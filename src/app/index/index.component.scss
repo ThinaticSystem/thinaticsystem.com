@@ -78,14 +78,3 @@ main {
   opacity: 1.0;
   transition: all 100ms 0s ease-in;
 }
-
-/* ページロードのフェード操作 */
-@keyframes fadein-anime {
-  0% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
