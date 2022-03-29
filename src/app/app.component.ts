@@ -7,7 +7,6 @@ import { ClipboardService } from 'ngx-clipboard';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'honi';
   cookie = false;
 
   constructor(
