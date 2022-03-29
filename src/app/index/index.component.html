@@ -1,20 +1,20 @@
-  <main>
-    <div id='info'>
-      <h1 id='infoHead'>おしらせ</h1>
-      <ol id='infoBody'>
-        <ng-template [ngForOf]="news.contents" let-data ngFor>
-          <li><a [href]="data.url">{{data.summary}}</a></li>
-        </ng-template>
-      </ol>
-    </div><!--
-			--><ul id='linkList'>
-      <li><a href='https://honi.club/@ThinaticSystem/'><img src='assets/link/activity_pub.svg' alt='ActivityPub'></a>
-      </li>
-      <li><a href='https://soundcloud.com/ThinaticSystem/'><img src='assets/link/soundcloud.svg' alt='SoundCloud'></a>
-      </li>
-      <li><a href='https://discord.com/users/260449322183819264'><img src='assets/link/discord.svg' alt='Discord'></a>
-      <li>
-      <li><a href='https://twitter.com/ThinaticSystem/'><img src='assets/link/twitter.svg' alt='Twitter'></a></li>
-      <li><a href='http://amzn.asia/d8Q1ib7'><img src='assets/link/hoshi_imo.svg' alt='Amazonほしいものリスト'></a></li>
-    </ul>
-  </main>
+<main>
+  <div id='info'>
+    <h1 id='infoHead'>おしらせ</h1>
+    <ol id='infoBody'>
+      <ng-template [ngForOf]="news.contents" let-data ngFor>
+        <li><a [href]="data.url">{{data.summary}}</a></li>
+      </ng-template>
+    </ol>
+  </div>
+  <ul id='linkList'>
+    <li><a href='https://honi.club/@ThinaticSystem/'><img src='assets/link/activity_pub.svg' alt='ActivityPub'></a>
+    </li>
+    <li><a href='https://soundcloud.com/ThinaticSystem/'><img src='assets/link/soundcloud.svg' alt='SoundCloud'></a>
+    </li>
+    <li><a href='https://discord.com/users/260449322183819264'><img src='assets/link/discord.svg' alt='Discord'></a>
+    <li>
+    <li><a href='https://twitter.com/ThinaticSystem/'><img src='assets/link/twitter.svg' alt='Twitter'></a></li>
+    <li><a href='http://amzn.asia/d8Q1ib7'><img src='assets/link/hoshi_imo.svg' alt='Amazonほしいものリスト'></a></li>
+  </ul>
+</main>
