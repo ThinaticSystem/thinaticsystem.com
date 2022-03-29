@@ -1,7 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { Title } from '@angular/platform-browser';
-import { ClipboardService } from 'ngx-clipboard';
 import { environment } from 'src/environments/environment';
 
 export interface News {

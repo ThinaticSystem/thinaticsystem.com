@@ -1,3 +1,4 @@
+import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ClipboardModule } from 'ngx-clipboard';
@@ -12,6 +13,7 @@ import { AppComponent } from './app.component';
   imports: [
     BrowserModule,
     AppRoutingModule,
+    HttpClientModule,
     ClipboardModule,
   ],
   providers: [],
