@@ -1,0 +1,92 @@
+main {
+  margin: 0 auto 0 auto;
+  max-width: 24rem;
+
+  > * {
+    animation: fadein-anime 2s forwards;
+    display: inline-block;
+    vertical-align: top;
+    width: 10rem;
+  }
+}
+
+#info {
+  margin-right: 4rem;
+
+  > * {
+    text-align: left;
+  }
+}
+
+#infoHead {
+  margin: 0 0 0.7rem 0;
+  background-color: #e28e9e;
+  font-size: 1.7rem;
+  color: #2f3535;
+}
+
+#infoBody {
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+  list-style-type: none;
+
+  > li {
+    &:before {
+      content: "📣";
+    }
+
+    margin-bottom: 0.4rem;
+    padding-left: 1.37rem;
+    text-indent: -1.37rem;
+    white-space: pre-line;
+  }
+}
+
+.css-br::after {
+  content: '\A';
+  white-space: pre;
+}
+
+#linkList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  * {
+    vertical-align: bottom;
+  }
+}
+
+#discordID {
+  display: none;
+}
+
+#buttonCookieOk {
+  vertical-align: center;
+}
+
+/* フェードイン */
+
+.fadeout {
+  opacity: 0.3;
+  transition: all 300ms 0s ease-out;
+}
+
+/* フェードアウト */
+
+.fadein {
+  opacity: 1.0;
+  transition: all 100ms 0s ease-in;
+}
+
+/* ページロードのフェード操作 */
+@keyframes fadein-anime {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
