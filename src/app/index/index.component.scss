@@ -29,6 +29,7 @@ main {
   padding: 0;
   line-height: 1.2;
   list-style-type: none;
+  animation: fadein-anime 2s forwards; /* microCMSの取得遅延のストレス解消 */
 
   > li {
     &:before {
@@ -77,4 +78,15 @@ main {
 .fadein {
   opacity: 1.0;
   transition: all 100ms 0s ease-in;
+}
+
+/* ページロードのフェードイン定義 */
+@keyframes fadein-anime {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
