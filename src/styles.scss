@@ -26,6 +26,8 @@ header > .siteLogo {
   border: dashed 3px #E0E0D0;
   color: #e0e0e0;
   background-color: #46869e;
+  cursor: pointer;
+  user-select: none;
 }
 
 #shareText {
