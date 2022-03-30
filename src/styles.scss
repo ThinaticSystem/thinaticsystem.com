@@ -13,10 +13,15 @@ body {
   overflow-y: scroll;
 }
 
-header > .siteLogo {
+header {
   margin: 3rem auto 2rem auto;
   display: block;
   width: 24rem;
+
+  > .siteLogo img {
+    width: 100%;
+    height: auto;
+  }
 }
 
 #shareButton {
@@ -75,8 +80,9 @@ footer {
       vertical-align: top;
     }
 
-    .siteLogo {
+    .siteLogo img{
       width: 7rem;
+      height: auto;
     }
 
     p {
