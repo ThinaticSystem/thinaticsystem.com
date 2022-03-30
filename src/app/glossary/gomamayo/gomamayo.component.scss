@@ -1,6 +1,8 @@
 main {
   display: inline-block;
   width: 24rem;
+  margin-left: calc(50vw - 24rem / 2);
+  margin-right: calc(50vw - 24rem / 2);
   text-align: left;
   background-color: #C0C0B0;
 }

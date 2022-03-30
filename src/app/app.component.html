@@ -1,24 +1,26 @@
-<header>
-  <a routerLink='/' class='siteLogo'><img src='/assets/site_logo.svg' alt='㈲しなちくシステム' width="300" height="66"></a>
-</header>
-<router-outlet></router-outlet>
-<a (click)="share()" id='shareButton'>ページをシェア<br>（クリップボードにコピーされます）</a><textarea id='shareText'></textarea>
+<div id="nonFooter">
+  <header>
+    <a routerLink='/' class='siteLogo'><img src='/assets/site_logo.svg' alt='㈲しなちくシステム' width="300" height="66"></a>
+  </header>
+  <router-outlet></router-outlet>
+</div>
 <footer>
+  <a (click)="share()" id='shareButton'>ページをシェア<br>（クリップボードにコピーされます）</a>
   <ul id='pageList'>
     <li><a routerLink="/about">About</a></li>
     <li><a routerLink="/discography">Discography</a></li>
     <li><a routerLink='/glossary'>用語集</a></li>
   </ul>
   <div id='siteInfo'>
-    <a routerLink='/' class='siteLogo' id='home'><img src='/assets/site_logo.svg' alt='㈲しなちくシステム' width="300" height="66"></a>
+    <a routerLink='/' class='siteLogo' id='home'><img src='/assets/site_logo.svg' alt='㈲しなちくシステム' width="300"
+        height="66"></a>
     <p id='sangyo'>{{sangyo.contents![0].text}}</p>
   </div>
+  <ng-template [ngIf]="!cookie">
+    <div id='cookieModal'>
+      <p id='cookieModalText'>当サイトでは、サイトの利便性向上のためクッキー(Cookie)以外全部を使用しています。<br>サイトのクッキー(Cookie)の使用に関しては、「<a
+          href='javascript:alert("くっきー(？)なぞ使っておらぬのじゃ🐾");'>プライバシーポリシー</a>」をお読みください。</p>
+      <button id='buttonCookieOk' (click)="cookie=true">OK</button>
+    </div>
+  </ng-template>
 </footer>
-
-<ng-template [ngIf]="!cookie">
-  <div id='cookieModal'>
-    <p id='cookieModalText'>当サイトでは、サイトの利便性向上のためクッキー(Cookie)以外全部を使用しています。<br>サイトのクッキー(Cookie)の使用に関しては、「<a
-        href='javascript:alert("くっきー(？)なぞ使っておらぬのじゃ🐾");'>プライバシーポリシー</a>」をお読みください。</p>
-    <button id='buttonCookieOk' (click)="cookie=true">OK</button>
-  </div>
-</ng-template>

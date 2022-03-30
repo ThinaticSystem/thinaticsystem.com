@@ -10,34 +10,17 @@ html {
 body {
   background-color: #E0E0D0;
   margin: 0;
-  overflow-y: scroll;
 }
 
 header {
-  margin: 3rem auto 2rem auto;
+  margin: 3rem calc(50vw - 24rem / 2) 2rem calc(50vw - 24rem / 2);
   display: block;
   width: 24rem;
 
-  > .siteLogo img {
+  >.siteLogo img {
     width: 100%;
     height: auto;
   }
-}
-
-#shareButton {
-  display: block;
-  font-weight: bold;
-  width: 24rem;
-  margin: 1rem auto 0 auto;
-  border: dashed 3px #E0E0D0;
-  color: #e0e0e0;
-  background-color: #46869e;
-  cursor: pointer;
-  user-select: none;
-}
-
-#shareText {
-  display: none;
 }
 
 #pageList {
@@ -58,57 +41,83 @@ header {
   }
 }
 
+#nonFooter {
+  max-height: 75vh;
+  overflow-y: scroll;
+  overflow-x: hidden; /* スクロールバー考慮センタリングのおしりぬぐい */
+}
+
 footer {
   animation: fadein-anime 2s;
   animation-delay: 1.5s;
   animation-fill-mode: backwards;
   width: 24rem;
-  text-align: left;
   margin: 2rem auto 3rem auto;
-}
 
-#siteInfo {
-  margin: 0.5rem auto 0 auto;
-  width: 24rem;
-  text-align: left;
-
-  > {
-    * {
-      display: inline-block;
-      margin: 0;
-      padding: 0;
-      vertical-align: top;
-    }
-
-    .siteLogo img{
-      width: 7rem;
-      height: auto;
-    }
-
-    p {
-      white-space: pre;
-      font-size: 0.5rem;
-      line-height: 1.1;
-    }
-  }
-}
-
-#cookieModal * {
-  display: inline-block;
-}
-
-#cookieModal {
-  font-size: 0.4rem;
+  position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  position: fixed;
-  background-color: #051000C0;
-  color: #E0E0E0;
-}
 
-#cookieModalText a {
-  color: #A0A0E0;
+  >#shareButton {
+    display: block;
+    font-weight: bold;
+    width: 24rem;
+    margin: 0rem auto 0 auto;
+    border: dashed 3px #E0E0D0;
+    color: #e0e0e0;
+    background-color: #46869e;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  > #pageList {
+    text-align: left;
+  }
+
+  > #siteInfo {
+    margin: 0.5rem auto 0 auto;
+    width: 24rem;
+    text-align: left;
+
+    > {
+      * {
+        display: inline-block;
+        margin: 0;
+        padding: 0;
+        vertical-align: top;
+      }
+
+      .siteLogo img {
+        width: 7rem;
+        height: auto;
+      }
+
+      p {
+        white-space: pre;
+        font-size: 0.5rem;
+        line-height: 1.1;
+      }
+    }
+  }
+
+  > #cookieModal * {
+    display: inline-block;
+  }
+
+  > #cookieModal {
+    font-size: 0.4rem;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    position: fixed;
+    background-color: #051000C0;
+    color: #E0E0E0;
+  }
+
+  > #cookieModalText a {
+    color: #A0A0E0;
+  }
 }
 
 @media (max-width: 1200px) {
