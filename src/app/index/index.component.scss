@@ -53,8 +53,10 @@ main {
   padding: 0;
   list-style: none;
 
-  * {
+  img {
     vertical-align: bottom;
+    width: 10rem;
+    height: auto;
   }
 }
 
