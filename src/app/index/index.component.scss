@@ -21,12 +21,15 @@ main {
   margin: 0 0 0.7rem 0;
   background-color: #e28e9e;
   font-size: 1.7rem;
+  line-height: 2rem;
   color: #2f3535;
 }
 
 #infoBody {
   margin: 0;
   padding: 0;
+  height: calc(80px*10rem/300px * 5 - (2rem + 1rem));
+  overflow-y: scroll;
   line-height: 1.2;
   list-style-type: none;
   animation: fadein-anime 2s forwards; /* microCMSの取得遅延のストレス解消 */
@@ -53,8 +56,10 @@ main {
   padding: 0;
   list-style: none;
 
-  * {
+  img {
     vertical-align: bottom;
+    width: 10rem;
+    height: auto;
   }
 }
 
