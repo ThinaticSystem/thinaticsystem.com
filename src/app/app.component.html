@@ -11,7 +11,9 @@
   </ul>
   <div id='siteInfo'>
     <a routerLink='/' class='siteLogo' id='home'><img src='/assets/site_logo.svg' alt='㈲しなちくシステム'></a>
-    <p id='sangyo'>{{sangyo.contents![0].text}}</p>
+    <ng-template [ngForOf]="sangyo?.contents" let-data ngFor>
+      <p id='sangyo'>{{data.text}}</p>
+    </ng-template>
   </div>
 </footer>
 
