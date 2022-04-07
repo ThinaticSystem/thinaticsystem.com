@@ -3,14 +3,14 @@ main {
   width: 24rem;
 
   > * {
-    display: inline-block;
     vertical-align: top;
-    width: 10rem;
   }
 }
 
 #info {
-  margin-right: 4rem;
+  display: inline-block;
+  width: 14rem;
+  margin-right: 2rem;
 
   > * {
     text-align: left;
@@ -28,7 +28,7 @@ main {
 #infoBody {
   margin: 0;
   padding: 0;
-  height: calc(80px*10rem/300px * 6 - (2rem + 1rem));
+  height: calc(80px*8rem/190px * 6 - (2rem + 1rem));
   overflow-y: scroll;
   line-height: 1.2;
   list-style-type: none;
@@ -52,13 +52,14 @@ main {
 }
 
 #linkList {
+  display: inline-block;
   margin: 0;
   padding: 0;
   list-style: none;
 
   img {
     vertical-align: bottom;
-    width: 10rem;
+    width: 8rem;
     height: auto;
   }
 }
