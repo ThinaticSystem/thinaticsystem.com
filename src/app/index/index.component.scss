@@ -28,7 +28,7 @@ main {
 #infoBody {
   margin: 0;
   padding: 0;
-  height: calc(80px*8rem/190px * 6 - (2rem + 0.7rem));
+  height: calc(80px * 8rem / 190px * 6/*liの数*/ - (2rem/*(#infoHeadのline-height)*/ + 0.7rem/*(#infoHeadのmargin-bottom)*/));
   overflow-y: scroll;
   line-height: 1.2;
   list-style-type: none;
