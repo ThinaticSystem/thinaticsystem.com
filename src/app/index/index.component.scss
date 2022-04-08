@@ -62,6 +62,10 @@ main {
     width: 8rem;
     height: auto;
   }
+
+  img:hover {
+    filter: drop-shadow(0px 14px 8px #332211)
+  }
 }
 
 #discordID {
