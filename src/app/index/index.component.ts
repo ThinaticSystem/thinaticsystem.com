@@ -3,20 +3,9 @@ import { Component, OnInit } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
 
-export interface News {
-  contents?: (ContentsEntity)[] | null;
-  totalCount: number;
-  offset: number;
-  limit: number;
-}
-export interface ContentsEntity {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string;
-  revisedAt: string;
-  summary: string;
-  url?: string | null;
+export interface Notifications {
+  title: String;
+  url: String;
 }
 
 @Component({
@@ -25,7 +14,7 @@ export interface ContentsEntity {
   styleUrls: ['./index.component.scss']
 })
 export class IndexComponent implements OnInit {
-  news!: News;
+  notifications!: Notifications[];
 
   constructor(
     private httpClient: HttpClient,
@@ -35,9 +24,9 @@ export class IndexComponent implements OnInit {
   ngOnInit(): void {
     this.titleService.setTitle('㈲しなちくシステム');
 
-    this.httpClient.get<News>('https://thinaticsystem-web.microcms.io/api/v1/news', {headers: new HttpHeaders({'x-api-key': environment.apiKey})})
+    this.httpClient.get<Notifications[]>(`${environment.cmsUrl}/notifications`)
     .subscribe((data) => {
-      this.news = data;
+      this.notifications = data;
     });
   }
 }

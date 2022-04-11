@@ -32,23 +32,13 @@ h2 {
   list-style: none;
 }
 
-.discMetadata {
-  margin-bottom: 2rem;
-  padding: 1rem 1rem 1rem 1rem;
-  background-color: #DAC69A;
-}
-
-#discList > li:last-child > .discMetadata {
+#discList>li:last-child>.discMetadata {
   margin-bottom: 0;
 }
 
-.demo > iframe {
+.demo>iframe {
   vertical-align: top;
   width: 100%;
-}
-
-.prefix::after {
-  content: '様';
 }
 
 main p {
@@ -56,47 +46,12 @@ main p {
 }
 
 .discMetadata {
-  list-style-type: none;
+  display: grid;
+  grid-template-columns: auto 1.3fr;
+  gap: 0px 20%;
+  grid-auto-flow: row;
 
-  > {
-    li {
-      padding-left: 5.7rem;
-      text-indent: -5.7rem;
-    }
-
-    .demo:before {
-      content: "🎧Demo:";
-      padding: 0 1rem 0 0;
-    }
-
-    .detail:before {
-      content: "🔍Detail:";
-      padding: 0 1.1rem 0 0;
-    }
-
-    .release:before {
-      content: "📅Release:";
-      padding: 0 0.2rem 0 0;
-    }
-
-    .place:before {
-      content: "📍Place:";
-      padding: 0 1.6rem 0 0.3rem;
-    }
-
-    .circle:before {
-      content: "🏢Circle:";
-      padding: 0 1.2rem 0 0;
-    }
-
-    .resale:before {
-      content: "💿Resale:";
-      padding: 0 0.8rem 0 0;
-    }
-
-    .dl:before {
-      content: "⬇DL:";
-      padding: 0 3rem 0 0.4rem;
-    }
-  }
+  margin-bottom: 2rem;
+  padding: 1rem 1rem 1rem 1rem;
+  background-color: #DAC69A;
 }

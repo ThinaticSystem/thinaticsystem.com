@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { DiscographyRoutingModule } from './discography-routing.module';
 import { DiscographyComponent } from './discography.component';
+import { OrderModule } from 'ngx-order-pipe';
 
 
 @NgModule({
@@ -11,7 +12,8 @@ import { DiscographyComponent } from './discography.component';
   ],
   imports: [
     CommonModule,
-    DiscographyRoutingModule
+    DiscographyRoutingModule,
+    OrderModule,
   ]
 })
 export class DiscographyModule { }
