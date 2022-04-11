@@ -4,7 +4,6 @@
 
 export const environment = {
   production: false,
-  apiKey: '77b0be95-e6f5-44e0-8842-2a1746e8cf53',
   cmsUrl: 'https://cms.thinaticsystem.com',
 };
 
