@@ -23,7 +23,7 @@
         </div>
 
         <!-- 購入リンクがある場合 -->
-        <ng-template [ngIf]="discography.buyComponent.length != 0">
+        <ng-template [ngIf]="discography.buyComponent.length !== 0">
           <div class="border-t border-gray-200 mt-10 pt-10">
             <h3 class="text-gray-900">Buy</h3>
             <div class="prose prose-sm text-gray-500">
@@ -37,7 +37,7 @@
         </ng-template>
 
         <!-- DLまたはストリーミング配信用リンクがある場合 -->
-        <ng-template [ngIf]="discography.dlComponent.length != 0">
+        <ng-template [ngIf]="discography.dlComponent.length !== 0">
           <div class="border-t border-gray-200 mt-10 pt-10">
             <h3 class="text-gray-900">Download / Streaming</h3>
             <div class="prose prose-sm text-gray-500">
@@ -83,7 +83,7 @@
         </div>
 
         <!-- デモ -->
-        <ng-template [ngIf]="discography.demoComponent.length != 0">
+        <ng-template [ngIf]="discography.demoComponent.length !== 0">
           <h2 class="text-2xl text-gray-900">Demo</h2>
           <div class="prose prose-sm text-gray-500">
             <ng-template ngFor [ngForOf]="discography.demoComponent" let-demo>
