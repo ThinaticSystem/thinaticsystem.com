@@ -3,7 +3,13 @@ import { RouterModule, Routes } from '@angular/router';
 import { DiscographyComponent } from './discography.component';
 
 const routes: Routes = [
-  {path: '', component: DiscographyComponent}
+  {
+    path: '',
+    component: DiscographyComponent
+  }, {
+    path: '',
+    loadChildren: () => import('./detail/detail.module').then(m => m.DetailModule)
+  }
 ];
 
 @NgModule({
