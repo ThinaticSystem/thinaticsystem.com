@@ -6,6 +6,7 @@ import { ClipboardModule } from 'ngx-clipboard';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import {NgClickOutsideModule} from "ng-click-outside2";
+import { ScullyLibModule } from '@scullyio/ng-lib';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import {NgClickOutsideModule} from "ng-click-outside2";
     AppRoutingModule,
     HttpClientModule,
     ClipboardModule,
-    NgClickOutsideModule
+    NgClickOutsideModule,
+    ScullyLibModule
   ],
   providers: [],
   bootstrap: [AppComponent]
