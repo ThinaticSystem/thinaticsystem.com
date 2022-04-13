@@ -4,8 +4,9 @@ import { Title } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
 
 export interface Notifications {
-  title: String;
-  url: String;
+  title: string;
+  url: string;
+  published_at: string;
 }
 
 @Component({

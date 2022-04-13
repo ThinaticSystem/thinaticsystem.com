@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { IndexRoutingModule } from './index-routing.module';
 import { IndexComponent } from './index.component';
 import { HttpClientModule } from '@angular/common/http';
+import {OrderModule} from "ngx-order-pipe";
 
 
 @NgModule({
@@ -14,6 +15,7 @@ import { HttpClientModule } from '@angular/common/http';
     CommonModule,
     IndexRoutingModule,
     HttpClientModule,
+    OrderModule,
   ]
 })
 export class IndexModule { }

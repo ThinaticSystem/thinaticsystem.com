@@ -41,7 +41,7 @@
   <h2 class="text-gray-500 text-3xl tracking-wide">おしらせ</h2>
   <ul role="list" class="mt-3 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
 
-    <ng-template [ngForOf]="notifications" let-data ngFor>
+    <ng-template [ngForOf]="notifications | orderBy: 'published_at' : true" let-data ngFor>
       <a [href]="data.url" target="_blank">
         <li class="col-span1 flex shadow-md rounded-md">
           <div class="flex-1 flex items-center justify-between border border-gray-200 bg-white rounded-md truncate">
