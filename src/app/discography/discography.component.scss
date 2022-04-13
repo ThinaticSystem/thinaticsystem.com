@@ -1,0 +1,7 @@
+.artwork {
+  @apply aspect-square;
+
+  img {
+    @apply object-cover shadow-lg hover:shadow-xl rounded-lg transition-all;
+  }
+}

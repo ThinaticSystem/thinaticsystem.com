@@ -19,10 +19,10 @@
 
         <div class="links">
           <div>
-            <a routerLink="/about" class="text-white bg-emerald-600 hover:bg-emerald-700">もっと詳しく</a>
+            <button (click)="navigate.go('/about')" class="text-white bg-emerald-600 hover:bg-emerald-700">もっと詳しく</button>
           </div>
           <div>
-            <a routerLink="/discography" class="text-gray-600 bg-gray-100 hover:bg-gray-200">楽曲一覧</a>
+            <button (click)="navigate.go('/discography')" class="text-gray-600 bg-gray-100 hover:bg-gray-200">楽曲一覧</button>
           </div>
         </div>
       </div>

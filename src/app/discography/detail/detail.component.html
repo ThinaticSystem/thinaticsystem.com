@@ -4,7 +4,7 @@
       <!-- アートワーク -->
       <div class="lg:row-end-1 lg:col-span-4">
         <div class="aspect-square rounded-lg bg-gray-100 overflow-hidden">
-          <img *ngIf="discography?.artwork" [src]="environment.cmsUrl + discography.artwork.formats.medium.url" [alt]="discography.artwork.alternativeText" class="object-center object-cover" width="100%">
+          <img (load)="loadingService.loading = false" *ngIf="discography?.artwork" [src]="environment.cmsUrl + discography.artwork.formats.medium.url" [alt]="discography.artwork.alternativeText" class="object-center object-cover" width="100%">
           <img *ngIf="!discography?.artwork" [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'" class="object-center object-cover" alt="画像がありません" width="100%">
         </div>
       </div>

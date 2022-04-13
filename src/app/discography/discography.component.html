@@ -9,16 +9,16 @@
 
           <ng-template ngFor [ngForOf]="discographies | orderBy: 'release': true" let-data>
           <li>
-            <a [routerLink]="'/discography/' + data.id" class="space-y-4">
-              <div class="aspect-square">
-                <img *ngIf="data?.artwork" class="object-cover shadow-lg rounded-lg" [src]="environment.cmsUrl + data?.artwork.formats.small.url" [alt]="data?.artwork.alternativeText">
-                <img *ngIf="!data?.artwork" class="object-cover shadow-lg rounded-lg" [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'" alt="画像がありません">
+            <div (click)="navigate.go('/discography/' + data.id)" class="space-y-4 cursor-pointer">
+              <div class="artwork">
+                <img (load)="imageLoaded()" *ngIf="data?.artwork" [src]="environment.cmsUrl + data?.artwork.formats.small.url" [alt]="data?.artwork.alternativeText">
+                <img (load)="imageLoaded()" *ngIf="!data?.artwork" [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'" alt="画像がありません">
               </div>
               <div class="text-lg leading-6 font-medium space-y-1">
                 <h3>{{ data.title }}</h3>
                 <p class="text-gray-500">{{ data.release | date: 'YYYY/MM/dd' }}</p>
               </div>
-            </a>
+            </div>
           </li>
           </ng-template>
         </ul>

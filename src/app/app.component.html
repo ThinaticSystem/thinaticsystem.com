@@ -1,3 +1,10 @@
+<div class="loading" [class.loaded]="!loadingService.loading">
+  <div class="layer1"></div>
+  <div class="layer2"></div>
+  <img [src]="enviroment.cmsUrl + '/uploads/loading_2c53045083.gif'" alt="読込中...">
+</div>
+
+
 <div class="relative">
   <!-- スクリーンリーダー用 -->
   <span class="sr-only">このウェブサイトはスクリーンリーダーに対応しています</span>
@@ -32,7 +39,7 @@
 
           <!-- PC用メニュー -->
           <div class="pc-menu">
-            <a *ngFor="let link of headerLinks" [routerLink]="link.url">{{link.name}}</a>
+            <button *ngFor="let link of headerLinks" (click)="navigate.go(link.url)">{{link.name}}</button>
           </div>
         </nav>
       </div>

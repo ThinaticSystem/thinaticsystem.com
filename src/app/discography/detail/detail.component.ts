@@ -1,16 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from "@angular/router";
 import {HttpClient} from "@angular/common/http";
 import {Discography} from "../../interfaces/discography";
 import {environment} from "../../../environments/environment";
 import {DomSanitizer, SafeHtml, Title} from "@angular/platform-browser";
+import {LoadingService} from "../../service/loading.service";
 
 @Component({
   selector: 'app-detail',
   templateUrl: './detail.component.html',
   styleUrls: ['./detail.component.scss']
 })
-export class DetailComponent implements OnInit {
+export class DetailComponent implements OnInit, OnDestroy {
   discography!: Discography;
   environment = environment;
   id?: string | null;
@@ -21,6 +22,7 @@ export class DetailComponent implements OnInit {
     private httpClient: HttpClient,
     private sanitizer: DomSanitizer,
     private router: Router,
+    public loadingService: LoadingService,
   ) { }
 
   ngOnInit(): void {
@@ -33,7 +35,6 @@ export class DetailComponent implements OnInit {
     this.httpClient.get<Discography>(`${environment.cmsUrl}/discographies/${this.id}`)
       .subscribe((data) => {
         this.discography = data;
-
         // タイトル設定
         this.titleService.setTitle(`${this.discography.title} | しなちくシステム`);
       }, (error) => {
@@ -45,6 +46,10 @@ export class DetailComponent implements OnInit {
   // SoundCloud等のiframe埋め込み用
   getIframe(tag: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(tag);
+  }
+
+  ngOnDestroy(): void {
+    this.loadingService.loading = true;
   }
 
 }

@@ -3,3 +3,57 @@
  @tailwind utilities;
 
  @import '~animate.css/animate.css';
+
+ $easing: cubic-bezier(1, 0, 0.25, 1);
+
+
+ .loading {
+   position: fixed;
+   width: 100vw;
+   height: 100vh;
+   top: 0;
+   left: 0;
+   z-index: 99999;
+
+   .layer1, .layer2 {
+     width: 100%;
+     height: 100%;
+     transition-timing-function: $easing;
+     transition-delay: 1s;
+   }
+
+   .layer1 {
+     @apply bg-white;
+     transition: height 0.5s;
+   }
+
+   .layer2 {
+     @apply bg-green-400;
+     transition: height 1s;
+   }
+
+   &.loaded {
+     pointer-events: none;
+     .layer1, .layer2 {
+       height: 0;
+     }
+
+     img {
+       opacity: 0;
+     }
+   }
+
+   img {
+     position: absolute;
+     width: 64px;
+     max-width: 50%;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     margin: auto;
+     pointer-events: none;
+     transition: 0.25s;
+     transition-delay: 0.25s;
+   }
+ }

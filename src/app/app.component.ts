@@ -1,16 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from 'src/environments/environment';
 import { ClipboardService } from 'ngx-clipboard';
+import {LoadingService} from "./service/loading.service";
+import {environment} from "../environments/environment";
+import {NavigateService} from "./service/navigate.service";
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   // Footerコピーライト表示用西暦取得
   year = new Date().getFullYear();
+  enviroment = environment;
 
   // モバイルメニュー開閉用
   openMenu = false;
@@ -56,13 +58,10 @@ export class AppComponent implements OnInit {
   ];
 
   constructor(
-    private httpClient: HttpClient,
     private _clipboardService: ClipboardService,
+    public loadingService: LoadingService,
+    public navigate: NavigateService,
   ) {}
-
-  ngOnInit(): void {
-
-  }
 
   share(): void {
     this._clipboardService.copy(document.title + '\n' + location.href);
