@@ -13,7 +13,7 @@ export class IndexComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.titleService.setTitle('用語集 | ㈲しなちくシステム');
+    this.titleService.setTitle('用語集 | しなちくシステム');
   }
 
 }

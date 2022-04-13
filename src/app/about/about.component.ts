@@ -13,7 +13,7 @@ export class AboutComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.titleService.setTitle('しなちくシステムについて | ㈲しなちくシステム');
+    this.titleService.setTitle('しなちくシステムについて | しなちくシステム');
   }
 
 }

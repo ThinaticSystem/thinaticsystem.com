@@ -25,7 +25,7 @@ export class DetailComponent implements OnInit {
 
   ngOnInit(): void {
     // 仮タイトル設定
-    this.titleService.setTitle('Discography | ㈲しなちくシステム');
+    this.titleService.setTitle('Discography | しなちくシステム');
     // URLからIDを取得
     this.id = this.route.snapshot.paramMap.get('id');
 
@@ -35,7 +35,7 @@ export class DetailComponent implements OnInit {
         this.discography = data;
 
         // タイトル設定
-        this.titleService.setTitle(`${this.discography.title} | ㈲しなちくシステム`);
+        this.titleService.setTitle(`${this.discography.title} | しなちくシステム`);
       }, (error) => {
         // 詳細情報が存在しない場合はDiscography一覧にリダイレクト
         this.router.navigate(['/discography']);

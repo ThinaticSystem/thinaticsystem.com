@@ -13,7 +13,7 @@ export class HoniComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.titleService.setTitle('ほに-用語集 | ㈲しなちくシステム');
+    this.titleService.setTitle('ほに-用語集 | しなちくシステム');
   }
 
 }

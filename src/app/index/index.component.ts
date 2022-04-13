@@ -23,7 +23,7 @@ export class IndexComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.titleService.setTitle('㈲しなちくシステム');
+    this.titleService.setTitle('しなちくシステム');
 
     this.httpClient.get<Notifications[]>(`${environment.cmsUrl}/notifications`)
     .subscribe((data) => {

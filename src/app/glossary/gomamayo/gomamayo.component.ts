@@ -13,7 +13,7 @@ export class GomamayoComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.titleService.setTitle('ゴママヨ-用語集 | ㈲しなちくシステム');
+    this.titleService.setTitle('ゴママヨ-用語集 | しなちくシステム');
   }
 
 }

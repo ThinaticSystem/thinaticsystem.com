@@ -20,7 +20,7 @@ export class DiscographyComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.titleService.setTitle('Discography | ㈲しなちくシステム');
+    this.titleService.setTitle('Discography | しなちくシステム');
     this.httpClient.get<Discography[]>(`${environment.cmsUrl}/discographies`)
     .subscribe((data) => {
       this.discographies = data;
