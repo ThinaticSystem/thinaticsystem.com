@@ -1,18 +1,64 @@
-<main>
-  <div id='info'>
-    <h1 id='infoHead'>おしらせ</h1>
-    <ol id='infoBody'>
-      <ng-template [ngForOf]="notifications" let-data ngFor>
-        <li><a [href]="data.url">{{data.title}}</a></li>
-      </ng-template>
-    </ol>
+<!-- 右側ベース背景 -->
+<div class="relative bg-emerald-300 rounded-xl overflow-hidden lg:shadow-lg mb-12">
+  <div class="max-w-7xl mx-auto">
+    <!-- 左側背景 -->
+    <div class="relative z-2 px-0 py-6 md:p-12 bg-white sm:py-16 md:py-20 lg:max-w-2xl lg:w-full lg:py-28 xl:py-32">
+      <!-- 真ん中の斜め効果 -->
+      <svg class="hidden lg:block absolute right-0 inset-y-0 h-full w-48 text-white transform translate-x-1/2"
+           fill="currentColor" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <polygon points="50,0 100,0 50,100 0,100"/>
+      </svg>
+
+      <div class="big-hero">
+        <h1>㈲しなちくシステム</h1>
+        <p>
+          しなちくシステムと申します。<br>
+          趣味で作曲をしております。<br>
+          好きな人にはけもみみとけもしっぽが生えています。
+        </p>
+
+        <div class="links">
+          <div>
+            <a routerLink="/about" class="text-white bg-emerald-600 hover:bg-emerald-700">もっと詳しく</a>
+          </div>
+          <div>
+            <a routerLink="/discography" class="text-gray-600 bg-gray-100 hover:bg-gray-200">楽曲一覧</a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <ul id='linkList'>
-    <li><a href='https://honi.club/@ThinaticSystem/'><img src='assets/link/activity_pub.svg' alt='ActivityPub' width="190" height="80"></a></li>
-    <li><a href='https://soundcloud.com/ThinaticSystem/'><img src='assets/link/soundcloud.svg' alt='SoundCloud' width="190" height="80"></a></li>
-    <li><a href='https://discord.com/users/260449322183819264'><img src='assets/link/discord.svg' alt='Discord' width="190" height="80"></a></li>
-    <li><a href='https://twitter.com/ThinaticSystem/'><img src='assets/link/twitter.svg' alt='Twitter' width="190" height="80"></a></li>
-    <li><a href='http://amzn.asia/d8Q1ib7'><img src='assets/link/hoshi_imo.svg' alt='Amazonほしいものリスト' width="190" height="80"></a></li>
-    <li><a href='https://www.patreon.com/ThinaticSystem'><img src='assets/link/patreon.svg' alt='Patreon' width="190" height="80"></a>
+
+  <!-- 右側画像分 -->
+  <div class="hidden lg:block lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
+    <img class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
+         src="https://cms.thinaticsystem.com/uploads/thinatic_icon_ceb0aa7998.png" alt="">
+  </div>
+</div>
+
+
+<div class="my-32">
+  <h2 class="text-gray-500 text-3xl tracking-wide">おしらせ</h2>
+  <ul role="list" class="mt-3 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
+
+    <ng-template [ngForOf]="notifications" let-data ngFor>
+      <a [href]="data.url" target="_blank">
+        <li class="col-span1 flex shadow-md rounded-md">
+          <div class="flex-1 flex items-center justify-between border border-gray-200 bg-white rounded-md truncate">
+
+            <div class="flex-1 px-4 py-6 text-sm truncate">{{data.title}}</div>
+
+            <div class="flex-shrink-0 pr-4">
+              <span class="sr-only">「{{data.title}}」の詳細を見る</span>
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>
+            </div>
+
+          </div>
+        </li>
+      </a>
+    </ng-template>
+
   </ul>
-</main>
+</div>
