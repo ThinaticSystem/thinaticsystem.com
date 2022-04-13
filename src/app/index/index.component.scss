@@ -1,6 +1,10 @@
 .big-hero {
   @apply sm:text-center lg:text-left;
 
+  h3 {
+    @apply text-2xl tracking-tight text-emerald-200 sm:text-3xl md:text-4xl mb-3 lg:ml-1;
+  }
+
   h1 {
     @apply text-4xl tracking-tight font-extrabold text-emerald-400 sm:text-5xl md:text-6xl;
   }
@@ -28,4 +32,9 @@
       }
     }
   }
+}
+
+
+.gen-btn {
+  @apply w-10 h-10 transition-colors;
 }
