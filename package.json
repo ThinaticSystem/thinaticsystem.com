@@ -21,6 +21,7 @@
     "animate.css": "^4.1.1",
     "ng-click-outside2": "^10.0.4",
     "ngx-clipboard": "^15.1.0",
+    "ngx-markdown": "^13.1.0",
     "ngx-order-pipe": "^2.2.0",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
