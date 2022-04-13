@@ -1,0 +1,40 @@
+.pc-menu {
+  @apply hidden md:block md:ml-10 md:pr-4 md:space-x-8;
+
+  a {
+    @apply font-medium text-gray-500 hover:text-gray-900;
+  }
+}
+
+.mobile-menu {
+  @apply px-2 pt-2 space-y-1;
+
+  a {
+    @apply block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50;
+  }
+}
+
+
+.animate__animated {
+  --animate-duration: 0.5s;
+}
+
+footer {
+  @apply max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8;
+
+  nav {
+    @apply -mx-5 -my-2 flex flex-wrap justify-center;
+
+    div {
+      @apply px-5 py-2;
+
+      a {
+        @apply text-base text-gray-500 hover:text-gray-900;
+      }
+    }
+  }
+
+  p {
+    @apply mt-8 text-center text-base text-gray-400;
+  }
+}

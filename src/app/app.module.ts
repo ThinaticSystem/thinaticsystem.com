@@ -5,6 +5,7 @@ import { ClipboardModule } from 'ngx-clipboard';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import {NgClickOutsideModule} from "ng-click-outside2";
 
 @NgModule({
   declarations: [
@@ -15,6 +16,7 @@ import { AppComponent } from './app.component';
     AppRoutingModule,
     HttpClientModule,
     ClipboardModule,
+    NgClickOutsideModule
   ],
   providers: [],
   bootstrap: [AppComponent]
