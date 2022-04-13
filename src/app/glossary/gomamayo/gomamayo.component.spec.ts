@@ -1,6 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { GomamayoComponent } from './gomamayo.component';
+import {GomamayoComponent} from './gomamayo.component';
 
 describe('GomamayoComponent', () => {
   let component: GomamayoComponent;
@@ -8,9 +8,9 @@ describe('GomamayoComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ GomamayoComponent ]
+      declarations: [GomamayoComponent]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {

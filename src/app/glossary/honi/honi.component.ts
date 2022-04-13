@@ -1,5 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import { Title } from '@angular/platform-browser';
+import {Title} from '@angular/platform-browser';
 import {LoadingService} from "../../service/loading.service";
 
 @Component({
@@ -12,7 +12,8 @@ export class HoniComponent implements OnInit, OnDestroy {
   constructor(
     private titleService: Title,
     public loadingService: LoadingService,
-  ) { }
+  ) {
+  }
 
   ngOnInit(): void {
     this.titleService.setTitle('ほに-用語集 | しなちくシステム');

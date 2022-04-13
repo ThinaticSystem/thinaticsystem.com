@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { ClipboardService } from 'ngx-clipboard';
+import {Component} from '@angular/core';
+import {ClipboardService} from 'ngx-clipboard';
 import {LoadingService} from "./service/loading.service";
 import {environment} from "../environments/environment";
 import {NavigateService} from "./service/navigate.service";
@@ -32,7 +32,7 @@ export class AppComponent {
       name: '用語集',
       url: '/glossary'
     }
-];
+  ];
 
   // Footerリンク一覧
   footerLinks = [
@@ -61,7 +61,8 @@ export class AppComponent {
     private _clipboardService: ClipboardService,
     public loadingService: LoadingService,
     public navigate: NavigateService,
-  ) {}
+  ) {
+  }
 
   share(): void {
     this._clipboardService.copy(document.title + '\n' + location.href);

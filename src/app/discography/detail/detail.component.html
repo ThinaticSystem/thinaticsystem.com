@@ -4,8 +4,11 @@
       <!-- アートワーク -->
       <div class="lg:row-end-1 lg:col-span-4">
         <div class="aspect-square rounded-lg bg-gray-100 overflow-hidden">
-          <img (load)="loadingService.loading = false" *ngIf="discography?.artwork" [src]="environment.cmsUrl + discography.artwork.formats.medium.url" [alt]="discography.artwork.alternativeText" class="object-center object-cover" width="100%">
-          <img *ngIf="!discography?.artwork" [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'" class="object-center object-cover" alt="画像がありません" width="100%">
+          <img (load)="loadingService.loading = false" *ngIf="discography?.artwork"
+               [alt]="discography.artwork.alternativeText"
+               [src]="environment.cmsUrl + discography.artwork.formats.medium.url" class="object-center object-cover" width="100%">
+          <img *ngIf="!discography?.artwork" [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'"
+               alt="画像がありません" class="object-center object-cover" width="100%">
         </div>
       </div>
 
@@ -13,12 +16,12 @@
         <div class="flex flex-col-reverse">
           <h1 class="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">{{ discography.title }}</h1>
           <!-- スクリーンリーダー用 -->
-          <h2 id="information-heading" class="sr-only">リリースについての詳細</h2>
+          <h2 class="sr-only" id="information-heading">リリースについての詳細</h2>
           <p class="text-sm text-gray-500 mt-8 mb-2">{{ discography.release | date: 'YYYY年M月d日'}}リリース</p>
         </div>
 
         <!-- 紹介文 -->
-        <div class="detail" [innerHTML]="discography.detail | markdown">
+        <div [innerHTML]="discography.detail | markdown" class="detail">
           <p>読み込み中...</p>
         </div>
 
@@ -28,7 +31,7 @@
             <h3 class="text-gray-900">Buy</h3>
             <div class="prose prose-sm text-gray-500">
               <div class="buy-links">
-                <ng-template ngFor let-dl [ngForOf]="discography.buyComponent">
+                <ng-template [ngForOf]="discography.buyComponent" let-dl ngFor>
                   <a [href]="dl.url" target="_blank">{{ dl.store }}</a>
                 </ng-template>
               </div>
@@ -42,7 +45,7 @@
             <h3 class="text-gray-900">Download / Streaming</h3>
             <div class="prose prose-sm text-gray-500">
               <div class="buy-links">
-                <ng-template ngFor let-dl [ngForOf]="discography.dlComponent">
+                <ng-template [ngForOf]="discography.dlComponent" let-dl ngFor>
                   <a [href]="dl.url" target="_blank">{{ dl.name }}</a>
                 </ng-template>
               </div>
@@ -52,20 +55,23 @@
 
         <div class="border-t border-gray-200 mt-10 pt-10">
           <h3 class="text-gray-900">Share</h3>
-          <ul role="list" class="flex items-center space-x-6 mt-4">
+          <ul class="flex items-center space-x-6 mt-4" role="list">
             <li>
-              <a href="#" class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500">
+              <a class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500" href="#">
                 <span class="sr-only">このページのURLをコピーします</span>
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                  <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd" />
+                <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path clip-rule="evenodd"
+                        d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z"
+                        fill-rule="evenodd"/>
                 </svg>
               </a>
             </li>
             <li>
-              <a href="#" class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500">
+              <a class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500" href="#">
                 <span class="sr-only">Twitterでこのページを共有します</span>
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                  <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
+                <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84"/>
                 </svg>
               </a>
             </li>
@@ -86,7 +92,7 @@
         <ng-template [ngIf]="discography.demoComponent.length !== 0">
           <h2 class="text-2xl text-gray-900">Demo</h2>
           <div class="prose prose-sm text-gray-500">
-            <ng-template ngFor [ngForOf]="discography.demoComponent" let-demo>
+            <ng-template [ngForOf]="discography.demoComponent" let-demo ngFor>
               <div class="my-4">
                 <p class="text-sm text-gray-500">{{ demo.title }}</p>
                 <div [innerHTML]="getIframe(demo.iframe)"></div>

@@ -1,6 +1,6 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { DiscographyComponent } from './discography.component';
+import {NgModule} from '@angular/core';
+import {RouterModule, Routes} from '@angular/router';
+import {DiscographyComponent} from './discography.component';
 
 const routes: Routes = [
   {
@@ -16,4 +16,5 @@ const routes: Routes = [
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]
 })
-export class DiscographyRoutingModule { }
+export class DiscographyRoutingModule {
+}

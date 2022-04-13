@@ -1,7 +1,7 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import { Title } from '@angular/platform-browser';
-import { environment } from 'src/environments/environment';
+import {Title} from '@angular/platform-browser';
+import {environment} from 'src/environments/environment';
 import {Discography} from "../interfaces/discography";
 import {LoadingService} from "../service/loading.service";
 import {NavigateService} from "../service/navigate.service";
@@ -22,14 +22,15 @@ export class DiscographyComponent implements OnInit, OnDestroy {
     private titleService: Title,
     public loadingService: LoadingService,
     public navigate: NavigateService,
-  ) { }
+  ) {
+  }
 
   ngOnInit(): void {
     this.titleService.setTitle('Discography | しなちくシステム');
     this.httpClient.get<Discography[]>(`${environment.cmsUrl}/discographies`)
-    .subscribe((data) => {
-      this.discographies = data;
-    });
+      .subscribe((data) => {
+        this.discographies = data;
+      });
   }
 
   ngOnDestroy(): void {

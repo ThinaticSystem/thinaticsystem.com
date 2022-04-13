@@ -1,4 +1,4 @@
-<div class="loading" [class.loaded]="!loadingService.loading">
+<div [class.loaded]="!loadingService.loading" class="loading">
   <div class="layer1"></div>
   <div class="layer2"></div>
   <img [src]="enviroment.cmsUrl + '/uploads/loading_2c53045083.gif'" alt="読込中...">
@@ -16,19 +16,20 @@
             <div class="flex items-center justify-between w-full md:w-auto">
 
               <!-- ロゴリンク -->
-              <a href="#">
+              <button (click)="navigate.go('/')">
                 <!-- スクリーンリーダー用 -->
                 <span class="sr-only">しなちくシステムの公式サイトです</span>
                 <h1>ここにロゴ</h1>
-              </a>
+              </button>
 
               <!-- モバイルメニュー開閉用ボタン -->
               <div class="-mr-2 flex items-center md:hidden">
-                <button type="button" (click)="openMenu = true"
-                        class="bg-white rounded-md p-2 inline-flex items-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-300">
+                <button (click)="openMenu = true"
+                        class="bg-white rounded-md p-2 inline-flex items-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-300"
+                        type="button">
                   <span class="sr-only">メニューを開きます</span>
-                  <svg class="h-6 w-6" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                       viewBox="0 0 24 24" stroke="currentColor">
+                  <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                       stroke-width="2" viewBox="0 0 24 24">
                     <path d="M4 6h16M4 12h16M4 18h16"/>
                   </svg>
                 </button>
@@ -39,14 +40,14 @@
 
           <!-- PC用メニュー -->
           <div class="pc-menu">
-            <button *ngFor="let link of headerLinks" (click)="navigate.go(link.url)">{{link.name}}</button>
+            <button (click)="navigate.go(link.url)" *ngFor="let link of headerLinks">{{link.name}}</button>
           </div>
         </nav>
       </div>
     </header>
 
     <!-- モバイル用メニュー -->
-    <div *ngIf="openMenu" (clickOutside)="openMenu = false" [delayClickOutsideInit]="true"
+    <div (clickOutside)="openMenu = false" *ngIf="openMenu" [delayClickOutsideInit]="true"
          class="absolute z-10 top-0 inset-x-0 p-2 transition transform origin-top-right md:hidden animate__animated animate__fadeIn">
       <div class="rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 overflow-hidden">
         <div class="px-5 pt-4 flex items-center justify-between">
@@ -54,20 +55,21 @@
             <h1>ここにロゴ</h1>
           </div>
           <div class="-mr-2">
-            <button type="button" (click)="openMenu = false"
-                    class="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-300">
+            <button (click)="openMenu = false"
+                    class="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-300"
+                    type="button">
               <!-- スクリーンリーダー用 -->
               <span class="sr-only">メニューを閉じます</span>
               <!-- Heroicon name: outline/x -->
-              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                   stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              <svg aria-hidden="true" class="h-6 w-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
               </svg>
             </button>
           </div>
         </div>
         <div class="mobile-menu">
-          <a *ngFor="let link of headerLinks" [routerLink]="link.url" (click)="openMenu = false">{{link.name}}</a>
+          <a (click)="openMenu = false;navigate.go(link.url)" *ngFor="let link of headerLinks">{{link.name}}</a>
         </div>
       </div>
     </div>
@@ -81,7 +83,7 @@
 
 <footer>
   <nav aria-label="footer">
-    <ng-template ngFor [ngForOf]="footerLinks" let-link>
+    <ng-template [ngForOf]="footerLinks" let-link ngFor>
       <div>
         <a [href]="link.url" target="_blank">{{ link.name }}</a>
       </div>

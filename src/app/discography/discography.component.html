@@ -5,21 +5,24 @@
         <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl">Discography</h2>
       </div>
       <div class="lg:col-span-2">
-        <ul role="list" class="space-y-12 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:gap-x-8">
+        <ul class="space-y-12 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:gap-x-8" role="list">
 
-          <ng-template ngFor [ngForOf]="discographies | orderBy: 'release': true" let-data>
-          <li>
-            <div (click)="navigate.go('/discography/' + data.id)" class="space-y-4 cursor-pointer">
-              <div class="artwork">
-                <img (load)="imageLoaded()" *ngIf="data?.artwork" [src]="environment.cmsUrl + data?.artwork.formats.small.url" [alt]="data?.artwork.alternativeText">
-                <img (load)="imageLoaded()" *ngIf="!data?.artwork" [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'" alt="画像がありません">
+          <ng-template [ngForOf]="discographies | orderBy: 'release': true" let-data ngFor>
+            <li>
+              <div (click)="navigate.go('/discography/' + data.id)" class="space-y-4 cursor-pointer">
+                <div class="artwork">
+                  <img (load)="imageLoaded()" *ngIf="data?.artwork"
+                       [alt]="data?.artwork.alternativeText"
+                       [src]="environment.cmsUrl + data?.artwork.formats.small.url">
+                  <img (load)="imageLoaded()" *ngIf="!data?.artwork"
+                       [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'" alt="画像がありません">
+                </div>
+                <div class="text-lg leading-6 font-medium space-y-1">
+                  <h3>{{ data.title }}</h3>
+                  <p class="text-gray-500">{{ data.release | date: 'YYYY/MM/dd' }}</p>
+                </div>
               </div>
-              <div class="text-lg leading-6 font-medium space-y-1">
-                <h3>{{ data.title }}</h3>
-                <p class="text-gray-500">{{ data.release | date: 'YYYY/MM/dd' }}</p>
-              </div>
-            </div>
-          </li>
+            </li>
           </ng-template>
         </ul>
       </div>

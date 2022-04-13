@@ -1,8 +1,8 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
 
-import { DetailRoutingModule } from './detail-routing.module';
-import { DetailComponent } from './detail.component';
+import {DetailRoutingModule} from './detail-routing.module';
+import {DetailComponent} from './detail.component';
 import {MarkdownModule} from "ngx-markdown";
 
 
@@ -16,4 +16,5 @@ import {MarkdownModule} from "ngx-markdown";
     MarkdownModule.forRoot(),
   ]
 })
-export class DetailModule { }
+export class DetailModule {
+}

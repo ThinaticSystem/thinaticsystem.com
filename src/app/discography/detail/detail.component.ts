@@ -23,7 +23,8 @@ export class DetailComponent implements OnInit, OnDestroy {
     private sanitizer: DomSanitizer,
     private router: Router,
     public loadingService: LoadingService,
-  ) { }
+  ) {
+  }
 
   ngOnInit(): void {
     // 仮タイトル設定

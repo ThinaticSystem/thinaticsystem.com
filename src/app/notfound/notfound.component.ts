@@ -7,12 +7,13 @@ import {NavigateService} from "../service/navigate.service";
   templateUrl: './notfound.component.html',
   styleUrls: ['./notfound.component.scss']
 })
-export class NotfoundComponent implements OnDestroy {
+export class NotfoundComponent implements OnInit, OnDestroy {
 
   constructor(
     public loadingService: LoadingService,
     public navigate: NavigateService,
-    ) { }
+  ) {
+  }
 
   ngOnInit(): void {
     this.loadingService.loading = false;

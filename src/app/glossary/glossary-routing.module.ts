@@ -1,8 +1,8 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { IndexComponent } from './index/index.component';
-import { HoniComponent } from './honi/honi.component';
-import { GomamayoComponent } from './gomamayo/gomamayo.component';
+import {NgModule} from '@angular/core';
+import {RouterModule, Routes} from '@angular/router';
+import {IndexComponent} from './index/index.component';
+import {HoniComponent} from './honi/honi.component';
+import {GomamayoComponent} from './gomamayo/gomamayo.component';
 
 const routes: Routes = [
   {
@@ -21,4 +21,5 @@ const routes: Routes = [
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]
 })
-export class GlossaryRoutingModule { }
+export class GlossaryRoutingModule {
+}

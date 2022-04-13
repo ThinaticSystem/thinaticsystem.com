@@ -1,4 +1,3 @@
-
 export interface Discography {
   title: string;
   demoComponent: Demo[];
@@ -41,12 +40,14 @@ export interface Artwork {
   formats: ArtworkFormats;
   url: string;
 }
+
 export interface ArtworkFormats {
   large: ArtworkAllSize;
   small: ArtworkAllSize;
   medium: ArtworkAllSize;
   thumbnail: ArtworkAllSize;
 }
+
 export interface ArtworkAllSize {
   ext: string;
   url: string;

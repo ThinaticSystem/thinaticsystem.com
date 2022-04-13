@@ -1,5 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import { Title } from '@angular/platform-browser';
+import {Title} from '@angular/platform-browser';
 import {LoadingService} from "../../service/loading.service";
 import {NavigateService} from "../../service/navigate.service";
 
@@ -14,7 +14,8 @@ export class IndexComponent implements OnInit, OnDestroy {
     private titleService: Title,
     public loadingService: LoadingService,
     public navigate: NavigateService,
-  ) { }
+  ) {
+  }
 
   ngOnInit(): void {
     this.titleService.setTitle('用語集 | しなちくシステム');
@@ -23,7 +24,7 @@ export class IndexComponent implements OnInit, OnDestroy {
     }, 500);
   }
 
-    ngOnDestroy(): void {
-      this.loadingService.loading = true;
-    }
+  ngOnDestroy(): void {
+    this.loadingService.loading = true;
+  }
 }
