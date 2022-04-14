@@ -3,6 +3,7 @@ import {ClipboardService} from 'ngx-clipboard';
 import {LoadingService} from "./service/loading.service";
 import {environment} from "../environments/environment";
 import {NavigateService} from "./service/navigate.service";
+import {NotificationService} from "./service/notification.service";
 
 @Component({
   selector: 'app-root',
@@ -61,6 +62,7 @@ export class AppComponent {
     private _clipboardService: ClipboardService,
     public loadingService: LoadingService,
     public navigate: NavigateService,
+    public notification: NotificationService,
   ) {
   }
 

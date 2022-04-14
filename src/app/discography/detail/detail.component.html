@@ -3,10 +3,10 @@
     <div *ngIf="discography" class="lg:grid lg:grid-rows-1 lg:grid-cols-7 lg:gap-x-8 lg:gap-y-10 xl:gap-x-16">
       <!-- アートワーク -->
       <div class="lg:row-end-1 lg:col-span-4">
-        <div class="aspect-square rounded-lg bg-gray-100 overflow-hidden">
+        <div class="rounded-3xl shadow-lg bg-gray-100 overflow-hidden">
           <img (load)="loadingService.loading = false" *ngIf="discography?.artwork"
                [alt]="discography.artwork.alternativeText"
-               [src]="environment.cmsUrl + discography.artwork.formats.medium.url" class="object-center object-cover" width="100%">
+               [src]="environment.cmsUrl + discography.artwork.url" class="aspect-square object-cover" width="100%">
           <img *ngIf="!discography?.artwork" [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'"
                alt="画像がありません" class="object-center object-cover" width="100%">
         </div>
@@ -57,17 +57,20 @@
           <h3 class="text-gray-900">Share</h3>
           <ul class="flex items-center space-x-6 mt-4" role="list">
             <li>
-              <a class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500" href="#">
+              <button (cbOnSuccess)="Notification.show('コピーしました')" [cbContent]="'「' + discography.title + '」\n' + url"
+                      class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500" ngxClipboard>
+
                 <span class="sr-only">このページのURLをコピーします</span>
                 <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path clip-rule="evenodd"
                         d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z"
                         fill-rule="evenodd"/>
                 </svg>
-              </a>
+              </button>
             </li>
             <li>
-              <a class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500" href="#">
+              <a [href]="'https://twitter.com/intent/tweet?text=「' + discography.title + '」%0a&url=' + url"
+                 class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500">
                 <span class="sr-only">Twitterでこのページを共有します</span>
                 <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path
@@ -95,7 +98,7 @@
             <ng-template [ngForOf]="discography.demoComponent" let-demo ngFor>
               <div class="my-4">
                 <p class="text-sm text-gray-500">{{ demo.title }}</p>
-                <div [innerHTML]="getIframe(demo.iframe)"></div>
+                <div [innerHTML]="demo.iframe | sanitizeHtml"></div>
               </div>
             </ng-template>
           </div>
