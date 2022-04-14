@@ -14,7 +14,7 @@ import {OrderModule} from 'ngx-order-pipe';
     CommonModule,
     DiscographyRoutingModule,
     OrderModule,
-  ]
+  ],
 })
 export class DiscographyModule {
 }

@@ -2,6 +2,6 @@
   @apply aspect-square;
 
   img {
-    @apply object-cover shadow-lg hover:shadow-xl rounded-lg transition-all;
+    @apply aspect-square object-cover shadow-lg hover:shadow-xl rounded-xl transition-all;
   }
 }

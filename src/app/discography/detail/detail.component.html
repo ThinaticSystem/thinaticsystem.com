@@ -57,7 +57,7 @@
           <h3 class="text-gray-900">Share</h3>
           <ul class="flex items-center space-x-6 mt-4" role="list">
             <li>
-              <button (cbOnSuccess)="Notification.show('コピーしました')" [cbContent]="'「' + discography.title + '」\n' + url"
+              <button (cbOnSuccess)="Notification.show('楽曲情報をコピーしました！')" [cbContent]="'「' + discography.title + '」\n' + url"
                       class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500" ngxClipboard>
 
                 <span class="sr-only">このページのURLをコピーします</span>

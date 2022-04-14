@@ -13,7 +13,7 @@
                 <div class="artwork">
                   <img (load)="imageLoaded()" *ngIf="data?.artwork"
                        [alt]="data?.artwork.alternativeText"
-                       [src]="environment.cmsUrl + data?.artwork.formats.small.url">
+                       [src]="environment.cmsUrl + data?.artwork.formats.small.url" width="100%">
                   <img (load)="imageLoaded()" *ngIf="!data?.artwork"
                        [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'" alt="画像がありません">
                 </div>

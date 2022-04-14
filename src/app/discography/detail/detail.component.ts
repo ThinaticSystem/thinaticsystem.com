@@ -16,8 +16,8 @@ import {NotificationService} from "../../service/notification.service";
 export class DetailComponent implements OnInit, OnDestroy {
     discography!: Discography;
     environment = environment;
+    url = location.href;
     id?: string | null;
-    url!: string;
 
     constructor(
         private titleService: Title,
@@ -34,7 +34,6 @@ export class DetailComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         // 仮タイトル設定
         this.titleService.setTitle('Discography | しなちくシステム');
-        this.url = location.href;
         // URLからIDを取得
         this.id = this.route.snapshot.paramMap.get('id');
 
