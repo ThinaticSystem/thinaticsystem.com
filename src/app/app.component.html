@@ -8,8 +8,9 @@
 <!-- 通知オーバーレイ -->
 <div aria-live="assertive" class="notifications">
   <div class="w-full flex flex-col items-center space-y-4 sm:items-end">
-    <div [ngClass]="{'animate__slideInRight': notification.showNotification, 'animate__slideOutRight': !notification.showNotification}"
-         class="notification animate__animated">
+    <div
+      [ngClass]="{'animate__slideInRight': notification.showNotification, 'animate__slideOutRight': !notification.showNotification}"
+      class="notification animate__animated">
       <div class="px-4 py-8">
         <div class="flex items-start">
           <div class="flex-shrink-0">
