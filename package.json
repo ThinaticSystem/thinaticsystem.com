@@ -26,6 +26,7 @@
     "@scullyio/scully": "^2.1.0",
     "@scullyio/scully-plugin-puppeteer": "^2.1.0",
     "animate.css": "^4.1.1",
+    "github-markdown-css": "^5.1.0",
     "ng-click-outside2": "^10.0.4",
     "ngx-clipboard": "^15.1.0",
     "ngx-markdown": "^13.1.0",
