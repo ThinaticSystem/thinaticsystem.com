@@ -30,7 +30,7 @@ export class AppComponent {
       name: 'Discography',
       url: '/discography'
     }, {
-      name: '用語集',
+      name: 'Vocabulary',
       url: '/glossary'
     }
   ];

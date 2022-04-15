@@ -1,11 +1,5 @@
-main {
-  display: inline-block;
-  width: 24rem;
-  text-align: left;
-  background-color: #C0C0B0;
-}
-
-ul {
-  list-style: none;
-  padding-left: 0;
+.links {
+  a {
+    @apply text-2xl hover:text-blue-500 block cursor-pointer mb-3;
+  }
 }
