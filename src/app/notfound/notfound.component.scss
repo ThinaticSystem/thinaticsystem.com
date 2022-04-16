@@ -1,0 +1,25 @@
+.bg {
+  @apply min-h-full bg-cover bg-top sm:bg-top;
+  background-image: url("https://cms.thinaticsystem.com/uploads/notfound_bg_26bcd2fa11.png");
+
+  div {
+    @apply max-w-max mx-auto px-4 py-16 text-center sm:px-6 sm:py-24 lg:px-8 lg:py-48;
+
+    p {
+      @apply font-extrabold text-black text-opacity-50 tracking-wide;
+    }
+
+    h1 {
+      @apply mt-8 text-4xl font-extrabold tracking-tight sm:text-5xl;
+    }
+  }
+}
+
+
+.go-home {
+  @apply mt-6;
+
+  a {
+    @apply w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md md:py-4 md:text-lg md:px-10 transition-colors text-black bg-emerald-200 hover:bg-emerald-300;
+  }
+}

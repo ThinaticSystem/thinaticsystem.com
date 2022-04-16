@@ -1,6 +1,13 @@
-<main>
-  <ul>
-    <li><a routerLink='honi'>ほに</a></li>
-    <li><a routerLink='gomamayo'>ゴママヨサラダ</a></li>
-  </ul>
-</main>
+<div class="bg-white">
+  <div class="mx-auto py-12 px-4 max-w-7xl sm:px-6 lg:px-8 lg:py-24">
+    <div class="space-y-12 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
+      <div class="space-y-5 sm:space-y-4">
+        <h2 class="text-3xl font-extrabold tracking-tight sm:text-3xl">Vocabulary</h2>
+      </div>
+      <div class="lg:col-span-2 links">
+        <a (click)="navigate.go('/glossary/honi')">ほに</a>
+        <a (click)="navigate.go('/glossary/gomamayo')">ゴママヨサラダ</a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,8 +1,9 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
 
-import { AboutRoutingModule } from './about-routing.module';
-import { AboutComponent } from './about.component';
+import {AboutRoutingModule} from './about-routing.module';
+import {AboutComponent} from './about.component';
+import {MarkdownModule} from "ngx-markdown";
 
 
 @NgModule({
@@ -11,7 +12,9 @@ import { AboutComponent } from './about.component';
   ],
   imports: [
     CommonModule,
-    AboutRoutingModule
+    AboutRoutingModule,
+    MarkdownModule.forRoot(),
   ]
 })
-export class AboutModule { }
+export class AboutModule {
+}

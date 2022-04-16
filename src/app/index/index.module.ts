@@ -1,9 +1,10 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-
-import { IndexRoutingModule } from './index-routing.module';
-import { IndexComponent } from './index.component';
-import { HttpClientModule } from '@angular/common/http';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {IndexRoutingModule} from './index-routing.module';
+import {IndexComponent} from './index.component';
+import {HttpClientModule} from '@angular/common/http';
+import {OrderModule} from "ngx-order-pipe";
+import {ClipboardModule} from "ngx-clipboard";
 
 
 @NgModule({
@@ -14,6 +15,9 @@ import { HttpClientModule } from '@angular/common/http';
     CommonModule,
     IndexRoutingModule,
     HttpClientModule,
+    OrderModule,
+    ClipboardModule,
   ]
 })
-export class IndexModule { }
+export class IndexModule {
+}

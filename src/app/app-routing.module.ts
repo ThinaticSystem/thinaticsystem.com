@@ -1,5 +1,5 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import {NgModule} from '@angular/core';
+import {RouterModule, Routes} from '@angular/router';
 
 const routes: Routes = [
   {
@@ -14,11 +14,18 @@ const routes: Routes = [
   }, {
     path: 'glossary',
     loadChildren: () => import('./glossary/glossary.module').then(m => m.GlossaryModule)
-  },
+  }, {
+    path: '404',
+    loadChildren: () => import('./notfound/notfound.module').then(m => m.NotfoundModule)
+  }, {
+    path: '**',
+    redirectTo: '404'
+  }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { scrollPositionRestoration: 'top' })],
+  imports: [RouterModule.forRoot(routes, {scrollPositionRestoration: 'top'})],
   exports: [RouterModule]
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {
+}
