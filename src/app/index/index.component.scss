@@ -1,102 +1,40 @@
-main {
-  margin: 0 auto 0 auto;
-  width: 24rem;
+.big-hero {
+  @apply sm:text-center lg:text-left;
 
-  > * {
-    vertical-align: top;
+  h3 {
+    @apply text-2xl tracking-tight text-emerald-200 sm:text-3xl md:text-4xl mb-3 lg:ml-1;
   }
-}
 
-#info {
-  display: inline-block;
-  width: 14rem;
-  margin-right: 2rem;
-
-  > * {
-    text-align: left;
+  h1 {
+    @apply text-4xl tracking-tight font-extrabold text-emerald-400 sm:text-5xl md:text-6xl;
   }
-}
 
-#infoHead {
-  margin: 0 0 0.7rem 0;
-  background-color: #e28e9e;
-  font-size: 1.7rem;
-  line-height: 2rem;
-  color: #2f3535;
-}
+  p {
+    @apply mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0;
+  }
 
-#infoBody {
-  margin: 0;
-  padding: 0;
-  height: calc(80px * 8rem / 190px * 6/*liの数*/ - (2rem/*(#infoHeadのline-height)*/ + 0.7rem/*(#infoHeadのmargin-bottom)*/));
-  overflow-y: scroll;
-  line-height: 1.2;
-  list-style-type: none;
-  animation: fadein-anime 2s forwards; /* microCMSの取得遅延のストレス解消 */
+  .links {
+    @apply mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start;
 
-  > li {
-    &:before {
-      content: "📣";
+    div {
+      @apply rounded-md shadow sm:mx-2 mb-3 sm:mb-0;
+
+      &:first-child {
+        @apply ml-0;
+      }
+
+      &:last-child {
+        @apply mr-0 mb-0;
+      }
+
+      button {
+        @apply w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md md:py-4 md:text-lg md:px-10 transition-colors;
+      }
     }
-
-    margin-bottom: 0.4rem;
-    padding-left: 1.37rem;
-    text-indent: -1.37rem;
-    white-space: pre-line;
   }
 }
 
-.css-br::after {
-  content: '\A';
-  white-space: pre;
-}
 
-#linkList {
-  display: inline-block;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-
-  img {
-    vertical-align: bottom;
-    width: 8rem;
-    height: auto;
-  }
-
-  img:hover {
-    filter: drop-shadow(0px 14px 8px #332211)
-  }
-}
-
-#discordID {
-  display: none;
-}
-
-#buttonCookieOk {
-  vertical-align: center;
-}
-
-/* フェードイン */
-
-.fadeout {
-  opacity: 0.3;
-  transition: all 300ms 0s ease-out;
-}
-
-/* フェードアウト */
-
-.fadein {
-  opacity: 1.0;
-  transition: all 100ms 0s ease-in;
-}
-
-/* ページロードのフェードイン定義 */
-@keyframes fadein-anime {
-  0% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
+.gen-btn {
+  @apply w-10 h-10 transition-colors;
 }

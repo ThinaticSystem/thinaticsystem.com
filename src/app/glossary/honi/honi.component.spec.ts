@@ -1,6 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { HoniComponent } from './honi.component';
+import {HoniComponent} from './honi.component';
 
 describe('HoniComponent', () => {
   let component: HoniComponent;
@@ -8,9 +8,9 @@ describe('HoniComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ HoniComponent ]
+      declarations: [HoniComponent]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {

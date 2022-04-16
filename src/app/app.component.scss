@@ -1,0 +1,50 @@
+.pc-menu {
+  @apply hidden md:block md:ml-10 md:pr-4 md:space-x-8;
+
+  a {
+    @apply font-medium text-gray-500 hover:text-gray-900;
+  }
+}
+
+.mobile-menu {
+  @apply px-2 pt-2 space-y-1;
+
+  a {
+    @apply block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 cursor-pointer;
+  }
+}
+
+
+.animate__animated {
+  --animate-duration: 0.5s;
+}
+
+footer {
+  @apply max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8;
+
+  nav {
+    @apply -mx-5 -my-2 flex flex-wrap justify-center;
+
+    div {
+      @apply px-5 py-2;
+
+      button {
+        @apply text-base text-gray-500 hover:text-gray-900;
+      }
+    }
+  }
+
+  p {
+    @apply mt-8 text-center text-base text-gray-400;
+  }
+}
+
+
+.notifications {
+  @apply fixed inset-0 flex items-end px-4 py-6 pointer-events-none sm:p-6 sm:items-start z-50;
+
+  .notification {
+    @apply max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden;
+  }
+
+}

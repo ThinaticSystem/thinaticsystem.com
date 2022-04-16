@@ -1,10 +1,10 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
 
-import { GlossaryRoutingModule } from './glossary-routing.module';
-import { IndexComponent } from './index/index.component';
-import { HoniComponent } from './honi/honi.component';
-import { GomamayoComponent } from './gomamayo/gomamayo.component';
+import {GlossaryRoutingModule} from './glossary-routing.module';
+import {IndexComponent} from './index/index.component';
+import {HoniComponent} from './honi/honi.component';
+import {GomamayoComponent} from './gomamayo/gomamayo.component';
 
 
 @NgModule({
@@ -18,4 +18,5 @@ import { GomamayoComponent } from './gomamayo/gomamayo.component';
     GlossaryRoutingModule
   ]
 })
-export class GlossaryModule { }
+export class GlossaryModule {
+}

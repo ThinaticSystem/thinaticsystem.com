@@ -1,0 +1,110 @@
+<div class="bg-white">
+  <div class="mx-auto py-8 px-4 sm:py-16 sm:px-6 lg:max-w-7xl lg:px-8">
+    <div *ngIf="discography" class="lg:grid lg:grid-rows-1 lg:grid-cols-7 lg:gap-x-8 lg:gap-y-10 xl:gap-x-16">
+      <!-- アートワーク -->
+      <div class="lg:row-end-1 lg:col-span-4">
+        <div class="rounded-3xl shadow-lg bg-gray-100 overflow-hidden">
+          <img (load)="loadingService.loading = false" *ngIf="discography?.artwork"
+               [alt]="discography.artwork.alternativeText"
+               [src]="environment.cmsUrl + discography.artwork.url" class="aspect-square object-cover" width="100%">
+          <img *ngIf="!discography?.artwork" [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'"
+               alt="画像がありません" class="object-center object-cover" width="100%">
+        </div>
+      </div>
+
+      <div class="max-w-2xl mx-auto lg:max-w-none lg:row-end-2 lg:row-span-2 lg:col-span-3">
+        <div class="flex flex-col-reverse">
+          <h1 class="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">{{ discography.title }}</h1>
+          <!-- スクリーンリーダー用 -->
+          <h2 class="sr-only" id="information-heading">リリースについての詳細</h2>
+          <p class="text-sm text-gray-500 mt-8 mb-2">{{ discography.release | date: 'YYYY年M月d日'}}リリース</p>
+        </div>
+
+        <!-- 紹介文 -->
+        <div [innerHTML]="discography.detail | markdown" class="detail">
+          <p>読み込み中...</p>
+        </div>
+
+        <!-- 購入リンクがある場合 -->
+        <ng-template [ngIf]="discography.buyComponent.length !== 0">
+          <div class="border-t border-gray-200 mt-10 pt-10">
+            <h3 class="text-gray-900">Buy</h3>
+            <div class="prose prose-sm text-gray-500">
+              <div class="buy-links">
+                <ng-template [ngForOf]="discography.buyComponent" let-dl ngFor>
+                  <a [href]="dl.url" target="_blank">{{ dl.store }}</a>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
+        <!-- DLまたはストリーミング配信用リンクがある場合 -->
+        <ng-template [ngIf]="discography.dlComponent.length !== 0">
+          <div class="border-t border-gray-200 mt-10 pt-10">
+            <h3 class="text-gray-900">Download / Streaming</h3>
+            <div class="prose prose-sm text-gray-500">
+              <div class="buy-links">
+                <ng-template [ngForOf]="discography.dlComponent" let-dl ngFor>
+                  <a [href]="dl.url" target="_blank">{{ dl.name }}</a>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
+        <div class="border-t border-gray-200 mt-10 pt-10">
+          <h3 class="text-gray-900">Share</h3>
+          <ul class="flex items-center space-x-6 mt-4" role="list">
+            <li>
+              <button (cbOnSuccess)="Notification.show('楽曲情報をコピーしました！')"
+                      [cbContent]="'「' + discography.title + '」\n' + url"
+                      class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500" ngxClipboard>
+
+                <span class="sr-only">このページのURLをコピーします</span>
+                <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path clip-rule="evenodd"
+                        d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z"
+                        fill-rule="evenodd"/>
+                </svg>
+              </button>
+            </li>
+            <li>
+              <a [href]="'https://twitter.com/intent/tweet?text=「' + discography.title + '」%0a&url=' + url"
+                 class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500" target="_blank">
+                <span class="sr-only">Twitterでこのページを共有します</span>
+                <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84"/>
+                </svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+
+      <div class="w-full max-w-2xl mx-auto mt-16 lg:max-w-none lg:mt-0 lg:col-span-4">
+        <div class="aspect-video hidden">
+          <!--
+            動画埋め込み比率保持クラス出力用
+            Tailwindは使ってないクラスを出力してくれないので
+          -->
+        </div>
+
+        <!-- デモ -->
+        <ng-template [ngIf]="discography.demoComponent.length !== 0">
+          <h2 class="text-2xl text-gray-900">Demo</h2>
+          <div class="prose prose-sm text-gray-500">
+            <ng-template [ngForOf]="discography.demoComponent" let-demo ngFor>
+              <div class="my-4">
+                <p class="text-sm text-gray-500">{{ demo.title }}</p>
+                <div [innerHTML]="demo.iframe | sanitizeHtml"></div>
+              </div>
+            </ng-template>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>

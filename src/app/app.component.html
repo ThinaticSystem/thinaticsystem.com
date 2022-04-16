@@ -1,24 +1,129 @@
-<header>
-  <a routerLink='/' class='siteLogo'><img src='/assets/site_logo.svg' alt='㈲しなちくシステム' width="300" height="66"></a>
-</header>
-<router-outlet></router-outlet>
-<a (click)="share()" id='shareButton'>ページをシェア<br>（クリップボードにコピーされます）</a><textarea id='shareText'></textarea>
-<footer>
-  <ul id='pageList'>
-    <li><a routerLink="/about">About</a></li>
-    <li><a routerLink="/discography">Discography</a></li>
-    <li><a routerLink='/glossary'>用語集</a></li>
-  </ul>
-  <div id='siteInfo'>
-    <a routerLink='/' class='siteLogo' id='home'><img src='/assets/site_logo.svg' alt='㈲しなちくシステム' width="300" height="66"></a>
-    <p id='sangyo'>{{sangyo.contents![0].text}}</p>
-  </div>
-</footer>
+<!-- ローディングのオーバーレイ -->
+<div [class.loaded]="!loadingService.loading" class="loading">
+  <div class="layer1"></div>
+  <div class="layer2"></div>
+  <img [src]="enviroment.cmsUrl + '/uploads/loading_2c53045083.gif'" alt="読込中...">
+</div>
 
-<ng-template [ngIf]="!cookie">
-  <div id='cookieModal'>
-    <p id='cookieModalText'>当サイトでは、サイトの利便性向上のためクッキー(Cookie)以外全部を使用しています。<br>サイトのクッキー(Cookie)の使用に関しては、「<a
-        href='javascript:alert("くっきー(？)なぞ使っておらぬのじゃ🐾");'>プライバシーポリシー</a>」をお読みください。</p>
-    <button id='buttonCookieOk' (click)="cookie=true">OK</button>
+<!-- 通知オーバーレイ -->
+<div aria-live="assertive" class="notifications">
+  <div class="w-full flex flex-col items-center space-y-4 sm:items-end">
+    <div
+      [ngClass]="{'animate__slideInRight': notification.showNotification, 'animate__slideOutRight': !notification.showNotification}"
+      class="notification animate__animated">
+      <div class="px-4 py-8">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <!-- Heroicon name: outline/check-circle -->
+            <svg aria-hidden="true" class="h-6 w-6 text-green-400" fill="none" stroke="currentColor"
+                 viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"
+                    stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="ml-3 w-0 flex-1 pt-0.5">
+            <p class="text-sm font-medium text-gray-900">{{notification.message}}</p>
+          </div>
+          <div class="ml-4 flex-shrink-0 flex">
+            <button (click)="notification.showNotification = false"
+                    class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              <span class="sr-only">通知を閉じる</span>
+              <!-- Heroicon name: solid/x -->
+              <svg aria-hidden="true" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path clip-rule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      fill-rule="evenodd"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</ng-template>
+</div>
+
+
+<div class="relative">
+  <!-- スクリーンリーダー用 -->
+  <span class="sr-only">このウェブサイトはスクリーンリーダーに対応しています</span>
+  <div class="max-w-7xl mx-auto">
+    <header>
+      <div class="relative pt-6 px-4 sm:px-6 lg:px-8">
+        <nav class="relative flex items-center justify-between sm:h-10 lg:justify-start">
+          <div class="flex items-center flex-grow flex-shrink-0 lg:flex-grow-0">
+            <div class="flex items-center justify-between w-full md:w-auto">
+
+              <button (click)="navigate.go('/')">
+                <span class="sr-only">しなちくシステムの公式サイトです</span>
+                <img class="h-9" src="https://cms.thinaticsystem.com/uploads/logo_fe74b72070.svg" alt="しなちくシステムの公式サイトです">
+              </button>
+              <!-- モバイルメニュー開閉用ボタン -->
+              <div class="-mr-2 flex items-center md:hidden">
+                <button (click)="openMenu = true"
+                        class="bg-white rounded-md p-2 inline-flex items-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-300"
+                        type="button">
+                  <span class="sr-only">メニューを開きます</span>
+                  <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                       stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 6h16M4 12h16M4 18h16"/>
+                  </svg>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- PC用メニュー -->
+          <div class="pc-menu">
+            <button (click)="navigate.go(link.url)" *ngFor="let link of headerLinks">{{link.name}}</button>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <!-- モバイル用メニュー -->
+    <div (clickOutside)="openMenu = false" *ngIf="openMenu" [delayClickOutsideInit]="true"
+         class="absolute z-10 top-0 inset-x-0 p-2 transition transform origin-top-right md:hidden animate__animated animate__fadeIn">
+      <div class="rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 overflow-hidden">
+        <div class="px-5 pt-4 flex items-center justify-between">
+          <div>
+            <h1>ここにロゴ</h1>
+          </div>
+          <div class="-mr-2">
+            <button (click)="openMenu = false"
+                    class="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-300"
+                    type="button">
+              <!-- スクリーンリーダー用 -->
+              <span class="sr-only">メニューを閉じます</span>
+              <!-- Heroicon name: outline/x -->
+              <svg aria-hidden="true" class="h-6 w-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="mobile-menu">
+          <a (click)="openMenu = false;navigate.go(link.url)" *ngFor="let link of headerLinks">{{link.name}}</a>
+        </div>
+      </div>
+    </div>
+
+
+    <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-8 lg:mt-10 lg:px-8 xl:mt-16 max-h-full">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
+
+<footer>
+  <nav aria-label="footer">
+    <ng-template [ngForOf]="footerLinks" let-link ngFor>
+      <div>
+        <a [href]="link.url" target="_blank">{{ link.name }}</a>
+      </div>
+    </ng-template>
+  </nav>
+  <p>&copy; {{ year }} しなちくシステム</p>
+</footer>
