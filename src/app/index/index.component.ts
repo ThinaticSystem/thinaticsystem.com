@@ -65,6 +65,10 @@ export class IndexComponent implements OnInit, OnDestroy {
     this.debobi = s + m;
   }
 
+  openNewTab(url: string): void {
+    window.open(url, '_blank');
+  }
+
   ngOnDestroy(): void {
     this.loadingService.loading = true;
   }
