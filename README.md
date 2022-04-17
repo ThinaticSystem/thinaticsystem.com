@@ -6,7 +6,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 ## Branches
 
 - master\
-  本番
+  本番\
   https://thinaticsystem.com でこのブランチが動きます\
   下のdevelopブランチがいい感じ™に温まるとこちらにマージされます
 - develop\
