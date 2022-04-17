@@ -6,10 +6,22 @@
   }
 }
 
-.detail {
+.description {
   @apply text-gray-500 mt-6;
 
   ::ng-deep p {
     @apply mb-3;
+  }
+}
+
+.detail {
+  @apply mt-3 grid grid-cols-1 sm:grid-cols-4;
+
+  .body {
+    @apply text-gray-500 col-span-3;
+
+    &.link {
+      @apply text-green-500 hover:text-green-600;
+    }
   }
 }
