@@ -2,7 +2,7 @@
   @apply my-3 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2;
 
   a {
-    @apply w-full bg-emerald-100 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-emerald-700 hover:bg-emerald-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-emerald-500 transition;
+    @apply w-full bg-eclair-100 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-eclair-700 hover:bg-eclair-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-eclair-500 transition;
   }
 }
 
@@ -21,7 +21,7 @@
     @apply text-gray-500 col-span-3;
 
     &.link {
-      @apply text-green-500 hover:text-green-600;
+      @apply text-eclair-500 hover:text-eclair-600;
     }
   }
 }
