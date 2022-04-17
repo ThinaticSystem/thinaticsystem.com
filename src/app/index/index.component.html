@@ -47,7 +47,7 @@
     <ul class="mt-5 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-2 auto-cols-auto" role="list">
 
       <ng-template [ngForOf]="notifications | orderBy: 'published_at' : true" let-data ngFor>
-        <a [href]="data.url" target="_blank">
+        <a (click)="data.urlOrigin === origin ? navigate.go(data.url) : openNewTab(data.url)" class="cursor-pointer">
           <li class="col-span1 flex shadow-md rounded-md h-full">
             <div class="flex-1 flex items-center justify-between border border-gray-200 bg-white rounded-md">
 
