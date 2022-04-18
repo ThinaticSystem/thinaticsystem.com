@@ -39,22 +39,25 @@ export class AppComponent {
   footerLinks = [
     {
       name: 'ActivityPub',
-      url: 'https://honi.club/@ThinaticSystem/'
+      url: 'https://honi.club/@ThinaticSystem'
     }, {
       name: 'SoundCloud',
-      url: 'https://soundcloud.com/ThinaticSystem/'
+      url: 'https://soundcloud.com/thinaticsystem'
     }, {
       name: 'Discord',
       url: 'https://discord.com/users/260449322183819264'
     }, {
       name: 'Twitter',
-      url: 'https://twitter.com/ThinaticSystem/'
+      url: 'https://twitter.com/ThinaticSystem'
     }, {
-      name: 'Feed エサ',
-      url: 'http://amzn.asia/d8Q1ib7'
+      name: 'Instagram',
+      url: 'https://www.instagram.com/thinaticsystem/'
     }, {
       name: 'Patreon',
       url: 'https://www.patreon.com/ThinaticSystem'
+    }, {
+      name: 'エサをやる',
+      url: 'http://amzn.asia/d8Q1ib7'
     }
   ];
 
