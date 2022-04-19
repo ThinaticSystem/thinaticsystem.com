@@ -1,0 +1,19 @@
+.article {
+  @apply relative rounded-xl shadow-md hover:shadow-lg transition-all aspect-video overflow-hidden bg-cover bg-center w-full;
+
+  .card-gradient {
+    @apply absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black opacity-75 pointer-events-none
+  }
+
+  .article-info {
+    @apply absolute bottom-0 p-3;
+
+    .title {
+      @apply mt-4 text-base font-medium text-white font-semibold space-x-8;
+    }
+
+    .date {
+      @apply text-sm text-gray-200 my-1;
+    }
+  }
+}

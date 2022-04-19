@@ -4,8 +4,8 @@ import {CommonModule} from '@angular/common';
 import {DetailRoutingModule} from './detail-routing.module';
 import {DetailComponent} from './detail.component';
 import {MarkdownModule} from "ngx-markdown";
-import {ClipboardModule} from "ngx-clipboard";
 import {SanitizeHtmlPipe} from "../../pipes/sanitize-html.pipe";
+import {ShareModule} from "../../components/share/share.module";
 
 
 @NgModule({
@@ -16,8 +16,8 @@ import {SanitizeHtmlPipe} from "../../pipes/sanitize-html.pipe";
   imports: [
     CommonModule,
     DetailRoutingModule,
+    ShareModule,
     MarkdownModule.forRoot(),
-    ClipboardModule,
   ],
 })
 export class DetailModule {

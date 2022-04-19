@@ -1,0 +1,22 @@
+<ng-template [ngIf]="data">
+  <a [routerLink]="'/blog/article/' + data.id" [style.background-image]="'url(' + environment.cmsUrl + (data.eyecatch ? data.eyecatch.url :  '/uploads/small_noimage_f16114bd25.png') + ')'"
+     class="article">
+    <!-- グラデーション部分 -->
+    <div aria-hidden="true" class="card-gradient"></div>
+
+    <!-- 記事情報 -->
+    <div class="article-info">
+      <div class="title">{{data.title}}</div>
+      <p class="date">{{ data.created_at | date: 'YYYY/MM/dd' }}</p>
+
+      <!-- タグ一覧 -->
+      <ng-template [ngIf]="data.blogTags && data.blogTags.length !== 0">
+        <div class="tag">
+          <ng-template [ngForOf]="data.blogTags" let-tag ngFor>
+            <a [routerLink]="'/blog/tag/' + tag?.tag">{{tag?.tag}}</a>
+          </ng-template>
+        </div>
+      </ng-template>
+    </div>
+  </a>
+</ng-template>
