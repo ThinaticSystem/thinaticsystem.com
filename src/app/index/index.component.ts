@@ -2,10 +2,10 @@ import {HttpClient} from '@angular/common/http';
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Title} from '@angular/platform-browser';
 import {environment} from 'src/environments/environment';
-import {LoadingService} from "../service/loading.service";
-import {NavigateService} from "../service/navigate.service";
+import {LoadingService} from "../services/loading.service";
+import {NavigateService} from "../services/navigate.service";
 import {ClipboardService} from "ngx-clipboard";
-import {NotificationService} from "../service/notification.service";
+import {NotificationService} from "../services/notification.service";
 
 export interface Notifications {
   title: string;
