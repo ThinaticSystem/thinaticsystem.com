@@ -14,12 +14,3 @@
     }
   }
 }
-
-
-.go-home {
-  @apply mt-6;
-
-  a {
-    @apply w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md md:py-4 md:text-lg md:px-10 transition-colors text-black bg-eclair-200 hover:bg-eclair-300;
-  }
-}

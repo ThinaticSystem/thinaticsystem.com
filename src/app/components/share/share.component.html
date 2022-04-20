@@ -1,0 +1,26 @@
+<h3 class="text-gray-900">Share</h3>
+<ul class="flex items-center space-x-6 mt-4" role="list">
+  <li>
+    <button (cbOnSuccess)="Notification.show(share.copyMsg)"
+            [cbContent]="share.text + '\n' + share.url"
+            class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500" ngxClipboard>
+
+      <span class="sr-only">このページのURLをコピーします</span>
+      <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path clip-rule="evenodd"
+              d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z"
+              fill-rule="evenodd"/>
+      </svg>
+    </button>
+  </li>
+  <li>
+    <a [href]="'https://twitter.com/intent/tweet?text=' + share.text + '%0a&url=' + share.url"
+       class="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-500" target="_blank">
+      <span class="sr-only">Twitterでこのページを共有します</span>
+      <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path
+          d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84"/>
+      </svg>
+    </a>
+  </li>
+</ul>
