@@ -4,8 +4,8 @@ import {Blog} from "../../interfaces/blog";
 import {environment} from "../../../environments/environment";
 import {HttpClient} from "@angular/common/http";
 import {Title} from "@angular/platform-browser";
-import {LoadingService} from "../../service/loading.service";
-import {NavigateService} from "../../service/navigate.service";
+import {LoadingService} from "../../services/loading.service";
+import {NavigateService} from "../../services/navigate.service";
 
 @Component({
   selector: 'app-article',

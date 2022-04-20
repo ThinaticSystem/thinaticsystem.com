@@ -1,6 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Title} from '@angular/platform-browser';
-import {LoadingService} from "../service/loading.service";
+import {LoadingService} from "../services/loading.service";
 import {HttpClient} from "@angular/common/http";
 import {environment} from "../../environments/environment";
 

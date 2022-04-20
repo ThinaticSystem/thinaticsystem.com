@@ -2,8 +2,8 @@ import {Component, OnInit} from '@angular/core';
 import {environment} from "../../../environments/environment";
 import {HttpClient} from "@angular/common/http";
 import {Title} from "@angular/platform-browser";
-import {LoadingService} from "../../service/loading.service";
-import {NavigateService} from "../../service/navigate.service";
+import {LoadingService} from "../../services/loading.service";
+import {NavigateService} from "../../services/navigate.service";
 import {Blog} from "../../interfaces/blog";
 import {ActivatedRoute} from "@angular/router";
 

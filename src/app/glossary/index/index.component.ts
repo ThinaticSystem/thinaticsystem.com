@@ -1,7 +1,7 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Title} from '@angular/platform-browser';
-import {LoadingService} from "../../service/loading.service";
-import {NavigateService} from "../../service/navigate.service";
+import {LoadingService} from "../../services/loading.service";
+import {NavigateService} from "../../services/navigate.service";
 
 @Component({
   selector: 'app-index',
