@@ -9,6 +9,9 @@ const routes: Routes = [
     path: 'about',
     loadChildren: () => import('./about/about.module').then(m => m.AboutModule)
   }, {
+    path: 'blog',
+    loadChildren: () => import('./blog/blog.module').then(m => m.BlogModule)
+  }, {
     path: 'discography',
     loadChildren: () => import('./discography/discography.module').then(m => m.DiscographyModule)
   }, {

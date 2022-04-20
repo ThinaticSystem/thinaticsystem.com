@@ -43,7 +43,7 @@
 
 <div class="relative mb-12">
   <div class="max-w-7xl mx-auto">
-    <h2 class="text-gray-500 text-5xl tracking-wide">おしらせ</h2>
+    <h2 class="text-gray-500 text-3xl sm:text-4xl md:text-5xl tracking-wide">おしらせ</h2>
     <ul class="mt-5 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-2 auto-cols-auto" role="list">
 
       <ng-template [ngForOf]="notifications | orderBy: 'published_at' : true" let-data ngFor>
@@ -77,9 +77,9 @@
 <div class="relative mb-12">
   <div class="max-w-7xl mx-auto">
     <div class="relative z-2 px-0 py-6 bg-white sm:py-8 md:py-16 lg:w-full lg:py-16 xl:py-20">
-      <h2 class="text-5xl text-gray-500 ">無料ガチャ</h2>
+      <h2 class="text-3xl sm:text-4xl md:text-5xl text-gray-500">無料ガチャ</h2>
       <div class="mt-5 md:grid grid-cols-2 gap-5">
-        <div class="text-4xl border-2 border-gray-400 rounded-md p-2">{{debobi}}</div>
+        <div class="text-2xl sm:text-3xl md:text-4xl border-2 border-gray-400 rounded-md p-2">{{debobi}}</div>
 
         <div class="flex justify-around md:justify-start gap-8 my-8 md:my-auto">
           <button (click)="genDebobi()" class="gen-btn text-gray-500 hover:text-yellow-400 active:text-yellow-500">

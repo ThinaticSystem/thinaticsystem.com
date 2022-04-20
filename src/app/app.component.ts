@@ -27,6 +27,9 @@ export class AppComponent {
       name: 'About',
       url: '/about'
     }, {
+      name: 'Blog',
+      url: '/blog'
+    }, {
       name: 'Discography',
       url: '/discography'
     }, {
