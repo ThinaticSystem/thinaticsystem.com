@@ -14,6 +14,25 @@ export interface Notifications {
   urlOrigin: string;
 }
 
+export interface Patrons {
+  data: Data;
+  links: Links;
+}
+export interface Data {
+  attributes: Attributes;
+  id: string;
+  type: string;
+}
+export interface Attributes {
+  currently_entitled_amount_cents: number;
+  full_name: string;
+  lifetime_support_cents: number;
+  patron_status?: string;
+}
+export interface Links {
+  self: string;
+}
+
 @Component({
   selector: 'app-index',
   templateUrl: './index.component.html',
@@ -30,6 +49,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   };
 
   debobi!: string;
+  patrons!: Patrons[];
 
   constructor(
     private httpClient: HttpClient,
@@ -55,6 +75,11 @@ export class IndexComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           this.loadingService.loading = false;
         }, 500);
+      });
+
+    this.httpClient.get<Patrons[]>(`${environment.publicUrl}/workers/patrons`)
+      .subscribe((data) => {
+        this.patrons = data
       });
   }
 
