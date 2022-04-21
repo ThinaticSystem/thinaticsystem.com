@@ -4,9 +4,9 @@ import {HttpClient} from "@angular/common/http";
 import {Discography} from "../../interfaces/discography";
 import {environment} from "../../../environments/environment";
 import {DomSanitizer, Title} from "@angular/platform-browser";
-import {LoadingService} from "../../service/loading.service";
+import {LoadingService} from "../../services/loading.service";
 import {ClipboardService} from "ngx-clipboard";
-import {NotificationService} from "../../service/notification.service";
+import {NotificationService} from "../../services/notification.service";
 
 @Component({
   selector: 'app-detail',

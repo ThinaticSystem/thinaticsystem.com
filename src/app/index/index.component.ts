@@ -2,16 +2,35 @@ import {HttpClient} from '@angular/common/http';
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Title} from '@angular/platform-browser';
 import {environment} from 'src/environments/environment';
-import {LoadingService} from "../service/loading.service";
-import {NavigateService} from "../service/navigate.service";
+import {LoadingService} from "../services/loading.service";
+import {NavigateService} from "../services/navigate.service";
 import {ClipboardService} from "ngx-clipboard";
-import {NotificationService} from "../service/notification.service";
+import {NotificationService} from "../services/notification.service";
 
 export interface Notifications {
   title: string;
   url: string;
   published_at: string;
   urlOrigin: string;
+}
+
+export interface Patrons {
+  data: Data;
+  links: Links;
+}
+export interface Data {
+  attributes: Attributes;
+  id: string;
+  type: string;
+}
+export interface Attributes {
+  currently_entitled_amount_cents: number;
+  full_name: string;
+  lifetime_support_cents: number;
+  patron_status?: string;
+}
+export interface Links {
+  self: string;
 }
 
 @Component({
@@ -30,6 +49,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   };
 
   debobi!: string;
+  patrons!: Patrons[];
 
   constructor(
     private httpClient: HttpClient,
@@ -55,6 +75,11 @@ export class IndexComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           this.loadingService.loading = false;
         }, 500);
+      });
+
+    this.httpClient.get<Patrons[]>(`${environment.publicUrl}/workers/patrons`)
+      .subscribe((data) => {
+        this.patrons = data
       });
   }
 

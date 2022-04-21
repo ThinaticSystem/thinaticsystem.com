@@ -1,9 +1,9 @@
 import {Component} from '@angular/core';
 import {ClipboardService} from 'ngx-clipboard';
-import {LoadingService} from "./service/loading.service";
+import {LoadingService} from "./services/loading.service";
 import {environment} from "../environments/environment";
-import {NavigateService} from "./service/navigate.service";
-import {NotificationService} from "./service/notification.service";
+import {NavigateService} from "./services/navigate.service";
+import {NotificationService} from "./services/notification.service";
 
 @Component({
   selector: 'app-root',

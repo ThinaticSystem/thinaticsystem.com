@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {NotificationService} from "../../service/notification.service";
+import {NotificationService} from "../../services/notification.service";
 
 interface Share {
   text: string;

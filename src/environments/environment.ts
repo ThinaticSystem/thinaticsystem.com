@@ -5,6 +5,7 @@
 export const environment = {
   production: false,
   cmsUrl: 'https://cms.thinaticsystem.com',
+  publicUrl: 'https://thinaticsystem.com',
 };
 
 /*

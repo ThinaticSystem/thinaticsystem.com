@@ -9,6 +9,7 @@ import {ShareModule} from "../components/share/share.module";
 import {NgxPaginationModule} from "ngx-pagination";
 import {TagComponent} from "./tag/tag.component";
 import {BlogCardModule} from "../components/blog-card/blog-card.module";
+import {MarkdownRendererModule} from "../modules/markdown-renderer/markdown-renderer.module";
 
 @NgModule({
   declarations: [
@@ -22,6 +23,7 @@ import {BlogCardModule} from "../components/blog-card/blog-card.module";
     ShareModule,
     BlogCardModule,
     MarkdownModule.forRoot(),
+    MarkdownRendererModule,
     NgxPaginationModule,
     OrderModule,
   ]
