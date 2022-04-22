@@ -115,9 +115,11 @@
   <div class="max-w-7xl mx-auto">
     <h2 class="text-5xl text-gray-500">支援者の方々</h2>
     <div class="text-lg mt-5">
-      <ng-template [ngForOf]="patrons | orderBy: 'data.attributes.lifetime_support_cents' : true" let-patron ngFor>
-        {{patron.data.attributes.full_name}}
-      </ng-template>
+      <ol>
+        <ng-template [ngForOf]="patrons | orderBy: 'data.attributes.lifetime_support_cents' : true" let-patron ngFor>
+          <li class="inline-block mr-5">{{patron.data.attributes.full_name}}</li>
+        </ng-template>
+      </ol>
     </div>
   </div>
 </div>
