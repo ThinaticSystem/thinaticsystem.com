@@ -119,6 +119,8 @@
         <ng-template [ngForOf]="patrons | orderBy: 'data.attributes.lifetime_support_cents' : true" let-patron ngFor>
           <li class="inline-block mr-5">{{patron.data.attributes.full_name}}</li>
         </ng-template>
+        <li class="inline-block mr-5"><a (click)="openNewTab('https://www.patreon.com/bePatron?u=49764746')"
+            class="cursor-pointer">あなたのお名前を追加</a></li>
       </ol>
     </div>
   </div>
