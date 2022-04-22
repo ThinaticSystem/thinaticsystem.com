@@ -79,7 +79,9 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     this.httpClient.get<Patrons[]>(`${environment.publicUrl}/workers/patrons`)
       .subscribe((data) => {
-        this.patrons = data.filter(patron => patron.data.attributes.patron_status === 'active_patron');
+        this.patrons = data.filter(
+          patron => ['active_patron', 'former_patron'].includes(patron.data.attributes.patron_status ?? '')
+        );
       });
   }
 
