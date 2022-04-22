@@ -117,7 +117,7 @@
     <div class="text-lg mt-5">
       <ol>
         <ng-template [ngForOf]="patrons | orderBy: 'data.attributes.lifetime_support_cents' : true" let-patron ngFor>
-          <li class="inline mr-5">{{patron.data.attributes.full_name}}</li>
+          <li class="inline-block mr-5">{{patron.data.attributes.full_name}}</li>
         </ng-template>
       </ol>
     </div>
