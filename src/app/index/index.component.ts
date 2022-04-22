@@ -71,10 +71,6 @@ export class IndexComponent implements OnInit, OnDestroy {
           each.urlOrigin = new URL(each.url, location.origin).origin;
           return each
         });
-
-        setTimeout(() => {
-          this.loadingService.loading = false;
-        }, 500);
       });
 
     this.httpClient.get<Patrons[]>(`${environment.publicUrl}/workers/patrons`)
@@ -82,6 +78,8 @@ export class IndexComponent implements OnInit, OnDestroy {
         this.patrons = data.filter(
           patron => ['active_patron', 'former_patron'].includes(patron.data.attributes.patron_status ?? '')
         );
+
+        this.loadingService.loading = false;
       });
   }
 
