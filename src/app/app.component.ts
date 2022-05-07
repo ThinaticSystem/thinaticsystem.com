@@ -72,6 +72,17 @@ export class AppComponent {
   ) {
   }
 
+
+  toggleTheme(): void {
+    if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark');
+    }
+  }
+
   share(): void {
     this._clipboardService.copy(document.title + '\n' + location.href);
     alert('コピーしました');
