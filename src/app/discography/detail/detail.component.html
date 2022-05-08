@@ -14,10 +14,12 @@
 
       <div class="max-w-2xl mx-auto lg:max-w-none lg:row-end-2 lg:row-span-2 lg:col-span-3">
         <div class="flex flex-col-reverse">
-          <h1 class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-gray-200 sm:text-3xl">{{ discography.title }}</h1>
+          <h1
+            class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-gray-200 sm:text-3xl">{{ discography.title }}</h1>
           <!-- スクリーンリーダー用 -->
           <h2 class="sr-only" id="information-heading">リリースについての詳細</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-300 mt-8 mb-2">{{ discography.release | date: 'YYYY年M月d日'}}リリース</p>
+          <p class="text-sm text-gray-500 dark:text-gray-300 mt-8 mb-2">{{ discography.release | date: 'YYYY年M月d日'}}
+            リリース</p>
         </div>
 
         <!-- 紹介文 -->
@@ -32,7 +34,8 @@
               <div class="detail">
                 <p>{{ detail.title }}</p>
                 <p *ngIf="!detail.url" class="text-gray-500 dark:text-gray-300 col-span-3">{{ detail.body }}</p>
-                <a *ngIf="detail.url" [href]="detail.url" class="body text-gray-500 dark:text-gray-300 col-span-3 link" target="_blank">
+                <a *ngIf="detail.url" [href]="detail.url" class="body text-gray-500 dark:text-gray-300 col-span-3 link"
+                   target="_blank">
                   <p>{{ detail.body }}</p>
                 </a>
               </div>
