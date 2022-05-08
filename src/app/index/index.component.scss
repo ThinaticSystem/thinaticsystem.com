@@ -10,7 +10,7 @@
   }
 
   p {
-    @apply mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0;
+    @apply mt-3 text-base opacity-50 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0;
   }
 
   .links {
@@ -34,6 +34,9 @@
   }
 }
 
+h2 {
+  @apply text-3xl sm:text-4xl md:text-5xl tracking-wide opacity-60;
+}
 
 .gen-btn {
   @apply w-10 h-10 transition-colors;
