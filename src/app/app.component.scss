@@ -10,7 +10,7 @@
   @apply px-2 pt-2 space-y-1;
 
   a {
-    @apply block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 cursor-pointer;
+    @apply block px-3 py-2 rounded-md text-base font-medium text-opacity-70 hover:text-opacity-90 hover:bg-gray-400 hover:bg-opacity-20 cursor-pointer;
   }
 }
 
@@ -35,7 +35,7 @@ footer {
   }
 
   p {
-    @apply mt-8 text-center text-base text-gray-400;
+    @apply mt-8 text-center text-base opacity-60;
   }
 }
 

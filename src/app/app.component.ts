@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {ClipboardService} from 'ngx-clipboard';
 import {LoadingService} from "./services/loading.service";
 import {environment} from "../environments/environment";
@@ -10,10 +10,13 @@ import {NotificationService} from "./services/notification.service";
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   // Footerコピーライト表示用西暦取得
   year = new Date().getFullYear();
   enviroment = environment;
+
+  // テーマ切り替え
+  darkMode = false;
 
   // モバイルメニュー開閉用
   openMenu = false;
@@ -70,6 +73,26 @@ export class AppComponent {
     public navigate: NavigateService,
     public notification: NotificationService,
   ) {
+  }
+
+
+  ngOnInit(): void {
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+      this.darkMode = true;
+    }
+  }
+
+  toggleTheme(): void {
+    if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light');
+      this.darkMode = false;
+    } else {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark');
+      this.darkMode = true;
+    }
   }
 
   share(): void {
