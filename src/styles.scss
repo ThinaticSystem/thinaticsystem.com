@@ -122,12 +122,10 @@ body {
   }
 
   .layer1 {
-    @apply bg-white;
     transition: height 0.5s;
   }
 
   .layer2 {
-    @apply bg-eclair-300;
     transition: height 1s;
   }
 

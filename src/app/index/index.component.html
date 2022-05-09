@@ -1,18 +1,22 @@
 <!-- 右側ベース背景 -->
-<div class="relative bg-eclair-300 rounded-xl overflow-hidden lg:shadow-lg mb-24">
+<div class="relative bg-eclair-300  rounded-xl overflow-hidden lg:shadow-lg mb-24">
   <div class="max-w-7xl mx-auto">
     <!-- 左側背景 -->
     <div
-      class="relative z-2 px-0 py-6 md:p-12 bg-white dark:bg-gray-800 sm:py-16 md:py-20 lg:max-w-2xl lg:w-full lg:py-28 xl:py-32">
+      class="relative z-2 px-0 py-6 md:p-12 bg-white dark:bg-black dark:bg-opacity-50 sm:py-16 md:py-20 lg:max-w-2xl lg:w-full lg:py-28 xl:py-32">
       <!-- 真ん中の斜め効果 -->
-      <svg class="hidden lg:block absolute right-0 inset-y-0 h-full w-48 text-white transform translate-x-1/2"
+      <svg class="hidden lg:block absolute right-0 inset-y-0 h-full w-48 text-eclair-300 transform translate-x-1/2"
            fill="currentColor" preserveAspectRatio="none" viewBox="0 0 100 100">
         <polygon points="50,0 100,0 50,100 0,100"/>
       </svg>
 
       <div class="big-hero">
-        <h3>ThinaticSystem</h3>
-        <h1>しなちくシステム</h1>
+        <h3
+          class="text-2xl tracking-tight text-eclair-600 dark:text-white dark:text-opacity-60 sm:text-3xl md:text-4xl mb-3 lg:ml-1">
+          ThinaticSystem</h3>
+        <h1
+          class="text-4xl tracking-tight font-extrabold text-eclair-600 dark:text-white dark:text-opacity-75 sm:text-5xl md:text-6xl">
+          しなちくシステム</h1>
         <p>
           と申します。<br>
           趣味で作曲をしております。<br>
@@ -51,7 +55,7 @@
         <a (click)="data.urlOrigin === origin ? navigate.go(data.url) : openNewTab(data.url)" class="cursor-pointer">
           <li class="col-span1 flex shadow-md rounded-md h-full">
             <div
-              class="flex-1 flex items-center justify-between border border-gray-200 bg-white dark:bg-gray-800 rounded-md">
+              class="flex-1 flex items-center justify-between border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md">
 
               <div class="flex-1 px-4 py-8">
                 <p>{{data.title}}</p>
@@ -81,7 +85,8 @@
     <div class="relative z-2 px-0 py-6 bg-white dark:bg-gray-800 sm:py-8 md:py-16 lg:w-full lg:py-16 xl:py-20">
       <h2>無料ガチャ</h2>
       <div class="mt-5 md:grid grid-cols-2 gap-5">
-        <div class="text-2xl sm:text-3xl md:text-4xl border-2 border-gray-400 rounded-md p-2">{{debobi}}</div>
+        <div
+          class="text-2xl sm:text-3xl md:text-4xl border-2 border-gray-300 dark:border-gray-600 rounded-md p-2">{{debobi}}</div>
 
         <div class="flex justify-around md:justify-start gap-8 my-8 md:my-auto">
           <button (click)="genDebobi()" class="gen-btn text-gray-500 hover:text-yellow-400 active:text-yellow-500">

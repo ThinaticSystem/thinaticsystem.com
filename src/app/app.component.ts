@@ -15,6 +15,9 @@ export class AppComponent implements OnInit {
   year = new Date().getFullYear();
   enviroment = environment;
 
+  // テーマ切り替え
+  darkMode = false;
+
   // モバイルメニュー開閉用
   openMenu = false;
 
@@ -76,6 +79,7 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
+      this.darkMode = true;
     }
   }
 
@@ -83,9 +87,11 @@ export class AppComponent implements OnInit {
     if (document.documentElement.classList.contains('dark')) {
       document.documentElement.classList.remove('dark')
       localStorage.setItem('theme', 'light');
+      this.darkMode = false;
     } else {
       document.documentElement.classList.add('dark')
       localStorage.setItem('theme', 'dark');
+      this.darkMode = true;
     }
   }
 

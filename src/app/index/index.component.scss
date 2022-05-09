@@ -1,16 +1,8 @@
 .big-hero {
-  @apply sm:text-center lg:text-left;
-
-  h3 {
-    @apply text-2xl tracking-tight text-eclair-600 sm:text-3xl md:text-4xl mb-3 lg:ml-1;
-  }
-
-  h1 {
-    @apply text-4xl tracking-tight font-extrabold text-eclair-600 sm:text-5xl md:text-6xl;
-  }
+  @apply px-8 sm:text-center lg:text-left;
 
   p {
-    @apply mt-3 text-base opacity-50 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0;
+    @apply mt-3 text-base opacity-60 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0;
   }
 
   .links {
