@@ -79,7 +79,9 @@ export class IndexComponent implements OnInit, OnDestroy {
           patron => ['active_patron', 'former_patron'].includes(patron.data.attributes.patron_status ?? '')
         );
 
-        this.loadingService.loading = false;
+        setTimeout(() => {
+          this.loadingService.loading = false;
+        }, 500);
       });
   }
 
