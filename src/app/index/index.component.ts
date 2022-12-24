@@ -4,8 +4,10 @@ import {Title} from '@angular/platform-browser';
 import {environment} from 'src/environments/environment';
 import {LoadingService} from "../services/loading.service";
 import {NavigateService} from "../services/navigate.service";
-import {ClipboardService} from "ngx-clipboard";
+import {ClipboardModule, ClipboardService} from "ngx-clipboard";
 import {NotificationService} from "../services/notification.service";
+import { CommonModule } from '@angular/common';
+import { OrderModule } from 'ngx-order-pipe';
 
 export interface Notifications {
   title: string;
@@ -37,11 +39,17 @@ export interface Links {
 }
 
 @Component({
+  standalone: true,
   selector: 'app-index',
   templateUrl: './index.component.html',
-  styleUrls: ['./index.component.scss']
+  styleUrls: ['./index.component.scss'],
+  imports: [
+    CommonModule,
+    ClipboardModule,
+    OrderModule,
+  ],
 })
-export class IndexComponent implements OnInit, OnDestroy {
+export default class IndexComponent implements OnInit, OnDestroy {
   notifications!: Notifications[];
   url = location.href;
   origin = location.origin;
@@ -57,7 +65,6 @@ export class IndexComponent implements OnInit, OnDestroy {
   constructor(
     private httpClient: HttpClient,
     private titleService: Title,
-    private clipboard: ClipboardService,
     public loadingService: LoadingService,
     public navigate: NavigateService,
     public notification: NotificationService,
