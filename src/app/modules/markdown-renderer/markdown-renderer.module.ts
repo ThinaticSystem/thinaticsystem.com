@@ -19,9 +19,10 @@ export class MarkdownRendererModule {
     // 処理をカスタマイズするために関数をオーバーライドする
 
     //// 相対リンクの場合はcmsホストに対する相対URLなのでcmsの絶対URLに置換する
+    const imageRenderer = renderer.image;
     renderer.image = (href: string | null, title: string | null, text: string) => {
       const isRelativeUrl = href?.startsWith('/');
-      return renderer.image.call(
+      return imageRenderer.call(
         renderer,
         isRelativeUrl ? `${environment.cmsUrl}${href}` : href,
         title,
