@@ -1,6 +1,7 @@
 import {NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {MarkdownService} from "ngx-markdown";
+import {environment} from 'src/environments/environment'
 
 
 @NgModule({
@@ -13,8 +14,21 @@ export class MarkdownRendererModule {
   constructor(
     private markdownService: MarkdownService
   ) {
-    // Markdownのリンクが外部リンクの場合、aタグのtarget="_blank"を付与する
     const renderer = this.markdownService.renderer;
+
+    // 処理をカスタマイズするために関数をオーバーライドする
+
+    //// 相対リンクの場合はcmsホストに対する相対URLなのでcmsの絶対URLに置換する
+    renderer.image = (href: string | null, title: string | null, text: string) => {
+      const isRelativeUrl = href?.startsWith('/');
+      return renderer.image.call(
+        renderer,
+        isRelativeUrl ? `${environment.cmsUrl}${href}` : href,
+        title,
+        text);
+    };
+
+    //// Markdownのリンクが外部リンクの場合、aタグのtarget="_blank"を付与する
     const linkRenderer = renderer.link;
     renderer.link = (href: string, title, text) => {
       let localLink = false;
