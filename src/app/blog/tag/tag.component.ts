@@ -1,11 +1,12 @@
-import {Component, OnInit} from '@angular/core';
-import {environment} from "../../../environments/environment";
-import {HttpClient} from "@angular/common/http";
-import {Title} from "@angular/platform-browser";
-import {LoadingService} from "../../services/loading.service";
-import {NavigateService} from "../../services/navigate.service";
-import {Blog} from "../../interfaces/blog";
-import {ActivatedRoute} from "@angular/router";
+import { Component, OnInit } from '@angular/core';
+import { environment } from "../../../environments/environment";
+import { HttpClient } from "@angular/common/http";
+import { Title } from "@angular/platform-browser";
+import { LoadingService } from "../../services/loading.service";
+import { NavigateService } from "../../services/navigate.service";
+import { Blog } from "../../interfaces/blog";
+import { ActivatedRoute } from "@angular/router";
+import { filter, from, mergeMap, tap } from 'rxjs';
 
 interface TagFilter {
   blogTags?: (BlogTags | null)[] | null;
@@ -51,17 +52,18 @@ export class TagComponent implements OnInit {
 
     // ブログ情報の取得
     this.httpClient.get<Blog[]>(`${environment.cmsUrl}/blogs`)
-      .subscribe((data) => {
-        data.forEach((blog) => {
-          if (blog.blogTags) {
-            blog.blogTags.forEach((blogTag) => {
-              if (blogTag?.tag.includes(<string>this.tag)) {
-                this.blogs.push(blog);
-                console.log(blog);
-              }
-            });
-          }
-        });
+      .pipe(
+        // Blog[]のストリームをBlogのストリームへ変換
+        mergeMap((list) => from(list)),
+        // タグが合致するものだけに絞る
+        filter((blog) =>
+          blog.blogTags?.some(
+            tagEntry => tagEntry?.tag === this.tag!
+          ) ?? false
+        ),
+        tap((blog) => this.blogs.push(blog)),
+      )
+      .subscribe((_data) => {
         this.loadingService.loading = false;
       });
   }
