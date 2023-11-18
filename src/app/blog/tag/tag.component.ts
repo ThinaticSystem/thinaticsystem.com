@@ -24,7 +24,7 @@ interface BlogTags {
 export class TagComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
 
-  blogs = signal<Blog[]>([]);
+  blogs = signal<Blog[] | null>(null);
   environment = environment;
   tag = "";
 
