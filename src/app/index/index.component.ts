@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ClipboardModule } from "ngx-clipboard";
 import { NgPipesModule } from 'ngx-pipes';
+import { Subject, map, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { LoadingService } from "../services/loading.service";
 import { NavigateService } from "../services/navigate.service";
@@ -50,7 +51,9 @@ export interface Links {
   ],
 })
 export default class IndexComponent implements OnInit, OnDestroy {
-  notifications!: Notifications[];
+  #dispose$ = new Subject<null>();
+
+  notifications = signal<Notifications[] | null>(null);
   url = location.href;
   origin = location.origin;
 
@@ -60,7 +63,7 @@ export default class IndexComponent implements OnInit, OnDestroy {
   };
 
   debobi!: string;
-  patrons!: Patrons[];
+  patrons = signal<Patrons[] | null>(null);
 
   constructor(
     private httpClient: HttpClient,
@@ -76,23 +79,37 @@ export default class IndexComponent implements OnInit, OnDestroy {
     this.genDebobi();
 
     this.httpClient.get<Notifications[]>(`${environment.cmsUrl}/notifications`)
-      .subscribe((data) => {
-        this.notifications = data.map(each => {
-          each.urlOrigin = new URL(each.url, location.origin).origin;
-          return each
-        });
-
+      .pipe(
+        map((data) =>
+          data.map(each => {
+            each.urlOrigin = new URL(each.url, location.origin).origin;
+            return each;
+          })
+        ),
+        tap((urlReplacedNotifications) => {
+          this.notifications.set(urlReplacedNotifications);
+        }),
+        takeUntil(this.#dispose$),
+      )
+      .subscribe(() => {
         setTimeout(() => {
           this.loadingService.loading = false;
         }, 500);
       });
 
     this.httpClient.get<Patrons[]>(`${environment.publicUrl}/workers/patrons`)
-      .subscribe((data) => {
-        this.patrons = data.filter(
-          patron => ['active_patron', 'former_patron'].includes(patron.data.attributes.patron_status ?? '')
-        );
-      });
+      .pipe(
+        map((data) =>
+          data.filter(patron =>
+            ['active_patron', 'former_patron'].includes(patron.data.attributes.patron_status ?? '')
+          )
+        ),
+        tap((activePatron) => {
+          this.patrons.set(activePatron);
+        }),
+        takeUntil(this.#dispose$),
+      )
+      .subscribe();
   }
 
   genDebobi(): void {
@@ -108,5 +125,7 @@ export default class IndexComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.loadingService.loading = true;
+
+    this.#dispose$.next(null);
   }
 }
