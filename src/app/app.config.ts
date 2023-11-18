@@ -1,7 +1,6 @@
 import { provideHttpClient } from "@angular/common/http";
-import { ApplicationConfig } from "@angular/platform-browser";
+import { ApplicationConfig } from "@angular/core";
 import { provideRouter, withInMemoryScrolling } from "@angular/router";
-import { provideMarkdown } from "ngx-markdown";
 import { routes } from "./routes";
 
 /** スクロールしたらトップに戻る設定 */
@@ -14,6 +13,6 @@ export const appConfig = {
     providers: [
         provideRouter(routes, InMemoryScrollingFeature),
         provideHttpClient(),
-        provideMarkdown(),
+        // provideMarkdown(),
     ],
 } satisfies ApplicationConfig;
