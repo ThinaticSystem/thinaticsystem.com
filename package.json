@@ -13,14 +13,14 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^16.2.12",
-    "@angular/common": "^16.2.12",
-    "@angular/compiler": "^16.2.12",
-    "@angular/core": "^16.2.12",
-    "@angular/forms": "^16.2.12",
-    "@angular/platform-browser": "^16.2.12",
-    "@angular/platform-browser-dynamic": "^16.2.12",
-    "@angular/router": "^16.2.12",
+    "@angular/animations": "^17.0.3",
+    "@angular/common": "^17.0.3",
+    "@angular/compiler": "^17.0.3",
+    "@angular/core": "^17.0.3",
+    "@angular/forms": "^17.0.3",
+    "@angular/platform-browser": "^17.0.3",
+    "@angular/platform-browser-dynamic": "^17.0.3",
+    "@angular/router": "^17.0.3",
     "@scullyio/init": "^2.1.29",
     "@scullyio/ng-lib": "^2.1.0",
     "@scullyio/scully": "^2.1.0",
@@ -35,17 +35,17 @@
     "ngx-pagination": "^5.1.1",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.13.3"
+    "zone.js": "~0.14.2"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^16.2.10",
+    "@angular-devkit/build-angular": "^17.0.1",
     "@angular-eslint/builder": "15.1.0",
     "@angular-eslint/eslint-plugin": "15.1.0",
     "@angular-eslint/eslint-plugin-template": "15.1.0",
     "@angular-eslint/schematics": "15.1.0",
     "@angular-eslint/template-parser": "15.1.0",
-    "@angular/cli": "^16.2.10",
-    "@angular/compiler-cli": "^16.2.12",
+    "@angular/cli": "^17.0.1",
+    "@angular/compiler-cli": "^17.0.3",
     "@tailwindcss/aspect-ratio": "^0.4.0",
     "@types/jasmine": "~3.10.0",
     "@types/node": "^12.11.1",
@@ -61,6 +61,6 @@
     "karma-jasmine-html-reporter": "~1.7.0",
     "postcss": "^8.4.12",
     "tailwindcss": "^3.0.23",
-    "typescript": "~5.1.6"
+    "typescript": "~5.2.2"
   }
 }
