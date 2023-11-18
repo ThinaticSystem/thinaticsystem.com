@@ -1,15 +1,15 @@
-import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {BlogRoutingModule} from './blog-routing.module';
-import {IndexComponent} from "./index/index.component";
-import {ArticleComponent} from "./article/article.component";
-import {MarkdownModule} from "ngx-markdown";
-import {OrderModule} from "ngx-order-pipe";
-import {ShareModule} from "../components/share/share.module";
-import {NgxPaginationModule} from "ngx-pagination";
-import {TagComponent} from "./tag/tag.component";
-import {BlogCardModule} from "../components/blog-card/blog-card.module";
-import {MarkdownRendererModule} from "../modules/markdown-renderer/markdown-renderer.module";
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MarkdownModule } from "ngx-markdown";
+import { NgxPaginationModule } from "ngx-pagination";
+import { NgPipesModule } from 'ngx-pipes';
+import { BlogCardModule } from "../components/blog-card/blog-card.module";
+import { ShareModule } from "../components/share/share.module";
+import { MarkdownRendererModule } from "../modules/markdown-renderer/markdown-renderer.module";
+import { ArticleComponent } from "./article/article.component";
+import { BlogRoutingModule } from './blog-routing.module';
+import { IndexComponent } from "./index/index.component";
+import { TagComponent } from "./tag/tag.component";
 
 @NgModule({
   declarations: [
@@ -25,7 +25,7 @@ import {MarkdownRendererModule} from "../modules/markdown-renderer/markdown-rend
     MarkdownModule.forRoot(),
     MarkdownRendererModule,
     NgxPaginationModule,
-    OrderModule,
+    NgPipesModule,
   ]
 })
 export class BlogModule {

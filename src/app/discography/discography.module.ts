@@ -1,19 +1,19 @@
-import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
 
-import {DiscographyRoutingModule} from './discography-routing.module';
-import {DiscographyComponent} from './discography.component';
-import {OrderModule} from 'ngx-order-pipe';
+import { NgPipesModule } from 'ngx-pipes';
+import { DiscographyRoutingModule } from './discography-routing.module';
+import { DiscographyComponent } from './discography.component';
 
 
 @NgModule({
   declarations: [
-    DiscographyComponent
+    DiscographyComponent,
   ],
   imports: [
     CommonModule,
     DiscographyRoutingModule,
-    OrderModule,
+    NgPipesModule,
   ],
 })
 export class DiscographyModule {
