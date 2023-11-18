@@ -15,7 +15,7 @@ import { NavigateService } from "../../services/navigate.service";
 export class IndexComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
 
-  blogs = signal<Blog[]>([]);
+  blogs = signal<Blog[] | null>(null);
   environment = environment;
 
   // ページ設定部分
