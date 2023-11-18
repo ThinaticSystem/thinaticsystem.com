@@ -51,7 +51,7 @@
     <h2>おしらせ</h2>
     <ul class="mt-5 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-2 auto-cols-auto" role="list">
 
-      <ng-template [ngForOf]="notifications | orderBy: 'published_at' | reverse" let-data ngFor>
+      <ng-template [ngForOf]="notifications() | orderBy: 'published_at' | reverse" let-data ngFor>
         <a (click)="data.urlOrigin === origin ? navigate.go(data.url) : openNewTab(data.url)" class="cursor-pointer">
           <li class="col-span1 flex shadow-md rounded-md h-full">
             <div
@@ -129,7 +129,7 @@
     <h2>支援者の方々</h2>
     <div class="text-lg mt-5">
       <ol>
-        <ng-template [ngForOf]="patrons | orderBy: 'data.attributes.lifetime_support_cents' | reverse" let-patron ngFor>
+        <ng-template [ngForOf]="patrons() | orderBy: 'data.attributes.lifetime_support_cents' | reverse" let-patron ngFor>
           <li class="inline-block mr-5">{{patron.data.attributes.full_name}}</li>
         </ng-template>
       </ol>
