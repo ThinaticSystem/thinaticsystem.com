@@ -134,7 +134,8 @@
     </header>
 
     <!-- モバイル用メニュー -->
-    <div (clickOutside)="openMenu = false" *ngIf="openMenu" [delayClickOutsideInit]="true"
+    <!-- TODO [delayClickOutsideInit]="true" -->
+    <div (clickOutside)="openMenu = false" *ngIf="openMenu"
       class="absolute z-10 top-0 inset-x-0 p-2 transition transform origin-top-right md:hidden animate__animated animate__fadeIn">
       <div class="rounded-lg shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 overflow-hidden">
         <div class="px-5 pt-4 flex items-center justify-between">
