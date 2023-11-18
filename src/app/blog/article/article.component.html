@@ -1,27 +1,27 @@
 <div class="min-h-screen">
-  <ng-template [ngIf]="blog">
-    <ng-template [ngIf]="blog.eyecatch">
-      <div [style.background-image]="'url(' + environment.cmsUrl + blog.eyecatch.url + ')'" class="eyecatch"></div>
+  <ng-template [ngIf]="blog()" let-article>
+    <ng-template [ngIf]="article.eyecatch" let-eyecatch>
+      <div [style.background-image]="'url(' + environment.cmsUrl + eyecatch.url + ')'" class="eyecatch"></div>
     </ng-template>
     <div class="mx-auto py-12 max-w-7xl lg:py-24">
       <div class="space-y-12 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
         <div class="space-y-5 sm:space-y-4">
-          <h2 class="text-3xl font-extrabold tracking-tight sm:text-3xl">{{blog.title}}</h2>
+          <h2 class="text-3xl font-extrabold tracking-tight sm:text-3xl">{{ article.title }}</h2>
 
           <div class="tag">
-            <ng-template [ngForOf]="blog.blogTags" let-tag ngFor>
+            <ng-template [ngForOf]="article.blogTags" let-tag ngFor>
               <a [routerLink]="'/blog/tag/' + tag?.tag">{{tag?.tag}}</a>
             </ng-template>
           </div>
 
           <!-- 共有ボタン -->
           <div class="my-4">
-            <app-share [share]="{text: '「' + blog.title + '」', url: url, copyMsg: '記事のリンクをコピーしました!'}"></app-share>
+            <app-share [share]="{text: '「' + article.title + '」', url: url, copyMsg: '記事のリンクをコピーしました!'}"></app-share>
           </div>
         </div>
         <div class="lg:col-span-2">
-          <p class="text-sm text-gray-500 mb-3">{{blog.created_at | date: 'YYYY年MM月dd日'}}</p>
-          <div [innerHTML]="blog.body | markdown" class="markdown-body"></div>
+          <p class="text-sm text-gray-500 mb-3">{{ article.created_at | date: 'YYYY年MM月dd日' }}</p>
+          <div [innerHTML]="article.body | markdown" class="markdown-body"></div>
         </div>
       </div>
     </div>
