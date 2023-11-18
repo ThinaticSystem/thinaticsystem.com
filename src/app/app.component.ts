@@ -20,7 +20,6 @@ import { NotificationService } from "./services/notification.service";
   /* TODO
    * - ClipboardModule
    * - NgClickOutsideModule
-   * - ScullyLibModule
    */
 })
 export class AppComponent implements OnInit {
