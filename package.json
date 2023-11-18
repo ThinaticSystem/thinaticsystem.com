@@ -31,8 +31,8 @@
     "ng-click-outside2": "^10.0.4",
     "ngx-clipboard": "^15.1.0",
     "ngx-markdown": "^17.1.0",
-    "ngx-order-pipe": "^2.2.0",
     "ngx-pagination": "^5.1.1",
+    "ngx-pipes": "^3.2.2",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.2"

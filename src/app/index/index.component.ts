@@ -1,13 +1,13 @@
-import {HttpClient} from '@angular/common/http';
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {Title} from '@angular/platform-browser';
-import {environment} from 'src/environments/environment';
-import {LoadingService} from "../services/loading.service";
-import {NavigateService} from "../services/navigate.service";
-import {ClipboardModule, ClipboardService} from "ngx-clipboard";
-import {NotificationService} from "../services/notification.service";
 import { CommonModule } from '@angular/common';
-import { OrderModule } from 'ngx-order-pipe';
+import { HttpClient } from '@angular/common/http';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Title } from '@angular/platform-browser';
+import { ClipboardModule } from "ngx-clipboard";
+import { NgPipesModule } from 'ngx-pipes';
+import { environment } from 'src/environments/environment';
+import { LoadingService } from "../services/loading.service";
+import { NavigateService } from "../services/navigate.service";
+import { NotificationService } from "../services/notification.service";
 
 export interface Notifications {
   title: string;
@@ -46,7 +46,7 @@ export interface Links {
   imports: [
     CommonModule,
     ClipboardModule,
-    OrderModule,
+    NgPipesModule,
   ],
 })
 export default class IndexComponent implements OnInit, OnDestroy {

@@ -6,7 +6,7 @@
     <div class="lg:col-span-2">
       <ng-template [ngIfElse]="noContent" [ngIf]="blogs?.length">
         <div class="mt-6 grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 sm:gap-y-10">
-          <ng-template [ngForOf]="blogs | orderBy: 'created_at': true | paginate: { itemsPerPage: 6, currentPage: page}"
+          <ng-template [ngForOf]="blogs | orderBy: 'created_at' | reverse | paginate: { itemsPerPage: 6, currentPage: page}"
                        let-data ngFor>
             <app-blog-card [data]="data"></app-blog-card>
           </ng-template>
