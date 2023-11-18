@@ -1,4 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 import { ClipboardService } from 'ngx-clipboard';
 import { environment } from "../environments/environment";
 import { LoadingService } from "./services/loading.service";
@@ -10,6 +12,10 @@ import { NotificationService } from "./services/notification.service";
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+  ],
   /* TODO
    * - ClipboardModule
    * - NgClickOutsideModule
