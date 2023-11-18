@@ -1,8 +1,10 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {Title} from '@angular/platform-browser';
-import {LoadingService} from "../services/loading.service";
-import {HttpClient} from "@angular/common/http";
-import {environment} from "../../environments/environment";
+import { HttpClient } from "@angular/common/http";
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Title } from '@angular/platform-browser';
+import { MarkdownComponent } from 'ngx-markdown';
+import { environment } from "../../environments/environment";
+import { MarkdownRendererModule } from '../modules/markdown-renderer/markdown-renderer.module';
+import { LoadingService } from "../services/loading.service";
 
 export interface About {
   id: number;
@@ -14,11 +16,16 @@ export interface About {
 }
 
 @Component({
+  standalone: true,
   selector: 'app-about',
   templateUrl: './about.component.html',
-  styleUrls: ['./about.component.scss']
+  styleUrls: ['./about.component.scss'],
+  imports: [
+    MarkdownComponent,
+    MarkdownRendererModule,
+  ],
 })
-export class AboutComponent implements OnInit, OnDestroy {
+export default class AboutComponent implements OnInit, OnDestroy {
   about!: About;
 
   constructor(
