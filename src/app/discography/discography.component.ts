@@ -1,10 +1,11 @@
-import {HttpClient} from '@angular/common/http';
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {Title} from '@angular/platform-browser';
-import {environment} from 'src/environments/environment';
-import {Discography} from "../interfaces/discography";
-import {LoadingService} from "../services/loading.service";
-import {NavigateService} from "../services/navigate.service";
+import { HttpClient } from '@angular/common/http';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Title } from '@angular/platform-browser';
+import { Subject, takeUntil, tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { Discography } from "../interfaces/discography";
+import { LoadingService } from "../services/loading.service";
+import { NavigateService } from "../services/navigate.service";
 
 
 @Component({
@@ -13,7 +14,9 @@ import {NavigateService} from "../services/navigate.service";
   styleUrls: ['./discography.component.scss']
 })
 export class DiscographyComponent implements OnInit, OnDestroy {
-  discographies!: Discography[];
+  #dispose$ = new Subject<null>();
+
+  discographies = signal<Discography[] | null>(null);
   environment = environment;
   loadedImages = 0;
 
@@ -28,13 +31,19 @@ export class DiscographyComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle('Discography | しなちくシステム');
     this.httpClient.get<Discography[]>(`${environment.cmsUrl}/discographies`)
-      .subscribe((data) => {
-        this.discographies = data;
-      });
+      .pipe(
+        tap((data) => {
+          this.discographies.set(data);
+        }),
+        takeUntil(this.#dispose$),
+      )
+      .subscribe();
   }
 
   ngOnDestroy(): void {
     this.loadingService.loading = true;
+
+    this.#dispose$.next(null);
   }
 
   imageLoaded(): void {
@@ -43,5 +52,4 @@ export class DiscographyComponent implements OnInit, OnDestroy {
       this.loadingService.loading = false;
     }
   }
-
 }

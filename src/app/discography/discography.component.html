@@ -7,7 +7,7 @@
       <div class="lg:col-span-2">
         <ul class="space-y-12 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:gap-x-8" role="list">
 
-          <ng-template [ngForOf]="discographies | orderBy: 'release': true" let-data ngFor>
+          <ng-template [ngForOf]="discographies() | orderBy: 'release' | reverse" let-data ngFor>
             <li>
               <div (click)="navigate.go('/discography/' + data.id)" class="space-y-4 cursor-pointer">
                 <div class="artwork">

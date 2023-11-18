@@ -1,14 +1,25 @@
-import {Component, OnInit} from '@angular/core';
-import {ClipboardService} from 'ngx-clipboard';
-import {LoadingService} from "./services/loading.service";
-import {environment} from "../environments/environment";
-import {NavigateService} from "./services/navigate.service";
-import {NotificationService} from "./services/notification.service";
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { ClipboardService } from 'ngx-clipboard';
+import { environment } from "../environments/environment";
+import { LoadingService } from "./services/loading.service";
+import { NavigateService } from "./services/navigate.service";
+import { NotificationService } from "./services/notification.service";
 
 @Component({
+  standalone: true,
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+  ],
+  /* TODO
+   * - ClipboardModule
+   * - NgClickOutsideModule
+   */
 })
 export class AppComponent implements OnInit {
   // Footerコピーライト表示用西暦取得
