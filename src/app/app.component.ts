@@ -1,9 +1,11 @@
-import {Component, OnInit} from '@angular/core';
-import {ClipboardService} from 'ngx-clipboard';
-import {LoadingService} from "./services/loading.service";
-import {environment} from "../environments/environment";
-import {NavigateService} from "./services/navigate.service";
-import {NotificationService} from "./services/notification.service";
+import { Component, OnInit } from '@angular/core';
+import { ClipboardService } from 'ngx-clipboard';
+import { LoadingService } from "./services/loading.service";
+import { environment } from "../environments/environment";
+import { NavigateService } from "./services/navigate.service";
+import { NotificationService } from "./services/notification.service";
+import { ActivatedRoute } from '@angular/router';
+import { filter, map } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +19,7 @@ export class AppComponent implements OnInit {
 
   // テーマ切り替え
   darkMode = false;
+  inboundMode = false;
 
   // モバイルメニュー開閉用
   openMenu = false;
@@ -68,6 +71,7 @@ export class AppComponent implements OnInit {
   ];
 
   constructor(
+    private route: ActivatedRoute,
     private _clipboardService: ClipboardService,
     public loadingService: LoadingService,
     public navigate: NavigateService,
@@ -81,6 +85,27 @@ export class AppComponent implements OnInit {
       document.documentElement.classList.add('dark');
       this.darkMode = true;
     }
+    if (localStorage.getItem('isInboundMode') === 'true') {
+      this.inboundMode = true;
+    }
+
+    this.route.queryParamMap
+      .pipe(
+        filter((map) => map.has('inbound')),
+        map((map) => map.get('inbound')!),
+      )
+      .subscribe((paramValue) => {
+        switch (paramValue) {
+          case '1':
+            localStorage.setItem('isInboundMode', 'true');
+            this.inboundMode = true;
+            break;
+          case '0':
+            localStorage.setItem('isInboundMode', 'false');
+            this.inboundMode = false;
+            break;
+        }
+      });
   }
 
   toggleTheme(): void {
