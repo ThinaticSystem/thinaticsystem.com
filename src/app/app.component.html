@@ -55,7 +55,7 @@
             <button (click)="navigate.go('/')" class="flex-none">
               <span class="sr-only">しなちくシステムの公式サイトです</span>
               <ng-container *ngIf="inboundMode; else normalLogo">
-                <p>いんばうんどロゴ</p>
+                <img src="/assets/site_logo_inbound.jpg" class="h-10" height="229"/>
               </ng-container>
               <ng-template #normalLogo>
                 <svg class="h-10 dark:fill-gray-200" viewBox="0 0 150 81" xml:space="preserve"
