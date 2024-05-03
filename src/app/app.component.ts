@@ -1,18 +1,28 @@
-import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute, RouterOutlet } from '@angular/router';
+import { NgClickOutsideModule } from 'ng-click-outside2';
 import { ClipboardService } from 'ngx-clipboard';
-import { LoadingService } from "./services/loading.service";
+import { Subject, filter, map, takeUntil } from 'rxjs';
 import { environment } from "../environments/environment";
+import { LoadingService } from "./services/loading.service";
 import { NavigateService } from "./services/navigate.service";
 import { NotificationService } from "./services/notification.service";
-import { ActivatedRoute } from '@angular/router';
-import { filter, map } from 'rxjs';
 
 @Component({
+  standalone: true,
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    NgClickOutsideModule,
+  ],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
+  #dispose$ = new Subject<null>();
+
   // Footerコピーライト表示用西暦取得
   year = new Date().getFullYear();
   enviroment = environment;
@@ -93,6 +103,7 @@ export class AppComponent implements OnInit {
       .pipe(
         filter((map) => map.has('inbound')),
         map((map) => map.get('inbound')!),
+        takeUntil(this.#dispose$),
       )
       .subscribe((paramValue) => {
         switch (paramValue) {
@@ -123,5 +134,9 @@ export class AppComponent implements OnInit {
   share(): void {
     this._clipboardService.copy(document.title + '\n' + location.href);
     alert('コピーしました');
+  }
+
+  ngOnDestroy(): void {
+    this.#dispose$.next(null);
   }
 }
