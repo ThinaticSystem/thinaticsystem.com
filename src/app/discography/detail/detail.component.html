@@ -23,7 +23,7 @@
         </div>
 
         <!-- 紹介文 -->
-        <div [innerHTML]="discography.detail | markdown" class="description text-gray-500 dark:text-gray-300">
+        <div [innerHTML]="discography.detail | markdown | async" class="description text-gray-500 dark:text-gray-300">
           <p>読み込み中...</p>
         </div>
 
