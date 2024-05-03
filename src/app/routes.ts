@@ -19,7 +19,7 @@ export const routes = [
         loadChildren: () => import('./glossary/glossary.module').then(m => m.GlossaryModule)
     }, {
         path: '404',
-        loadChildren: () => import('./notfound/notfound.module').then(m => m.NotfoundModule)
+        loadComponent: () => import('./notfound/notfound.component')
     }, {
         path: '**',
         redirectTo: '404'
