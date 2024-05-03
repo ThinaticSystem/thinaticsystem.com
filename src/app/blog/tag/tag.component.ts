@@ -1,8 +1,12 @@
+import { CommonModule } from "@angular/common";
 import { HttpClient } from "@angular/common/http";
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { Title } from "@angular/platform-browser";
 import { ActivatedRoute } from "@angular/router";
+import { NgxPaginationModule } from "ngx-pagination";
+import { NgPipesModule } from "ngx-pipes";
 import { Subject, map, takeUntil, tap } from 'rxjs';
+import { BlogCardComponent } from "src/app/components/blog-card/blog-card.component";
 import { environment } from "../../../environments/environment";
 import { Blog } from "../../interfaces/blog";
 import { LoadingService } from "../../services/loading.service";
@@ -17,11 +21,18 @@ interface BlogTags {
 }
 
 @Component({
+  standalone: true,
   selector: 'app-index',
   templateUrl: './tag.component.html',
-  styleUrls: ['./tag.component.scss']
+  styleUrls: ['./tag.component.scss'],
+  imports: [
+    CommonModule,
+    NgPipesModule,
+    BlogCardComponent,
+    NgxPaginationModule,
+  ],
 })
-export class TagComponent implements OnInit, OnDestroy {
+export default class TagComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
 
   blogs = signal<Blog[] | null>(null);

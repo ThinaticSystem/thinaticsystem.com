@@ -21,7 +21,7 @@
         </div>
         <div class="lg:col-span-2">
           <p class="text-sm text-gray-500 mb-3">{{ article.created_at | date: 'YYYY年MM月dd日' }}</p>
-          <div [innerHTML]="article.body | markdown" class="markdown-body"></div>
+          <div [innerHTML]="article.body | markdown | async" class="markdown-body"></div>
         </div>
       </div>
     </div>

@@ -10,7 +10,7 @@ export const routes = [
         loadComponent: () => import('./about/about.component'),
     }, {
         path: 'blog',
-        loadChildren: () => import('./blog/blog.module').then(m => m.BlogModule)
+        loadChildren: () => import('./blog/blog.routes'),
     }, {
         path: 'discography',
         loadChildren: () => import('./discography/discography.module').then(m => m.DiscographyModule)
