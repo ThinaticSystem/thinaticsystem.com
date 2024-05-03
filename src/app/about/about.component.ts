@@ -4,7 +4,6 @@ import { Title } from '@angular/platform-browser';
 import { MarkdownComponent } from 'ngx-markdown';
 import { Subject, takeUntil, tap } from "rxjs";
 import { environment } from "../../environments/environment";
-import { MarkdownRendererModule } from '../modules/markdown-renderer/markdown-renderer.module';
 import { LoadingService } from "../services/loading.service";
 
 export interface About {
@@ -23,7 +22,6 @@ export interface About {
   styleUrls: ['./about.component.scss'],
   imports: [
     MarkdownComponent,
-    MarkdownRendererModule,
   ],
 })
 export default class AboutComponent implements OnInit, OnDestroy {
