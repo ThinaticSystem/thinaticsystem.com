@@ -3,7 +3,7 @@ import { ApplicationConfig } from "@angular/core";
 import { provideRouter, withInMemoryScrolling } from "@angular/router";
 import { MARKED_OPTIONS, provideMarkdown } from "ngx-markdown";
 import { markedOptionsFactory } from "./providers/markdown/options";
-import { routes } from "./routes";
+import { routes } from "./app.routes";
 
 /** スクロールしたらトップに戻る設定 */
 const InMemoryScrollingFeature = withInMemoryScrolling({
