@@ -1,20 +1,31 @@
+import { CommonModule } from "@angular/common";
 import { HttpClient } from "@angular/common/http";
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { DomSanitizer, Title } from "@angular/platform-browser";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ClipboardService } from "ngx-clipboard";
+import { MarkdownPipe } from "ngx-markdown";
 import { Subject, takeUntil, tap } from 'rxjs';
+import { ShareComponent } from "src/app/components/share/share.component";
+import { SanitizeHtmlPipe } from "src/app/pipes/sanitize-html.pipe";
 import { environment } from "../../../environments/environment";
 import { Discography } from "../../interfaces/discography";
 import { LoadingService } from "../../services/loading.service";
 import { NotificationService } from "../../services/notification.service";
 
 @Component({
+  standalone: true,
   selector: 'app-detail',
   templateUrl: './detail.component.html',
-  styleUrls: ['./detail.component.scss']
+  styleUrls: ['./detail.component.scss'],
+  imports: [
+    CommonModule,
+    SanitizeHtmlPipe,
+    ShareComponent,
+    MarkdownPipe,
+  ],
 })
-export class DetailComponent implements OnInit, OnDestroy {
+export default class DetailComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
 
   discography = signal<Discography | null>(null);
