@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterOutlet } from '@angular/router';
+import { NgClickOutsideModule } from 'ng-click-outside2';
 import { ClipboardService } from 'ngx-clipboard';
 import { filter, map } from 'rxjs';
 import { environment } from "../environments/environment";
@@ -16,11 +17,8 @@ import { NotificationService } from "./services/notification.service";
   imports: [
     CommonModule,
     RouterOutlet,
+    NgClickOutsideModule,
   ],
-  /* TODO
-   * - ClipboardModule
-   * - NgClickOutsideModule
-   */
 })
 export class AppComponent implements OnInit {
   // Footerコピーライト表示用西暦取得
