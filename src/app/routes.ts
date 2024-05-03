@@ -16,7 +16,7 @@ export const routes = [
         loadChildren: () => import('./discography/discography.module').then(m => m.DiscographyModule)
     }, {
         path: 'glossary',
-        loadChildren: () => import('./glossary/glossary.module').then(m => m.GlossaryModule)
+        loadChildren: () => import('./glossary/glossary.routes'),
     }, {
         path: '404',
         loadComponent: () => import('./notfound/notfound.component')
