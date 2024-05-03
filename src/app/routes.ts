@@ -13,7 +13,7 @@ export const routes = [
         loadChildren: () => import('./blog/blog.routes'),
     }, {
         path: 'discography',
-        loadChildren: () => import('./discography/discography.module').then(m => m.DiscographyModule)
+        loadChildren: () => import('./discography/discography.routes')
     }, {
         path: 'glossary',
         loadChildren: () => import('./glossary/glossary.routes'),

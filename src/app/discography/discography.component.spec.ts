@@ -1,6 +1,5 @@
-import {ComponentFixture, TestBed} from '@angular/core/testing';
-
-import {DiscographyComponent} from './discography.component';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import DiscographyComponent from './discography.component';
 
 describe('DiscographyComponent', () => {
   let component: DiscographyComponent;
