@@ -1,14 +1,14 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {LoadingService} from "../services/loading.service";
-import {NavigateService} from "../services/navigate.service";
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { LoadingService } from "../services/loading.service";
+import { NavigateService } from "../services/navigate.service";
 
 @Component({
+  standalone: true,
   selector: 'app-notfound',
   templateUrl: './notfound.component.html',
-  styleUrls: ['./notfound.component.scss']
+  styleUrls: ['./notfound.component.scss'],
 })
-export class NotfoundComponent implements OnInit, OnDestroy {
-
+export default class NotfoundComponent implements OnInit, OnDestroy {
   constructor(
     public loadingService: LoadingService,
     public navigate: NavigateService,
@@ -22,5 +22,4 @@ export class NotfoundComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.loadingService.loading = true;
   }
-
 }
