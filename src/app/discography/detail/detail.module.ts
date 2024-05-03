@@ -1,11 +1,11 @@
-import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
 
-import {DetailRoutingModule} from './detail-routing.module';
-import {DetailComponent} from './detail.component';
-import {MarkdownModule} from "ngx-markdown";
-import {SanitizeHtmlPipe} from "../../pipes/sanitize-html.pipe";
-import {ShareModule} from "../../components/share/share.module";
+import { MarkdownModule } from "ngx-markdown";
+import { ShareComponent } from 'src/app/components/share/share.component';
+import { SanitizeHtmlPipe } from "../../pipes/sanitize-html.pipe";
+import { DetailRoutingModule } from './detail-routing.module';
+import { DetailComponent } from './detail.component';
 
 
 @NgModule({
@@ -16,7 +16,7 @@ import {ShareModule} from "../../components/share/share.module";
   imports: [
     CommonModule,
     DetailRoutingModule,
-    ShareModule,
+    ShareComponent,
     MarkdownModule.forRoot(),
   ],
 })
