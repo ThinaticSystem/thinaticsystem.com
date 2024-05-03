@@ -1,12 +1,16 @@
-import { Component, OnInit } from '@angular/core';
-import { environment } from "../../../environments/environment";
+import { CommonModule } from "@angular/common";
 import { HttpClient } from "@angular/common/http";
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { Title } from "@angular/platform-browser";
+import { ActivatedRoute } from "@angular/router";
+import { NgxPaginationModule } from "ngx-pagination";
+import { NgPipesModule } from "ngx-pipes";
+import { Subject, map, takeUntil, tap } from 'rxjs';
+import { BlogCardComponent } from "src/app/components/blog-card/blog-card.component";
+import { environment } from "../../../environments/environment";
+import { Blog } from "../../interfaces/blog";
 import { LoadingService } from "../../services/loading.service";
 import { NavigateService } from "../../services/navigate.service";
-import { Blog } from "../../interfaces/blog";
-import { ActivatedRoute } from "@angular/router";
-import { filter, from, mergeMap, tap } from 'rxjs';
 
 interface TagFilter {
   blogTags?: (BlogTags | null)[] | null;
@@ -17,14 +21,23 @@ interface BlogTags {
 }
 
 @Component({
+  standalone: true,
   selector: 'app-index',
   templateUrl: './tag.component.html',
-  styleUrls: ['./tag.component.scss']
+  styleUrls: ['./tag.component.scss'],
+  imports: [
+    CommonModule,
+    NgPipesModule,
+    BlogCardComponent,
+    NgxPaginationModule,
+  ],
 })
-export class TagComponent implements OnInit {
-  blogs: Blog[] = [];
+export default class TagComponent implements OnInit, OnDestroy {
+  #dispose$ = new Subject<null>();
+
+  blogs = signal<Blog[] | null>(null);
   environment = environment;
-  tag: string | null = "";
+  tag = "";
 
   // ページ設定部分
   page = 1;
@@ -42,29 +55,35 @@ export class TagComponent implements OnInit {
     this.titleService.setTitle('しなちくシステム');
 
     // URLからブログのタグを取得
-    this.tag = this.route.snapshot.paramMap.get('tag');
+    const tag = this.route.snapshot.paramMap.get('tag');
 
     // なんらかの理由でタグが存在しない場合はブログトップへ
-    if (this.tag === null) {
+    if (tag === null) {
       this.navigate.go('/blog');
       return;
     }
+    this.tag = tag;
 
     // ブログ情報の取得
     this.httpClient.get<Blog[]>(`${environment.cmsUrl}/blogs`)
       .pipe(
-        // Blog[]のストリームをBlogのストリームへ変換
-        mergeMap((list) => from(list)),
         // タグが合致するものだけに絞る
-        filter((blog) =>
-          blog.blogTags?.some(
-            tagEntry => tagEntry?.tag === this.tag!
-          ) ?? false
+        map((list) =>
+          list.filter((article) =>
+            article.blogTags?.some(
+              tagEntry => tagEntry?.tag === this.tag
+            ) ?? false
+          )
         ),
-        tap((blog) => this.blogs.push(blog)),
+        tap((list) => this.blogs.set(list)),
+        takeUntil(this.#dispose$),
       )
-      .subscribe((_data) => {
+      .subscribe(() => {
         this.loadingService.loading = false;
       });
+  }
+
+  ngOnDestroy(): void {
+    this.#dispose$.next(null);
   }
 }

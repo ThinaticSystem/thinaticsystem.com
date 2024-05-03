@@ -1,6 +1,6 @@
 <div class="bg-white dark:bg-gray-800 dark:bg-gray-800">
   <div class="mx-auto py-8 sm:py-16 lg:max-w-7xl">
-    <div *ngIf="discography" class="lg:grid lg:grid-rows-1 lg:grid-cols-7 lg:gap-x-8 lg:gap-y-10 xl:gap-x-16">
+    <div *ngIf="discography(); let discography" class="lg:grid lg:grid-rows-1 lg:grid-cols-7 lg:gap-x-8 lg:gap-y-10 xl:gap-x-16">
       <!-- アートワーク -->
       <div class="lg:row-end-1 lg:col-span-4">
         <div class="rounded-3xl shadow-lg bg-gray-100 overflow-hidden">
@@ -23,7 +23,7 @@
         </div>
 
         <!-- 紹介文 -->
-        <div [innerHTML]="discography.detail | markdown" class="description text-gray-500 dark:text-gray-300">
+        <div [innerHTML]="discography.detail | markdown | async" class="description text-gray-500 dark:text-gray-300">
           <p>読み込み中...</p>
         </div>
 

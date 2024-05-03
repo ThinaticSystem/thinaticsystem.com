@@ -1,20 +1,34 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {ActivatedRoute, Router} from "@angular/router";
-import {HttpClient} from "@angular/common/http";
-import {Discography} from "../../interfaces/discography";
-import {environment} from "../../../environments/environment";
-import {DomSanitizer, Title} from "@angular/platform-browser";
-import {LoadingService} from "../../services/loading.service";
-import {ClipboardService} from "ngx-clipboard";
-import {NotificationService} from "../../services/notification.service";
+import { CommonModule } from "@angular/common";
+import { HttpClient } from "@angular/common/http";
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { DomSanitizer, Title } from "@angular/platform-browser";
+import { ActivatedRoute, Router } from "@angular/router";
+import { ClipboardService } from "ngx-clipboard";
+import { MarkdownPipe } from "ngx-markdown";
+import { Subject, takeUntil, tap } from 'rxjs';
+import { ShareComponent } from "src/app/components/share/share.component";
+import { SanitizeHtmlPipe } from "src/app/pipes/sanitize-html.pipe";
+import { environment } from "../../../environments/environment";
+import { Discography } from "../../interfaces/discography";
+import { LoadingService } from "../../services/loading.service";
+import { NotificationService } from "../../services/notification.service";
 
 @Component({
+  standalone: true,
   selector: 'app-detail',
   templateUrl: './detail.component.html',
-  styleUrls: ['./detail.component.scss']
+  styleUrls: ['./detail.component.scss'],
+  imports: [
+    CommonModule,
+    SanitizeHtmlPipe,
+    ShareComponent,
+    MarkdownPipe,
+  ],
 })
-export class DetailComponent implements OnInit, OnDestroy {
-  discography!: Discography;
+export default class DetailComponent implements OnInit, OnDestroy {
+  #dispose$ = new Subject<null>();
+
+  discography = signal<Discography | null>(null);
   environment = environment;
   url = location.href;
   id?: string | null;
@@ -39,17 +53,26 @@ export class DetailComponent implements OnInit, OnDestroy {
 
     // IDからDiscographyを取得
     this.httpClient.get<Discography>(`${environment.cmsUrl}/discographies/${this.id}`)
-      .subscribe((data) => {
-        this.discography = data;
-        // タイトル設定
-        this.titleService.setTitle(`${this.discography.title} | しなちくシステム`);
-      }, (error) => {
-        // 詳細情報が存在しない場合はDiscography一覧にリダイレクト
-        this.router.navigate(['/discography']);
+      .pipe(
+        tap((data) => {
+          this.discography.set(data);
+          // タイトル設定
+          this.titleService.setTitle(`${data.title} | しなちくシステム`);
+        }),
+        takeUntil(this.#dispose$),
+      )
+      .subscribe({
+        error: (error) => {
+          console.error(error);
+          // 詳細情報が存在しない場合はDiscography一覧にリダイレクト
+          this.router.navigate(['/discography']);
+        },
       });
   }
 
   ngOnDestroy(): void {
     this.loadingService.loading = true;
+
+    this.#dispose$.next(null);
   }
 }
