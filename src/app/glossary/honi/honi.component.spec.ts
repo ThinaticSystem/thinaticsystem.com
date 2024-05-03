@@ -1,6 +1,5 @@
-import {ComponentFixture, TestBed} from '@angular/core/testing';
-
-import {HoniComponent} from './honi.component';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import HoniComponent from './honi.component';
 
 describe('HoniComponent', () => {
   let component: HoniComponent;

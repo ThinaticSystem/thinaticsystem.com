@@ -1,15 +1,15 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {Title} from '@angular/platform-browser';
-import {LoadingService} from "../../services/loading.service";
-import {NavigateService} from "../../services/navigate.service";
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Title } from '@angular/platform-browser';
+import { LoadingService } from "../../services/loading.service";
+import { NavigateService } from "../../services/navigate.service";
 
 @Component({
+  standalone: true,
   selector: 'app-index',
   templateUrl: './index.component.html',
   styleUrls: ['./index.component.scss']
 })
-export class IndexComponent implements OnInit, OnDestroy {
-
+export default class IndexComponent implements OnInit, OnDestroy {
   constructor(
     private titleService: Title,
     public loadingService: LoadingService,
