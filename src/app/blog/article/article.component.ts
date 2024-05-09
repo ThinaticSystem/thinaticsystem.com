@@ -1,10 +1,10 @@
 import { CommonModule } from "@angular/common";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { Title } from "@angular/platform-browser";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { MarkdownPipe } from "ngx-markdown";
-import { Subject, takeUntil, tap } from "rxjs";
+import { Subject, catchError, takeUntil, tap, throwError } from "rxjs";
 import { ShareComponent } from "src/app/components/share/share.component";
 import { environment } from "../../../environments/environment";
 import { Blog } from "../../interfaces/blog";
@@ -48,6 +48,7 @@ export default class ArticleComponent implements OnInit, OnDestroy {
           this.blog.set(data);
           this.titleService.setTitle(`${data.title} | しなちくシステム`);
         }),
+        catchError((error) => redirectWhen404(error, this.navigate)),
         takeUntil(this.#dispose$),
       )
       .subscribe(() => {
@@ -59,3 +60,11 @@ export default class ArticleComponent implements OnInit, OnDestroy {
     this.#dispose$.next(null);
   }
 }
+
+const redirectWhen404 = (error: HttpErrorResponse, navigate: NavigateService) => {
+  if (error.status === 404) {
+    console.error('No such article', error.error.message);
+    navigate.go('/404');
+  }
+  return throwError(() => error.error);
+};
