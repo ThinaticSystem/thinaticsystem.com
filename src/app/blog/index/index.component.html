@@ -4,26 +4,27 @@
       <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl">Blog</h2>
     </div>
     <div class="lg:col-span-2">
-      <ng-template [ngIfElse]="noContent" [ngIf]="blogs()?.length">
-        <div class="mt-6 grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 sm:gap-y-10">
-          <ng-template [ngForOf]="blogs() | orderBy: 'created_at' | reverse | paginate: { itemsPerPage: 6, currentPage: page}"
-                       let-data ngFor>
-            <app-blog-card [data]="data"></app-blog-card>
-          </ng-template>
+      @let articles = blogs();
+      @if (articles?.length) {
+      <div class="mt-6 grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 sm:gap-y-10">
+        @for (article of articles!
+        | paginate: { itemsPerPage: ITEMS_PER_PAGE, currentPage: page,totalItems: totalItems() ?? undefined };
+        track article.id
+        ) {
+        <app-blog-card [data]="article"></app-blog-card>
+        }
+      </div>
+      <div class="text-center my-12">
+        <pagination-controls (pageChange)="page = $event; loadPage($event)"></pagination-controls>
+      </div>
+      } @else {
+      <div class="animate__animated animate__fadeIn">
+        <p class="text-2xl font-semibold text-gray-600">まだ記事がありません</p>
+        <div class="go-home w-fit">
+          <a routerLink="/">サイトトップへ戻る</a>
         </div>
-        <div class="text-center my-12">
-          <pagination-controls (pageChange)="page = $event"></pagination-controls>
-        </div>
-      </ng-template>
-
-      <ng-template #noContent>
-        <div class="animate__animated animate__fadeIn">
-          <p class="text-2xl font-semibold text-gray-600">まだ記事がありません</p>
-          <div class="go-home w-fit">
-            <a routerLink="/">サイトトップへ戻る</a>
-          </div>
-        </div>
-      </ng-template>
+      </div>
+      }
     </div>
   </div>
 </div>
