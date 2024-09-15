@@ -46,12 +46,20 @@ html {
     --color-canvas-default: #ffffff;
     --color-canvas-subtle: #f6f8fa;
     --color-border-default: #d0d7de;
-    --color-border-muted: hsla(210,18%,87%,1);
-    --color-neutral-muted: rgba(175,184,193,0.2);
+    --color-border-muted: hsla(210, 18%, 87%, 1);
+    --color-neutral-muted: rgba(175, 184, 193, 0.2);
     --color-accent-fg: #0969da;
     --color-accent-emphasis: #0969da;
     --color-attention-subtle: #fff8c5;
     --color-danger-fg: #cf222e;
+
+    // FIXME: ダークモード切り替えのスタイル反映が上手くいかなくなったので応急処置
+    background: none;
+    color: var(--color-fg-default);
+
+    blockquote {
+      color: var(--color-fg-muted);
+    }
   }
 
   &.dark {
@@ -93,11 +101,19 @@ html {
       --color-canvas-subtle: #161b22;
       --color-border-default: #30363d;
       --color-border-muted: #21262d;
-      --color-neutral-muted: rgba(110,118,129,0.4);
+      --color-neutral-muted: rgba(110, 118, 129, 0.4);
       --color-accent-fg: #58a6ff;
       --color-accent-emphasis: #1f6feb;
-      --color-attention-subtle: rgba(187,128,9,0.15);
+      --color-attention-subtle: rgba(187, 128, 9, 0.15);
       --color-danger-fg: #f85149;
+
+      // FIXME: ダークモード切り替えのスタイル反映が上手くいかなくなったので応急処置
+      background: none;
+      color: var(--color-fg-default);
+
+      blockquote {
+        color: var(--color-fg-muted);
+      }
     }
   }
 }
@@ -114,7 +130,8 @@ body {
   left: 0;
   z-index: 99999;
 
-  .layer1, .layer2 {
+  .layer1,
+  .layer2 {
     width: 100%;
     height: 100%;
     transition-timing-function: $easing;
@@ -132,7 +149,8 @@ body {
   &.loaded {
     pointer-events: none;
 
-    .layer1, .layer2 {
+    .layer1,
+    .layer2 {
       height: 0;
     }
 
@@ -157,7 +175,10 @@ body {
 }
 
 .markdown-body {
-  ol, ul, menu {
+
+  ol,
+  ul,
+  menu {
     list-style: revert;
   }
 }
@@ -182,7 +203,9 @@ body {
 }
 
 .ngx-pagination {
-  .current, a:hover {
+
+  .current,
+  a:hover {
     @apply rounded-md transition-all;
   }
 }
