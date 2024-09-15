@@ -30,7 +30,9 @@ export default class IndexComponent implements OnInit, OnDestroy {
   environment = environment;
 
   // ページ設定部分
+  ITEMS_PER_PAGE = 6;
   page = 1;
+  totalItems = signal<null | number>(null);
 
   constructor(
     private httpClient: HttpClient,
@@ -43,19 +45,56 @@ export default class IndexComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle('しなちくシステム');
 
-    this.httpClient.get<Blog[]>(`${environment.cmsUrl}/blogs`)
+    this.#fetchPage(1)
       .pipe(
         tap((data) => {
           this.blogs.set(data);
         }),
-        takeUntil(this.#dispose$),
       )
-      .subscribe(() => {
-        this.loadingService.loading = false;
-      });
+      .subscribe();
+
+    this.#fetchTotalItems()
+      .pipe(
+        tap(((count) => {
+          this.totalItems.set(count)
+        })),
+      )
+      .subscribe();
   }
 
   ngOnDestroy(): void {
     this.#dispose$.next(null);
+  }
+
+  loadPage(page: number) {
+    this.#fetchPage(page)
+      .pipe(tap((data) => {
+        this.blogs.set(data)
+      }))
+      .subscribe();
+  }
+
+  #fetchPage(page: number) {
+    this.loadingService.loading = true;
+
+    const queryParams = `${[
+      '_sort=published_at:desc',
+      `_limit=${this.ITEMS_PER_PAGE}`,
+      `_start=${this.ITEMS_PER_PAGE * (page - 1)}`,
+    ].join('&')}`;
+    return this.httpClient.get<Blog[]>(`${environment.cmsUrl}/blogs?${queryParams}`)
+      .pipe(
+        tap(() => {
+          this.loadingService.loading = false;
+        }),
+        takeUntil(this.#dispose$),
+      );
+  }
+
+  #fetchTotalItems() {
+    return this.httpClient.get<number>(`${environment.cmsUrl}/blogs/count`)
+      .pipe(
+        takeUntil(this.#dispose$),
+      );
   }
 }
