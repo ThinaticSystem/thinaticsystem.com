@@ -39,8 +39,8 @@ importers:
         specifier: ^5.6.1
         version: 5.6.1
       marked:
-        specifier: ^9.1.6
-        version: 9.1.6
+        specifier: ^12.0.2
+        version: 12.0.2
       ng-click-outside2:
         specifier: ^16.0.0
         version: 16.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))
@@ -49,7 +49,7 @@ importers:
         version: 16.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))
       ngx-markdown:
         specifier: ^18.0.0
-        version: 18.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(@angular/platform-browser@18.2.4(@angular/animations@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)))(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)))(marked@9.1.6)(rxjs@7.5.7)(zone.js@0.14.10)
+        version: 18.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(@angular/platform-browser@18.2.4(@angular/animations@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)))(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)))(marked@12.0.2)(rxjs@7.5.7)(zone.js@0.14.10)
       ngx-pagination:
         specifier: ^6.0.3
         version: 6.0.3(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))
@@ -3575,9 +3575,9 @@ packages:
     resolution: {integrity: sha512-cKTUFc/rbKUd/9meOvgrpJ2WrNzymt6jfRDdwg5UCnVzv9dTpEj9JS5m3wtziXVCjluIXyL8pcaukYqezIzZQA==}
     engines: {node: ^16.14.0 || >=18.0.0}
 
-  marked@9.1.6:
-    resolution: {integrity: sha512-jcByLnIFkd5gSXZmjNvS1TlmRhCXZjIzHYlaGkPlLIekG55JDR2Z4va9tZwCiP+/RDERiNhMOFu01xd6O5ct1Q==}
-    engines: {node: '>= 16'}
+  marked@12.0.2:
+    resolution: {integrity: sha512-qXUm7e/YKFoqFPYPa3Ukg9xlI5cyAtGmyEIzMfW//m6kXwCy2Ps9DYf5ioijFKQ8qyuscrHoY04iJGctu2Kg0Q==}
+    engines: {node: '>= 18'}
     hasBin: true
 
   mdast-util-from-markdown@1.3.1:
@@ -9019,7 +9019,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  marked@9.1.6: {}
+  marked@12.0.2: {}
 
   mdast-util-from-markdown@1.3.1:
     dependencies:
@@ -9388,12 +9388,12 @@ snapshots:
       ngx-window-token: 7.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))
       tslib: 2.7.0
 
-  ngx-markdown@18.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(@angular/platform-browser@18.2.4(@angular/animations@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)))(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)))(marked@9.1.6)(rxjs@7.5.7)(zone.js@0.14.10):
+  ngx-markdown@18.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(@angular/platform-browser@18.2.4(@angular/animations@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)))(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)))(marked@12.0.2)(rxjs@7.5.7)(zone.js@0.14.10):
     dependencies:
       '@angular/common': 18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7)
       '@angular/core': 18.2.4(rxjs@7.5.7)(zone.js@0.14.10)
       '@angular/platform-browser': 18.2.4(@angular/animations@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)))(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))
-      marked: 9.1.6
+      marked: 12.0.2
       rxjs: 7.5.7
       tslib: 2.7.0
       zone.js: 0.14.10
