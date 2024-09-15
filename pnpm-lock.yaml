@@ -42,8 +42,8 @@ importers:
         specifier: ^9.1.6
         version: 9.1.6
       ng-click-outside2:
-        specifier: ^10.0.4
-        version: 10.0.4(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))
+        specifier: ^16.0.0
+        version: 16.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))
       ngx-clipboard:
         specifier: ^15.1.0
         version: 15.1.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))
@@ -3864,11 +3864,11 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
-  ng-click-outside2@10.0.4:
-    resolution: {integrity: sha512-tuih4WWIFouRc/RtPn1eAm1RHn08CTPlqogvnoj5jldIQjIiPZv8SUEsPwaNQG+7nZ62+5n7sGEsqJk5TPU7ZQ==}
+  ng-click-outside2@16.0.0:
+    resolution: {integrity: sha512-SEpawQ7J2CPI6OXyPW+d+c7WCaK4309JJ+sk8/A71JwzbQrO55NToxKWnutylHhLjbp1bWjKWxk54EmdELZONA==}
     peerDependencies:
-      '@angular/common': '>=13.0.0'
-      '@angular/core': '>=13.0.0'
+      '@angular/common': '>=18.0.0'
+      '@angular/core': '>=18.0.0'
 
   ngx-clipboard@15.1.0:
     resolution: {integrity: sha512-dUJl1cNtdkCqL953oAhP7wmUPFrqW2aDg5OPhwPU9R3cLEdQgU2NbsHEUz4zaPyEopTXu8SR37onVm1Ep8qOHg==}
@@ -9476,7 +9476,7 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  ng-click-outside2@10.0.4(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)):
+  ng-click-outside2@16.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)):
     dependencies:
       '@angular/common': 18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7)
       '@angular/core': 18.2.4(rxjs@7.5.7)(zone.js@0.14.10)
