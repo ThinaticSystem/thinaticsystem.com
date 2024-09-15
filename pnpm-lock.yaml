@@ -45,8 +45,8 @@ importers:
         specifier: ^16.0.0
         version: 16.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))
       ngx-clipboard:
-        specifier: ^15.1.0
-        version: 15.1.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))
+        specifier: ^16.0.0
+        version: 16.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))
       ngx-markdown:
         specifier: ^18.0.0
         version: 18.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(@angular/platform-browser@18.2.4(@angular/animations@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)))(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)))(marked@9.1.6)(rxjs@7.5.7)(zone.js@0.14.10)
@@ -3870,8 +3870,8 @@ packages:
       '@angular/common': '>=18.0.0'
       '@angular/core': '>=18.0.0'
 
-  ngx-clipboard@15.1.0:
-    resolution: {integrity: sha512-dUJl1cNtdkCqL953oAhP7wmUPFrqW2aDg5OPhwPU9R3cLEdQgU2NbsHEUz4zaPyEopTXu8SR37onVm1Ep8qOHg==}
+  ngx-clipboard@16.0.0:
+    resolution: {integrity: sha512-rZ/Eo1PqiKMiyF8tdjhmUkoUu68f7OzBJ7YH1YFeh2RAaNrerTaW8XfFOzppSckjFQqA1fwGSYuTTJlDhDag5w==}
     peerDependencies:
       '@angular/common': '>=13.0.0'
       '@angular/core': '>=13.0.0'
@@ -9482,7 +9482,7 @@ snapshots:
       '@angular/core': 18.2.4(rxjs@7.5.7)(zone.js@0.14.10)
       tslib: 2.7.0
 
-  ngx-clipboard@15.1.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)):
+  ngx-clipboard@16.0.0(@angular/common@18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7))(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10)):
     dependencies:
       '@angular/common': 18.2.4(@angular/core@18.2.4(rxjs@7.5.7)(zone.js@0.14.10))(rxjs@7.5.7)
       '@angular/core': 18.2.4(rxjs@7.5.7)(zone.js@0.14.10)
