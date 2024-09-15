@@ -24,7 +24,7 @@
     "github-markdown-css": "^5.6.1",
     "marked": "^9.1.6",
     "ng-click-outside2": "^16.0.0",
-    "ngx-clipboard": "^15.1.0",
+    "ngx-clipboard": "^16.0.0",
     "ngx-markdown": "^18.0.0",
     "ngx-pagination": "^6.0.3",
     "ngx-pipes": "^3.2.2",
