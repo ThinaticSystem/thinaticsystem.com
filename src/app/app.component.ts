@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterOutlet } from '@angular/router';
-import { NgClickOutsideModule } from 'ng-click-outside2';
+import { NgClickOutsideDelayOutsideDirective } from 'ng-click-outside2';
 import { ClipboardService } from 'ngx-clipboard';
 import { Subject, filter, map, takeUntil } from 'rxjs';
 import { environment } from "../environments/environment";
@@ -17,7 +17,7 @@ import { NotificationService } from "./services/notification.service";
   imports: [
     CommonModule,
     RouterOutlet,
-    NgClickOutsideModule,
+    NgClickOutsideDelayOutsideDirective,
   ],
 })
 export class AppComponent implements OnInit, OnDestroy {
