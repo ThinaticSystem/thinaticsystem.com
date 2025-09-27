@@ -47,7 +47,7 @@
     "@typescript-eslint/eslint-plugin": "^8.44.1",
     "@typescript-eslint/parser": "^8.44.1",
     "autoprefixer": "^10.4.21",
-    "eslint": "^8.57.1",
+    "eslint": "^9.36.0",
     "jasmine-core": "~4.0.1",
     "karma": "~6.3.20",
     "karma-chrome-launcher": "~3.1.1",
