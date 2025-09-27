@@ -110,8 +110,8 @@ export default class IndexComponent implements OnInit, OnDestroy {
   }
 
   genDebobi(): void {
-    const s = this.debobiSource.s[Math.floor(Math.random() * this.debobiSource.s.length)];
-    const m = this.debobiSource.m[Math.floor(Math.random() * this.debobiSource.m.length)];
+    const s = this.debobiSource.s[Math.floor(Math.random() * this.debobiSource.s.length)]!;
+    const m = this.debobiSource.m[Math.floor(Math.random() * this.debobiSource.m.length)]!;
 
     this.debobi = s + m;
   }
