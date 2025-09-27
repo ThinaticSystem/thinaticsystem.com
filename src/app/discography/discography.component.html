@@ -7,15 +7,19 @@
       <div class="lg:col-span-2">
         <ul class="space-y-12 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:gap-x-8" role="list">
 
-          <ng-template [ngForOf]="discographies() | orderBy: 'release' | reverse" let-data ngFor>
+          @for (data of discographies() | orderBy: 'release' | reverse; track data) {
             <li>
               <div (click)="navigate.go('/discography/' + data.id)" class="space-y-4 cursor-pointer">
                 <div class="artwork">
-                  <img (load)="imageLoaded()" *ngIf="data?.artwork"
-                       [alt]="data?.artwork.alternativeText"
-                       [src]="environment.cmsUrl + data?.artwork.formats.small.url" width="100%">
-                  <img (load)="imageLoaded()" *ngIf="!data?.artwork"
-                       [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'" alt="画像がありません">
+                  @if (data?.artwork) {
+                    <img (load)="imageLoaded()"
+                         [alt]="data?.artwork.alternativeText"
+                         [src]="environment.cmsUrl + data?.artwork.formats.small.url" width="100%">
+                  }
+                  @if (!data?.artwork) {
+                    <img (load)="imageLoaded()"
+                         [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'" alt="画像がありません">
+                  }
                 </div>
                 <div class="text-lg leading-6 font-medium space-y-1">
                   <h3>{{ data.title }}</h3>
@@ -23,7 +27,7 @@
                 </div>
               </div>
             </li>
-          </ng-template>
+          }
         </ul>
       </div>
     </div>

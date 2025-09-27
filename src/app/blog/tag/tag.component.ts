@@ -1,16 +1,15 @@
-import { CommonModule } from "@angular/common";
-import { HttpClient } from "@angular/common/http";
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { Title } from "@angular/platform-browser";
-import { ActivatedRoute } from "@angular/router";
-import { NgxPaginationModule } from "ngx-pagination";
-import { NgPipesModule } from "ngx-pipes";
-import { Subject, map, takeUntil, tap } from 'rxjs';
-import { BlogCardComponent } from "src/app/components/blog-card/blog-card.component";
-import { environment } from "../../../environments/environment";
-import { Blog } from "../../interfaces/blog";
-import { LoadingService } from "../../services/loading.service";
-import { NavigateService } from "../../services/navigate.service";
+import {HttpClient} from "@angular/common/http";
+import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {Title} from "@angular/platform-browser";
+import {ActivatedRoute} from "@angular/router";
+import {NgxPaginationModule} from "ngx-pagination";
+import {NgPipesModule} from "ngx-pipes";
+import {map, Subject, takeUntil, tap} from 'rxjs';
+import {BlogCardComponent} from "src/app/components/blog-card/blog-card.component";
+import {environment} from "../../../environments/environment";
+import {Blog} from "../../interfaces/blog";
+import {LoadingService} from "../../services/loading.service";
+import {NavigateService} from "../../services/navigate.service";
 
 interface TagFilter {
   blogTags?: (BlogTags | null)[] | null;
@@ -21,15 +20,14 @@ interface BlogTags {
 }
 
 @Component({
-    selector: 'app-index',
-    templateUrl: './tag.component.html',
-    styleUrls: ['./tag.component.scss'],
-    imports: [
-        CommonModule,
-        NgPipesModule,
-        BlogCardComponent,
-        NgxPaginationModule,
-    ]
+  selector: 'app-index',
+  templateUrl: './tag.component.html',
+  styleUrls: ['./tag.component.scss'],
+  imports: [
+    NgPipesModule,
+    BlogCardComponent,
+    NgxPaginationModule
+  ]
 })
 export default class TagComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
