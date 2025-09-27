@@ -1,103 +1,107 @@
 <div class="bg-white dark:bg-gray-800 dark:bg-gray-800">
   <div class="mx-auto py-8 sm:py-16 lg:max-w-7xl">
-    <div *ngIf="discography(); let discography" class="lg:grid lg:grid-rows-1 lg:grid-cols-7 lg:gap-x-8 lg:gap-y-10 xl:gap-x-16">
-      <!-- アートワーク -->
-      <div class="lg:row-end-1 lg:col-span-4">
-        <div class="rounded-3xl shadow-lg bg-gray-100 overflow-hidden">
-          <img (load)="loadingService.loading = false" *ngIf="discography?.artwork"
-               [alt]="discography.artwork.alternativeText"
-               [src]="environment.cmsUrl + discography.artwork.url" class="aspect-square object-cover" width="100%">
-          <img *ngIf="!discography?.artwork" [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'"
-               alt="画像がありません" class="object-center object-cover" width="100%">
-        </div>
-      </div>
-
-      <div class="max-w-2xl mx-auto lg:max-w-none lg:row-end-2 lg:row-span-2 lg:col-span-3">
-        <div class="flex flex-col-reverse">
-          <h1
-            class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-gray-200 sm:text-3xl">{{ discography.title }}</h1>
-          <!-- スクリーンリーダー用 -->
-          <h2 class="sr-only" id="information-heading">リリースについての詳細</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-300 mt-8 mb-2">{{ discography.release | date: 'YYYY年M月d日'}}
-            リリース</p>
-        </div>
-
-        <!-- 紹介文 -->
-        <div [innerHTML]="discography.detail | markdown | async" class="description text-gray-500 dark:text-gray-300">
-          <p>読み込み中...</p>
-        </div>
-
-        <!-- 詳細情報がある場合 -->
-        <ng-template [ngIf]="discography.detailComponent.length !== 0">
-          <div class="mt-10">
-            <ng-template [ngForOf]="discography.detailComponent" let-detail ngFor>
-              <div class="detail">
-                <p>{{ detail.title }}</p>
-                <p *ngIf="!detail.url" class="text-gray-500 dark:text-gray-300 col-span-3">{{ detail.body }}</p>
-                <a *ngIf="detail.url" [href]="detail.url" class="body text-gray-500 dark:text-gray-300 col-span-3 link"
-                   target="_blank">
-                  <p>{{ detail.body }}</p>
-                </a>
-              </div>
-            </ng-template>
+    @if (discography(); as discography) {
+      <div class="lg:grid lg:grid-rows-1 lg:grid-cols-7 lg:gap-x-8 lg:gap-y-10 xl:gap-x-16">
+        <!-- アートワーク -->
+        <div class="lg:row-end-1 lg:col-span-4">
+          <div class="rounded-3xl shadow-lg bg-gray-100 overflow-hidden">
+            @if (discography?.artwork) {
+              <img (load)="loadingService.loading = false"
+                   [alt]="discography.artwork.alternativeText"
+                   [src]="environment.cmsUrl + discography.artwork.url" class="aspect-square object-cover" width="100%">
+            }
+            @if (!discography?.artwork) {
+              <img [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'"
+                   alt="画像がありません" class="object-center object-cover" width="100%">
+            }
           </div>
-        </ng-template>
-
-        <!-- 購入リンクがある場合 -->
-        <ng-template [ngIf]="discography.buyComponent.length !== 0">
-          <div class="border-t border-gray-200 mt-10 pt-10">
-            <h3 class="text-gray-900 dark:text-gray-100">Buy</h3>
-            <div class="prose prose-sm text-gray-500">
-              <div class="buy-links">
-                <ng-template [ngForOf]="discography.buyComponent" let-dl ngFor>
-                  <a [href]="dl.url" target="_blank">{{ dl.store }}</a>
-                </ng-template>
+        </div>
+        <div class="max-w-2xl mx-auto lg:max-w-none lg:row-end-2 lg:row-span-2 lg:col-span-3">
+          <div class="flex flex-col-reverse">
+            <h1
+              class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-gray-200 sm:text-3xl">{{ discography.title }}</h1>
+            <!-- スクリーンリーダー用 -->
+            <h2 class="sr-only" id="information-heading">リリースについての詳細</h2>
+            <p
+              class="text-sm text-gray-500 dark:text-gray-300 mt-8 mb-2">{{ discography.release | date: 'YYYY年M月d日' }}
+              リリース</p>
+          </div>
+          <!-- 紹介文 -->
+          <div [innerHTML]="discography.detail | markdown | async" class="description text-gray-500 dark:text-gray-300">
+            <p>読み込み中...</p>
+          </div>
+          <!-- 詳細情報がある場合 -->
+          @if (discography.detailComponent.length !== 0) {
+            <div class="mt-10">
+              @for (detail of discography.detailComponent; track detail) {
+                <div class="detail">
+                  <p>{{ detail.title }}</p>
+                  @if (!detail.url) {
+                    <p class="text-gray-500 dark:text-gray-300 col-span-3">{{ detail.body }}</p>
+                  }
+                  @if (detail.url) {
+                    <a [href]="detail.url" class="body text-gray-500 dark:text-gray-300 col-span-3 link"
+                       target="_blank">
+                      <p>{{ detail.body }}</p>
+                    </a>
+                  }
+                </div>
+              }
+            </div>
+          }
+          <!-- 購入リンクがある場合 -->
+          @if (discography.buyComponent.length !== 0) {
+            <div class="border-t border-gray-200 mt-10 pt-10">
+              <h3 class="text-gray-900 dark:text-gray-100">Buy</h3>
+              <div class="prose prose-sm text-gray-500">
+                <div class="buy-links">
+                  @for (dl of discography.buyComponent; track dl) {
+                    <a [href]="dl.url" target="_blank">{{ dl.store }}</a>
+                  }
+                </div>
               </div>
             </div>
-          </div>
-        </ng-template>
-
-        <!-- DLまたはストリーミング配信用リンクがある場合 -->
-        <ng-template [ngIf]="discography.dlComponent.length !== 0">
-          <div class="border-t border-gray-200 mt-10 pt-10">
-            <h3 class="opacity-80">Download / Streaming</h3>
-            <div class="prose prose-sm">
-              <div class="buy-links">
-                <ng-template [ngForOf]="discography.dlComponent" let-dl ngFor>
-                  <a [href]="dl.url" target="_blank">{{ dl.name }}</a>
-                </ng-template>
+          }
+          <!-- DLまたはストリーミング配信用リンクがある場合 -->
+          @if (discography.dlComponent.length !== 0) {
+            <div class="border-t border-gray-200 mt-10 pt-10">
+              <h3 class="opacity-80">Download / Streaming</h3>
+              <div class="prose prose-sm">
+                <div class="buy-links">
+                  @for (dl of discography.dlComponent; track dl) {
+                    <a [href]="dl.url" target="_blank">{{ dl.name }}</a>
+                  }
+                </div>
               </div>
             </div>
+          }
+          <!-- 共有ボタン -->
+          <div class="border-t border-gray-200 mt-10 pt-10">
+            <app-share
+              [share]="{text: '「' + discography.title + '」', url: url, copyMsg: '楽曲情報をコピーしました!'}"></app-share>
           </div>
-        </ng-template>
-        <!-- 共有ボタン -->
-        <div class="border-t border-gray-200 mt-10 pt-10">
-          <app-share [share]="{text: '「' + discography.title + '」', url: url, copyMsg: '楽曲情報をコピーしました!'}"></app-share>
         </div>
-      </div>
-
-
-      <div class="w-full max-w-2xl mx-auto mt-16 lg:max-w-none lg:mt-0 lg:col-span-4">
-        <div class="aspect-video hidden">
-          <!--
+        <div class="w-full max-w-2xl mx-auto mt-16 lg:max-w-none lg:mt-0 lg:col-span-4">
+          <div class="aspect-video hidden">
+            <!--
             動画埋め込み比率保持クラス出力用
             Tailwindは使ってないクラスを出力してくれないので
-          -->
-        </div>
-
-        <!-- デモ -->
-        <ng-template [ngIf]="discography.demoComponent.length !== 0">
-          <h2 class="text-2xl opacity-80">Demo</h2>
-          <div class="prose prose-sm text-gray-500">
-            <ng-template [ngForOf]="discography.demoComponent" let-demo ngFor>
-              <div class="my-4">
-                <p class="text-sm text-gray-500 dark:text-gray-300">{{ demo.title }}</p>
-                <div [innerHTML]="demo.iframe | sanitizeHtml"></div>
-              </div>
-            </ng-template>
+            -->
           </div>
-        </ng-template>
+          <!-- デモ -->
+          @if (discography.demoComponent.length !== 0) {
+            <h2 class="text-2xl opacity-80">Demo</h2>
+            <div class="prose prose-sm text-gray-500">
+              @for (demo of discography.demoComponent; track demo) {
+                <div class="my-4">
+                  <p class="text-sm text-gray-500 dark:text-gray-300">{{ demo.title }}</p>
+                  <div [innerHTML]="demo.iframe | sanitizeHtml"></div>
+                </div>
+              }
+            </div>
+          }
+        </div>
       </div>
-    </div>
+    }
   </div>
 </div>

@@ -1,26 +1,24 @@
-import { CommonModule } from "@angular/common";
-import { HttpClient } from "@angular/common/http";
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { Title } from "@angular/platform-browser";
-import { NgxPaginationModule } from "ngx-pagination";
-import { NgPipesModule } from "ngx-pipes";
-import { Subject, takeUntil, tap } from 'rxjs';
-import { BlogCardComponent } from "src/app/components/blog-card/blog-card.component";
-import { environment } from "../../../environments/environment";
-import { Blog } from "../../interfaces/blog";
-import { LoadingService } from "../../services/loading.service";
-import { NavigateService } from "../../services/navigate.service";
+import {HttpClient} from "@angular/common/http";
+import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {Title} from "@angular/platform-browser";
+import {NgxPaginationModule} from "ngx-pagination";
+import {NgPipesModule} from "ngx-pipes";
+import {Subject, takeUntil, tap} from 'rxjs';
+import {BlogCardComponent} from "src/app/components/blog-card/blog-card.component";
+import {environment} from "../../../environments/environment";
+import {Blog} from "../../interfaces/blog";
+import {LoadingService} from "../../services/loading.service";
+import {NavigateService} from "../../services/navigate.service";
 
 @Component({
-    selector: 'app-index',
-    templateUrl: './index.component.html',
-    styleUrls: ['./index.component.scss'],
-    imports: [
-        CommonModule,
-        NgPipesModule,
-        BlogCardComponent,
-        NgxPaginationModule,
-    ]
+  selector: 'app-index',
+  templateUrl: './index.component.html',
+  styleUrls: ['./index.component.scss'],
+  imports: [
+    NgPipesModule,
+    BlogCardComponent,
+    NgxPaginationModule
+  ]
 })
 export default class IndexComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
