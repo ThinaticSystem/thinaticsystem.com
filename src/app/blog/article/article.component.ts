@@ -12,16 +12,15 @@ import { LoadingService } from "../../services/loading.service";
 import { NavigateService } from "../../services/navigate.service";
 
 @Component({
-  standalone: true,
-  selector: 'app-article',
-  templateUrl: './article.component.html',
-  styleUrls: ['./article.component.scss'],
-  imports: [
-    CommonModule,
-    RouterLink,
-    ShareComponent,
-    MarkdownPipe,
-  ],
+    selector: 'app-article',
+    templateUrl: './article.component.html',
+    styleUrls: ['./article.component.scss'],
+    imports: [
+        CommonModule,
+        RouterLink,
+        ShareComponent,
+        MarkdownPipe,
+    ]
 })
 export default class ArticleComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>()

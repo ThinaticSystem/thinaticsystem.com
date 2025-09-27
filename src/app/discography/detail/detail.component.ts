@@ -14,16 +14,15 @@ import { LoadingService } from "../../services/loading.service";
 import { NotificationService } from "../../services/notification.service";
 
 @Component({
-  standalone: true,
-  selector: 'app-detail',
-  templateUrl: './detail.component.html',
-  styleUrls: ['./detail.component.scss'],
-  imports: [
-    CommonModule,
-    SanitizeHtmlPipe,
-    ShareComponent,
-    MarkdownPipe,
-  ],
+    selector: 'app-detail',
+    templateUrl: './detail.component.html',
+    styleUrls: ['./detail.component.scss'],
+    imports: [
+        CommonModule,
+        SanitizeHtmlPipe,
+        ShareComponent,
+        MarkdownPipe,
+    ]
 })
 export default class DetailComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();

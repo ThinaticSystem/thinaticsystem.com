@@ -16,13 +16,12 @@ export interface About {
 }
 
 @Component({
-  standalone: true,
-  selector: 'app-about',
-  templateUrl: './about.component.html',
-  styleUrls: ['./about.component.scss'],
-  imports: [
-    MarkdownComponent,
-  ],
+    selector: 'app-about',
+    templateUrl: './about.component.html',
+    styleUrls: ['./about.component.scss'],
+    imports: [
+        MarkdownComponent,
+    ]
 })
 export default class AboutComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();

@@ -12,16 +12,15 @@ import { LoadingService } from "../../services/loading.service";
 import { NavigateService } from "../../services/navigate.service";
 
 @Component({
-  standalone: true,
-  selector: 'app-index',
-  templateUrl: './index.component.html',
-  styleUrls: ['./index.component.scss'],
-  imports: [
-    CommonModule,
-    NgPipesModule,
-    BlogCardComponent,
-    NgxPaginationModule,
-  ],
+    selector: 'app-index',
+    templateUrl: './index.component.html',
+    styleUrls: ['./index.component.scss'],
+    imports: [
+        CommonModule,
+        NgPipesModule,
+        BlogCardComponent,
+        NgxPaginationModule,
+    ]
 })
 export default class IndexComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
