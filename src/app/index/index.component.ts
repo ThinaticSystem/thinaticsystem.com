@@ -40,15 +40,14 @@ export interface Links {
 }
 
 @Component({
-  standalone: true,
-  selector: 'app-index',
-  templateUrl: './index.component.html',
-  styleUrls: ['./index.component.scss'],
-  imports: [
-    CommonModule,
-    ClipboardModule,
-    NgPipesModule,
-  ],
+    selector: 'app-index',
+    templateUrl: './index.component.html',
+    styleUrls: ['./index.component.scss'],
+    imports: [
+        CommonModule,
+        ClipboardModule,
+        NgPipesModule,
+    ]
 })
 export default class IndexComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();

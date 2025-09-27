@@ -9,13 +9,12 @@ interface Share {
 }
 
 @Component({
-  standalone: true,
-  selector: 'app-share',
-  templateUrl: './share.component.html',
-  styleUrls: ['./share.component.scss'],
-  imports: [
-    ClipboardModule,
-  ],
+    selector: 'app-share',
+    templateUrl: './share.component.html',
+    styleUrls: ['./share.component.scss'],
+    imports: [
+        ClipboardModule,
+    ]
 })
 export class ShareComponent {
   @Input() share!: Share;

@@ -21,16 +21,15 @@ interface BlogTags {
 }
 
 @Component({
-  standalone: true,
-  selector: 'app-index',
-  templateUrl: './tag.component.html',
-  styleUrls: ['./tag.component.scss'],
-  imports: [
-    CommonModule,
-    NgPipesModule,
-    BlogCardComponent,
-    NgxPaginationModule,
-  ],
+    selector: 'app-index',
+    templateUrl: './tag.component.html',
+    styleUrls: ['./tag.component.scss'],
+    imports: [
+        CommonModule,
+        NgPipesModule,
+        BlogCardComponent,
+        NgxPaginationModule,
+    ]
 })
 export default class TagComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
