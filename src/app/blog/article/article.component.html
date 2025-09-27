@@ -1,22 +1,21 @@
 <div class="min-h-screen">
-  <ng-template [ngIf]="blog()" let-article>
-    <ng-template [ngIf]="article.eyecatch" let-eyecatch>
+  @if (blog(); as article) {
+    @if (article.eyecatch; as eyecatch) {
       <div [style.background-image]="'url(' + environment.cmsUrl + eyecatch.url + ')'" class="eyecatch"></div>
-    </ng-template>
+    }
     <div class="mx-auto py-12 max-w-7xl lg:py-24">
       <div class="space-y-12 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
         <div class="space-y-5 sm:space-y-4">
           <h2 class="text-3xl font-extrabold tracking-tight sm:text-3xl">{{ article.title }}</h2>
-
           <div class="tag">
-            <ng-template [ngForOf]="article.blogTags" let-tag ngFor>
-              <a [routerLink]="'/blog/tag/' + tag?.tag">{{tag?.tag}}</a>
-            </ng-template>
+            @for (tag of article.blogTags; track tag) {
+              <a [routerLink]="'/blog/tag/' + tag?.tag">{{ tag?.tag }}</a>
+            }
           </div>
-
           <!-- 共有ボタン -->
           <div class="my-4">
-            <app-share [share]="{text: '「' + article.title + '」', url: url, copyMsg: '記事のリンクをコピーしました!'}"></app-share>
+            <app-share
+              [share]="{text: '「' + article.title + '」', url: url, copyMsg: '記事のリンクをコピーしました!'}"></app-share>
           </div>
         </div>
         <div class="lg:col-span-2">
@@ -25,5 +24,5 @@
         </div>
       </div>
     </div>
-  </ng-template>
+  }
 </div>

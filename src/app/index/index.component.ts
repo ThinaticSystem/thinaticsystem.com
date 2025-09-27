@@ -1,14 +1,13 @@
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { Title } from '@angular/platform-browser';
-import { ClipboardModule } from "ngx-clipboard";
-import { NgPipesModule } from 'ngx-pipes';
-import { Subject, map, takeUntil, tap } from 'rxjs';
-import { environment } from 'src/environments/environment';
-import { LoadingService } from "../services/loading.service";
-import { NavigateService } from "../services/navigate.service";
-import { NotificationService } from "../services/notification.service";
+import {HttpClient} from '@angular/common/http';
+import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {Title} from '@angular/platform-browser';
+import {ClipboardModule} from "ngx-clipboard";
+import {NgPipesModule} from 'ngx-pipes';
+import {map, Subject, takeUntil, tap} from 'rxjs';
+import {environment} from 'src/environments/environment';
+import {LoadingService} from "../services/loading.service";
+import {NavigateService} from "../services/navigate.service";
+import {NotificationService} from "../services/notification.service";
 
 export interface Notifications {
   title: string;
@@ -40,15 +39,13 @@ export interface Links {
 }
 
 @Component({
-  standalone: true,
   selector: 'app-index',
   templateUrl: './index.component.html',
   styleUrls: ['./index.component.scss'],
   imports: [
-    CommonModule,
     ClipboardModule,
-    NgPipesModule,
-  ],
+    NgPipesModule
+  ]
 })
 export default class IndexComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
@@ -113,8 +110,8 @@ export default class IndexComponent implements OnInit, OnDestroy {
   }
 
   genDebobi(): void {
-    const s = this.debobiSource.s[Math.floor(Math.random() * this.debobiSource.s.length)];
-    const m = this.debobiSource.m[Math.floor(Math.random() * this.debobiSource.m.length)];
+    const s = this.debobiSource.s[Math.floor(Math.random() * this.debobiSource.s.length)]!;
+    const m = this.debobiSource.m[Math.floor(Math.random() * this.debobiSource.m.length)]!;
 
     this.debobi = s + m;
   }

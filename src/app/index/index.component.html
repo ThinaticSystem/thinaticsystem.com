@@ -51,18 +51,16 @@
     <h2>おしらせ</h2>
     <ul class="mt-5 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-2 auto-cols-auto" role="list">
 
-      <ng-template [ngForOf]="notifications() | orderBy: 'published_at' | reverse" let-data ngFor>
+      @for (data of notifications() | orderBy: 'published_at' | reverse; track data) {
         <a (click)="data.urlOrigin === origin ? navigate.go(data.url) : openNewTab(data.url)" class="cursor-pointer">
           <li class="col-span1 flex shadow-md rounded-md h-full">
             <div
               class="flex-1 flex items-center justify-between border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md">
-
               <div class="flex-1 px-4 py-8">
-                <p>{{data.title}}</p>
+                <p>{{ data.title }}</p>
               </div>
-
               <div class="flex-shrink-0 pr-4">
-                <span class="sr-only">「{{data.title}}」の詳細を見る</span>
+                <span class="sr-only">「{{ data.title }}」の詳細を見る</span>
                 <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
                      xmlns="http://www.w3.org/2000/svg">
                   <path clip-rule="evenodd"
@@ -70,11 +68,10 @@
                         fill-rule="evenodd"/>
                 </svg>
               </div>
-
             </div>
           </li>
         </a>
-      </ng-template>
+      }
 
     </ul>
   </div>
@@ -86,7 +83,8 @@
       <h2>無料ガチャ</h2>
       <div class="mt-5 md:grid grid-cols-2 gap-5">
         <div
-          class="text-2xl sm:text-3xl md:text-4xl border-2 border-gray-300 dark:border-gray-600 rounded-md p-2">{{debobi}}</div>
+          class="text-2xl sm:text-3xl md:text-4xl border-2 border-gray-300 dark:border-gray-600 rounded-md p-2">{{ debobi }}
+        </div>
 
         <div class="flex justify-around md:justify-start gap-8 my-8 md:my-auto">
           <span class="sr-only">デボビゲゴを生成します</span>
@@ -107,7 +105,7 @@
           </a>
 
           <button (cbOnSuccess)="notification.show('クリップボードにコピーしました！')"
-                  [cbContent]="'「' + this.debobi + '」\n' + this.url + '\n#しなちくシステム無料ガチャ'"
+                  [cbContent]="'「' + debobi + '」\n' + url + '\n#しなちくシステム無料ガチャ'"
                   class="gen-btn text-gray-500 hover:text-green-600 active:text-green-700" ngxClipboard>
             <span class="sr-only">デボビゲゴをクリップボードにコピーします</span>
             <svg aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -129,9 +127,9 @@
     <h2>支援者の方々</h2>
     <div class="text-lg mt-5">
       <ol>
-        <ng-template [ngForOf]="patrons() | orderBy: 'data.attributes.lifetime_support_cents' | reverse" let-patron ngFor>
-          <li class="inline-block mr-5">{{patron.data.attributes.full_name}}</li>
-        </ng-template>
+        @for (patron of patrons() | orderBy: 'data.attributes.lifetime_support_cents' | reverse; track patron) {
+          <li class="inline-block mr-5">{{ patron.data.attributes.full_name }}</li>
+        }
       </ol>
     </div>
   </div>

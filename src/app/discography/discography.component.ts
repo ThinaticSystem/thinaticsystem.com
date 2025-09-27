@@ -10,14 +10,13 @@ import { LoadingService } from "../services/loading.service";
 import { NavigateService } from "../services/navigate.service";
 
 @Component({
-  standalone: true,
-  selector: 'app-discography',
-  templateUrl: './discography.component.html',
-  styleUrls: ['./discography.component.scss'],
-  imports: [
-    CommonModule,
-    NgPipesModule,
-  ],
+    selector: 'app-discography',
+    templateUrl: './discography.component.html',
+    styleUrls: ['./discography.component.scss'],
+    imports: [
+        CommonModule,
+        NgPipesModule,
+    ]
 })
 export default class DiscographyComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();

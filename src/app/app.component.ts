@@ -10,15 +10,14 @@ import { NavigateService } from "./services/navigate.service";
 import { NotificationService } from "./services/notification.service";
 
 @Component({
-  standalone: true,
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
-  imports: [
-    CommonModule,
-    RouterOutlet,
-    NgClickOutsideDelayOutsideDirective,
-  ],
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss'],
+    imports: [
+        CommonModule,
+        RouterOutlet,
+        NgClickOutsideDelayOutsideDirective,
+    ]
 })
 export class AppComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
