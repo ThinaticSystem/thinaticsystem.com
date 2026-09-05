@@ -2,8 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
-@import 'animate.css/animate.css';
 @import 'github-markdown-css/github-markdown.css';
+
+.animate__animated {
+  animation-duration: 1s;
+  animation-fill-mode: both;
+}
+
+.animate__fadeIn {
+  animation-name: fadeIn;
+}
+
+.animate__slideInRight {
+  animation-name: slideInRight;
+}
+
+.animate__slideOutRight {
+  animation-name: slideOutRight;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translate3d(100%, 0, 0); visibility: visible; }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes slideOutRight {
+  from { opacity: 1; }
+  to { opacity: 0; transform: translate3d(100%, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate__animated {
+    animation-duration: 1ms;
+    animation-iteration-count: 1;
+  }
+}
 
 $easing: cubic-bezier(1, 0, 0.25, 1);
 

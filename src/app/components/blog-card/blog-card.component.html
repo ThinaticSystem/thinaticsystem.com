@@ -7,12 +7,12 @@
     <!-- 記事情報 -->
     <div class="article-info">
       <div class="title">{{ data.title }}</div>
-      <p class="date">{{ data.created_at | date: 'YYYY/MM/dd' }}</p>
+      <p class="date">{{ data.created_at | date: 'yyyy/MM/dd' }}</p>
       <!-- タグ一覧 -->
       @if (data.blogTags && data.blogTags.length !== 0) {
         <div class="tag">
           @for (tag of data.blogTags; track tag) {
-            <a [routerLink]="'/blog/tag/' + tag?.tag">{{ tag?.tag }}</a>
+            <a [routerLink]="'/blog/tag/' + $safeNavigationMigration(tag?.tag)">{{ tag?.tag }}</a>
           }
         </div>
       }

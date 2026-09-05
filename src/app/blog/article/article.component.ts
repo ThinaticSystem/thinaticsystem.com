@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Title } from "@angular/platform-browser";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { MarkdownPipe } from "ngx-markdown";
@@ -15,6 +15,7 @@ import { NavigateService } from "../../services/navigate.service";
     selector: 'app-article',
     templateUrl: './article.component.html',
     styleUrls: ['./article.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
         CommonModule,
         RouterLink,

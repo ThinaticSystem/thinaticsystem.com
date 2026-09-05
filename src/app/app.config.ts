@@ -1,4 +1,4 @@
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import { ApplicationConfig } from "@angular/core";
 import { provideRouter, withInMemoryScrolling } from "@angular/router";
 import { MARKED_OPTIONS, provideMarkdown } from "ngx-markdown";
@@ -14,7 +14,7 @@ const InMemoryScrollingFeature = withInMemoryScrolling({
 export const appConfig = {
     providers: [
         provideRouter(routes, InMemoryScrollingFeature),
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideMarkdown({
             markedOptions: {
                 provide: MARKED_OPTIONS,

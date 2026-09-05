@@ -7,7 +7,7 @@ describe('GomamayoComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [GomamayoComponent]
+      imports: [GomamayoComponent]
     })
       .compileComponents();
   });

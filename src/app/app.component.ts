@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterOutlet } from '@angular/router';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
 import { NgClickOutsideDelayOutsideDirective } from 'ng-click-outside2';
 import { ClipboardService } from 'ngx-clipboard';
 import { Subject, filter, map, takeUntil } from 'rxjs';
@@ -13,8 +13,10 @@ import { NotificationService } from "./services/notification.service";
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
         CommonModule,
+        RouterLink,
         RouterOutlet,
         NgClickOutsideDelayOutsideDirective,
     ]

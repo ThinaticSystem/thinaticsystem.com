@@ -1,29 +1,31 @@
-import {TestBed} from '@angular/core/testing';
-import {RouterTestingModule} from '@angular/router/testing';
+import {render, screen} from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
 import {AppComponent} from './app.component';
 
 describe('AppComponent', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule
-      ],
-      declarations: [
-        AppComponent
-      ],
-    }).compileComponents();
+  it('should create the app', async () => {
+    const {fixture} = await render(AppComponent);
+
+    expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
+  it('should expose semantic shell controls', async () => {
+    await render(AppComponent);
+    const user = userEvent.setup();
+    const themeButton = screen.getByRole('button', {
+      name: 'ライトモードとダークモードを切り替えます',
+    });
+    const menuButton = screen.getByRole('button', {name: 'メニューを開きます'});
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('honi app is running!');
+    expect(screen.getByRole('main')).toBeTruthy();
+    expect(themeButton.getAttribute('aria-pressed')).toBe('false');
+    expect(menuButton.getAttribute('aria-expanded')).toBe('false');
+
+    await user.click(themeButton);
+    await user.click(menuButton);
+
+    expect(themeButton.getAttribute('aria-pressed')).toBe('true');
+    expect(menuButton.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('navigation', {name: 'モバイルナビゲーション'})).toBeTruthy();
   });
 });

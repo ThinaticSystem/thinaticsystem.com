@@ -9,11 +9,11 @@
 
           @for (data of discographies() | orderBy: 'release' | reverse; track data) {
             <li>
-              <div (click)="navigate.go('/discography/' + data.id)" class="space-y-4 cursor-pointer">
+              <a [routerLink]="'/discography/' + data.id" class="space-y-4 cursor-pointer">
                 <div class="artwork">
                   @if (data?.artwork) {
                     <img (load)="imageLoaded()"
-                         [alt]="data?.artwork.alternativeText"
+                         [alt]="$safeNavigationMigration(data?.artwork.alternativeText)"
                          [src]="environment.cmsUrl + data?.artwork.formats.small.url" width="100%">
                   }
                   @if (!data?.artwork) {
@@ -23,9 +23,9 @@
                 </div>
                 <div class="text-lg leading-6 font-medium space-y-1">
                   <h3>{{ data.title }}</h3>
-                  <p class="opacity-50">{{ data.release | date: 'YYYY/MM/dd' }}</p>
+                  <p class="opacity-50">{{ data.release | date: 'yyyy/MM/dd' }}</p>
                 </div>
-              </div>
+              </a>
             </li>
           }
         </ul>

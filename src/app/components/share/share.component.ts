@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { ClipboardModule } from 'ngx-clipboard';
 import { NotificationService } from "../../services/notification.service";
 
@@ -12,6 +12,7 @@ interface Share {
     selector: 'app-share',
     templateUrl: './share.component.html',
     styleUrls: ['./share.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
         ClipboardModule,
     ]

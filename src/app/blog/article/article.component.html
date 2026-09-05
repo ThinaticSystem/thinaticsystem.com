@@ -9,7 +9,7 @@
           <h2 class="text-3xl font-extrabold tracking-tight sm:text-3xl">{{ article.title }}</h2>
           <div class="tag">
             @for (tag of article.blogTags; track tag) {
-              <a [routerLink]="'/blog/tag/' + tag?.tag">{{ tag?.tag }}</a>
+              <a [routerLink]="'/blog/tag/' + $safeNavigationMigration(tag?.tag)">{{ tag?.tag }}</a>
             }
           </div>
           <!-- 共有ボタン -->
@@ -19,7 +19,7 @@
           </div>
         </div>
         <div class="lg:col-span-2">
-          <p class="text-sm text-gray-500 mb-3">{{ article.created_at | date: 'YYYY年MM月dd日' }}</p>
+          <p class="text-sm text-gray-500 mb-3">{{ article.created_at | date: 'yyyy年MM月dd日' }}</p>
           <div [innerHTML]="article.body | markdown | async" class="markdown-body"></div>
         </div>
       </div>

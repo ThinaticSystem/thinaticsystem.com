@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Title } from '@angular/platform-browser';
+import { RouterLink } from '@angular/router';
 import { NgPipesModule } from 'ngx-pipes';
 import { Subject, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -13,9 +14,11 @@ import { NavigateService } from "../services/navigate.service";
     selector: 'app-discography',
     templateUrl: './discography.component.html',
     styleUrls: ['./discography.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
         CommonModule,
         NgPipesModule,
+        RouterLink,
     ]
 })
 export default class DiscographyComponent implements OnInit, OnDestroy {

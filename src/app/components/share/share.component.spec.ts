@@ -8,7 +8,7 @@ describe('ShareComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ShareComponent]
+      imports: [ShareComponent]
     })
       .compileComponents();
   });
@@ -16,6 +16,10 @@ describe('ShareComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(ShareComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('share', {
+      text: 'Share this page',
+      url: 'https://example.test/article',
+    });
     fixture.detectChanges();
   });
 

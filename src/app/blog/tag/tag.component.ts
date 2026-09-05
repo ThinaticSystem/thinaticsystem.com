@@ -1,5 +1,5 @@
 import {HttpClient} from "@angular/common/http";
-import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 import {Title} from "@angular/platform-browser";
 import {ActivatedRoute} from "@angular/router";
 import {NgxPaginationModule} from "ngx-pagination";
@@ -11,18 +11,12 @@ import {Blog} from "../../interfaces/blog";
 import {LoadingService} from "../../services/loading.service";
 import {NavigateService} from "../../services/navigate.service";
 
-interface TagFilter {
-  blogTags?: (BlogTags | null)[] | null;
-}
-
-interface BlogTags {
-  tag: string;
-}
 
 @Component({
   selector: 'app-index',
   templateUrl: './tag.component.html',
   styleUrls: ['./tag.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     NgPipesModule,
     BlogCardComponent,

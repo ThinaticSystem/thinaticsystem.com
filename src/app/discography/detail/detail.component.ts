@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { HttpClient } from "@angular/common/http";
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DomSanitizer, Title } from "@angular/platform-browser";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ClipboardService } from "ngx-clipboard";
@@ -17,6 +17,7 @@ import { NotificationService } from "../../services/notification.service";
     selector: 'app-detail',
     templateUrl: './detail.component.html',
     styleUrls: ['./detail.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
         CommonModule,
         SanitizeHtmlPipe,

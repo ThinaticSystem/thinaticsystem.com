@@ -25,13 +25,11 @@
 
         <div class="links">
           <div>
-            <button (click)="navigate.go('/about')" class="text-white bg-eclair-600 hover:bg-eclair-700">もっと詳しく
-            </button>
+            <a routerLink="/about" class="text-white bg-eclair-600 hover:bg-eclair-700">もっと詳しく</a>
           </div>
           <div>
-            <button (click)="navigate.go('/discography')"
-                    class="text-opacity-80 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700">楽曲一覧
-            </button>
+            <a routerLink="/discography"
+               class="text-opacity-80 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700">楽曲一覧</a>
           </div>
         </div>
       </div>
@@ -52,7 +50,8 @@
     <ul class="mt-5 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-2 auto-cols-auto" role="list">
 
       @for (data of notifications() | orderBy: 'published_at' | reverse; track data) {
-        <a (click)="data.urlOrigin === origin ? navigate.go(data.url) : openNewTab(data.url)" class="cursor-pointer">
+        <a (click)="$event.preventDefault(); data.urlOrigin === origin ? navigate.go(data.url) : openNewTab(data.url)"
+           [href]="data.url" class="cursor-pointer">
           <li class="col-span1 flex shadow-md rounded-md h-full">
             <div
               class="flex-1 flex items-center justify-between border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md">

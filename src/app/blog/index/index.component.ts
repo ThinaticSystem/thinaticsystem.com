@@ -1,5 +1,5 @@
 import {HttpClient} from "@angular/common/http";
-import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 import {Title} from "@angular/platform-browser";
 import {NgxPaginationModule} from "ngx-pagination";
 import {NgPipesModule} from "ngx-pipes";
@@ -14,6 +14,7 @@ import {NavigateService} from "../../services/navigate.service";
   selector: 'app-index',
   templateUrl: './index.component.html',
   styleUrls: ['./index.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     NgPipesModule,
     BlogCardComponent,

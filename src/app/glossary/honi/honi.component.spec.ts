@@ -7,7 +7,7 @@ describe('HoniComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [HoniComponent]
+      imports: [HoniComponent]
     })
       .compileComponents();
   });

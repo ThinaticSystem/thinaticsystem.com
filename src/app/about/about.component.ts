@@ -1,5 +1,5 @@
 import { HttpClient } from "@angular/common/http";
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { MarkdownComponent } from 'ngx-markdown';
 import { Subject, takeUntil, tap } from "rxjs";
@@ -19,6 +19,7 @@ export interface About {
     selector: 'app-about',
     templateUrl: './about.component.html',
     styleUrls: ['./about.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
         MarkdownComponent,
     ]

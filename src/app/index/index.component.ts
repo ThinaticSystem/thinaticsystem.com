@@ -1,6 +1,7 @@
 import {HttpClient} from '@angular/common/http';
-import {Component, OnDestroy, OnInit, signal} from '@angular/core';
-import {Title} from '@angular/platform-browser';
+import {Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import { Title } from '@angular/platform-browser';
+import { RouterLink } from '@angular/router';
 import {ClipboardModule} from "ngx-clipboard";
 import {NgPipesModule} from 'ngx-pipes';
 import {map, Subject, takeUntil, tap} from 'rxjs';
@@ -42,9 +43,11 @@ export interface Links {
   selector: 'app-index',
   templateUrl: './index.component.html',
   styleUrls: ['./index.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     ClipboardModule,
-    NgPipesModule
+    NgPipesModule,
+    RouterLink,
   ]
 })
 export default class IndexComponent implements OnInit, OnDestroy {

@@ -1,0 +1,13 @@
+{
+  "schema": "thinaticsystem-com/known-defects/v1",
+  "cases": [
+    {
+      "id": "blog-card-nested-anchor",
+      "spec": "src/known-defects/blog-card.nested-anchor.spec.ts",
+      "testName": "still exposes the nested interactive-anchor defect",
+      "expected": "assertion-failure",
+      "assertion": "screen.getAllByRole('link') has length 1",
+      "disposition": "preserve-unfixed-product-defect"
+    }
+  ]
+}

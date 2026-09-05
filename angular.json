@@ -24,9 +24,6 @@
               "base": "dist/app"
             },
             "index": "src/index.html",
-            "polyfills": [
-              "src/polyfills.ts"
-            ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -34,11 +31,7 @@
               "src/assets"
             ],
             "styles": [
-              "node_modules/animate.css/animate.min.css",
               "src/styles.scss"
-            ],
-            "scripts": [
-              "node_modules/marked/marked.min.js"
             ],
             "browser": "src/main.ts"
           },
@@ -92,21 +85,28 @@
           }
         },
         "test": {
-          "builder": "@angular/build:karma",
+          "builder": "@angular/build:unit-test",
           "options": {
-            "main": "src/test.ts",
-            "polyfills": "src/polyfills.ts",
+            "runner": "vitest",
+            "buildTarget": "thinaticsystem-com:build:development",
             "tsConfig": "tsconfig.spec.json",
-            "karmaConfig": "karma.conf.js",
-            "inlineStyleLanguage": "scss",
-            "assets": [
-              "src/favicon.ico",
-              "src/assets"
-            ],
-            "styles": [
-              "src/styles.scss"
-            ],
-            "scripts": []
+            "include": ["src/**/*.spec.ts"],
+            "exclude": ["src/known-defects/**/*.spec.ts"],
+            "watch": false,
+            "providersFile": "src/test-providers.ts",
+            "setupFiles": ["src/test-setup.ts"]
+          }
+        },
+        "known-defects": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "runner": "vitest",
+            "buildTarget": "thinaticsystem-com:build:development",
+            "tsConfig": "tsconfig.spec.json",
+            "include": ["src/known-defects/**/*.spec.ts"],
+            "watch": false,
+            "providersFile": "src/test-providers.ts",
+            "setupFiles": ["src/test-setup.ts"]
           }
         },
         "lint": {
