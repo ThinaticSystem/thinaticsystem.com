@@ -226,7 +226,7 @@ body {
   @apply inline-block my-2;
 
   a {
-    @apply inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-eclair-100 text-eclair-700 mx-1;
+    @apply inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-eclair-100 text-gray-900 mx-1;
 
     &:first-child {
       @apply mr-1;

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "ThinaticSystem.com API",
+  "entryPoints": [
+    "src/app/app.config.ts",
+    "src/app/app.routes.ts",
+    "src/app/interfaces/blog.ts",
+    "src/app/interfaces/discography.ts",
+    "src/app/pipes/sanitize-html.pipe.ts",
+    "src/app/providers/markdown/options.ts",
+    "src/app/services/loading.service.ts",
+    "src/app/services/navigate.service.ts",
+    "src/app/services/notification.service.ts"
+  ],
+  "entryPointStrategy": "expand",
+  "tsconfig": "tsconfig.typedoc.json",
+  "out": ".artifacts/typedoc",
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "categorizeByGroup": false,
+  "sort": "source-order",
+  "intentionallyNotExported": ["Eyecatch", "Demo", "Detail", "__module"],
+  "navigationLinks": {
+    "Repository": "https://github.com/ThinaticSystem/thinaticsystem.com"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "thinaticsystem-modernization/performance-baseline/v1",
+  "baseSha": "33b4ef4e8d21276130127a61aede6f0a8e1c47cb",
+  "fixture": "synthetic CMS/API data; Chromium 140.0.7339.16; reducedMotion=reduce",
+  "compression": {"gzip": {"level": 9, "mtime": 0}, "brotli": {"quality": 11}},
+  "initial": {"rawBytes": 531195, "gzipBytes": 155551, "brotliBytes": 136693},
+  "journeys": {
+    "desktop.home": {"medianInMs": 301.5, "requestCount": 13},
+    "desktop.theme-toggle": {"medianInMs": 884.79, "requestCount": 0},
+    "desktop.blog-list": {"medianInMs": 1101.17, "requestCount": 6},
+    "desktop.blog-article": {"medianInMs": 106.36, "requestCount": 3},
+    "desktop.blog-back": {"medianInMs": 26.55, "requestCount": 2},
+    "desktop.discography": {"medianInMs": 966.85, "requestCount": 4},
+    "mobile.menu-blog": {"medianInMs": 2328.96, "requestCount": 19}
+  },
+  "policy": {
+    "initialSizeMustNotIncrease": true,
+    "requestCountMustNotIncrease": true,
+    "timing": "reported as three-repeat median; noisy local timings are not a UX guarantee"
+  }
+}

@@ -1,5 +1,5 @@
 <!-- ローディングのオーバーレイ -->
-<div [class.loaded]="!loadingService.loading" class="loading">
+<div [attr.aria-hidden]="true" [class.loaded]="!loadingService.loading" class="loading">
   <div class="layer1 bg-white dark:bg-eclair-900"></div>
   <div class="layer2 bg-eclair-300 dark:bg-eclair-600"></div>
   <img [src]="enviroment.cmsUrl + '/uploads/loading_2c53045083.gif'" alt="読込中...">
@@ -46,7 +46,6 @@
 
 <div class="relative">
   <!-- スクリーンリーダー用 -->
-  <span class="sr-only">このウェブサイトはスクリーンリーダーに対応しています</span>
   <div class="max-w-7xl mx-auto">
     <header>
       <div class="relative pt-6 px-4 sm:px-6 lg:px-8">
