@@ -1,0 +1,12 @@
+[
+  {
+    "data": {
+      "id": "fixture-1",
+      "type": "patron",
+      "attributes": {
+        "full_name": "Synthetic patron",
+        "patron_status": "active_patron"
+      }
+    }
+  }
+]

@@ -4,9 +4,10 @@
     {
       "id": "blog-card-nested-anchor",
       "spec": "src/known-defects/blog-card.nested-anchor.spec.ts",
+      "suiteName": "Known defects: BlogCardComponent",
       "testName": "still exposes the nested interactive-anchor defect",
       "expected": "assertion-failure",
-      "assertion": "screen.getAllByRole('link') has length 1",
+      "assertion": "article and tag links retain their destinations but are not nested",
       "disposition": "preserve-unfixed-product-defect"
     }
   ]

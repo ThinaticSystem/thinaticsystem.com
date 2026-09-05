@@ -9,6 +9,15 @@ corepack pnpm install --frozen-lockfile
 corepack pnpm start
 ```
 
+Nixを使う場合は、ホストのNode/pnpmを混ぜずに同じコマンドを`nix develop -c`から実行する。NixのNodeはAngular22の対応範囲に合わせたNode22 bridgeで、バージョンはflake lockの固定入力から確認する。
+
+```sh
+nix develop -c corepack pnpm install --frozen-lockfile
+nix develop -c corepack pnpm run check
+```
+
+Nix bridgeの実行成否はhost側の`pnpm run check`とは別に記録する。本remediation runではoffline `nix develop`がversion出力前にtimeoutしたため、Nixのinstall/build/browser実行は未検証である
+
 開発serverは`http://localhost:4200/`で起動する。通常のproduction artifactは`dist/app/browser/`へ出力される
 
 ## 品質コマンド

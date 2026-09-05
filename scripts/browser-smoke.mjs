@@ -1,5 +1,5 @@
 import {createServer} from 'node:http';
-import {createReadStream, existsSync, statSync} from 'node:fs';
+import {createReadStream, existsSync, readFileSync, statSync} from 'node:fs';
 import {extname, join, normalize} from 'node:path';
 import {chromium} from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
@@ -10,6 +10,8 @@ const evidenceRoot = process.env.EVIDENCE_DIR ?? '.artifacts';
 const outputPath = process.env.EVIDENCE_OUTPUT ?? null;
 const browserExecutablePath = process.env.BROWSER_EXECUTABLE_PATH ?? chromium.executablePath();
 const repeatCount = Number(process.env.BROWSER_REPEATS ?? 3);
+const patronsFixture = readFileSync(process.env.PATRONS_FIXTURE ?? 'test/fixtures/patrons.json', 'utf8');
+JSON.parse(patronsFixture);
 const onePixelGif = Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==', 'base64');
 const blogs = [
   {id: 1, title: 'Synthetic article one', body: '# Synthetic article\n\nFixture content for a deterministic browser baseline.', published_at: '2024-01-01T00:00:00.000Z', created_at: '2024-01-01T00:00:00.000Z', updated_at: '2024-01-01T00:00:00.000Z', blogTags: [{id: 1, tag: 'fixture'}], eyecatch: null},
@@ -32,7 +34,7 @@ function fixtureFor(url) {
     if (parsed.pathname === '/discographies') return jsonResponse(discographies);
     if (parsed.pathname.startsWith('/uploads/')) return {status: 200, contentType: 'image/gif', body: onePixelGif, headers: {'access-control-allow-origin': '*'}};
   }
-  if (parsed.hostname === 'thinaticsystem.com' && parsed.pathname === '/workers/patrons') return jsonResponse([{data: {id: 'fixture-1', type: 'patron', attributes: {full_name: 'Synthetic patron', patron_status: 'active_patron'}}}]);
+  if (parsed.hostname === 'thinaticsystem.com' && parsed.pathname === '/workers/patrons') return {status: 200, contentType: 'application/json', body: patronsFixture, headers: {'access-control-allow-origin': '*'}};
   return null;
 }
 
@@ -103,12 +105,14 @@ async function runRepeat(browser, server, repeat) {
   const record = async (name, action, screenshotName = null) => {
     const startedAt = performance.now();
     const requestStart = requestLog.length;
+    const resourceStart = await page.evaluate(() => performance.getEntriesByType('resource').length);
     await action();
     await waitForVisualReady(page);
     const elapsedInMs = Math.round((performance.now() - startedAt) * 100) / 100;
     const screenshotPath = screenshotName ? join(evidenceRoot, `browser-${screenshotName}-repeat-${repeat}.png`) : null;
     if (screenshotPath) await page.screenshot({path: screenshotPath, fullPage: true});
-    result.journeys.push({name, url: page.url(), elapsedInMs, requestCount: requestLog.length - requestStart});
+    const resourceSummary = await page.evaluate((start) => performance.getEntriesByType('resource').slice(start).filter((entry) => entry.name.startsWith(location.origin) && /\.(?:js|css)(?:\?|$)/.test(new URL(entry.name).pathname)).reduce((summary, entry) => ({count: summary.count + 1, transferSizeInBytes: summary.transferSizeInBytes + Number(entry.transferSize ?? 0), decodedBodySizeInBytes: summary.decodedBodySizeInBytes + Number(entry.decodedBodySize ?? 0)}), {count: 0, transferSizeInBytes: 0, decodedBodySizeInBytes: 0}), resourceStart);
+    result.journeys.push({name, url: page.url(), elapsedInMs, requestCount: requestLog.length - requestStart, resourceSummary});
   };
   try {
     await record('desktop.home', async () => {
@@ -116,37 +120,37 @@ async function runRepeat(browser, server, repeat) {
       await waitForText(page, 'ThinaticSystem');
       await waitForText(page, 'Synthetic notice');
       await page.getByRole('main').waitFor({state: 'visible'});
-      await scanA11y(page, result, 'desktop.home');
     }, 'home-desktop');
+    await scanA11y(page, result, 'desktop.home');
     await record('desktop.theme-toggle', async () => {
       const themeToggle = page.getByRole('button', {name: 'ライトモードとダークモードを切り替えます'});
       await themeToggle.focus();
       await themeToggle.press('Enter');
       result.observations.push({name: 'desktop.theme-toggle', keyboard: true, ariaPressed: await themeToggle.getAttribute('aria-pressed'), focused: await themeToggle.evaluate((element) => element === document.activeElement)});
-      await scanA11y(page, result, 'desktop.theme-toggle');
     });
+    await scanA11y(page, result, 'desktop.theme-toggle');
     await record('desktop.blog-list', async () => {
-      await page.getByRole('link', {name: 'Blog', exact: true}).first().click();
+      await page.getByText('Blog', {exact: true}).first().click();
       await page.getByRole('heading', {name: 'Blog', exact: true}).waitFor({state: 'visible'});
       await waitForText(page, 'Synthetic article one');
-      await scanA11y(page, result, 'desktop.blog-list');
     }, 'blog-list');
+    await scanA11y(page, result, 'desktop.blog-list');
     await record('desktop.blog-article', async () => {
       await page.getByText('Synthetic article one', {exact: true}).click();
       await page.getByRole('heading', {name: 'Synthetic article one', exact: true}).waitFor({state: 'visible'});
       await waitForText(page, 'Fixture content for a deterministic browser baseline.');
-      await scanA11y(page, result, 'desktop.blog-article');
     }, 'blog-article');
+    await scanA11y(page, result, 'desktop.blog-article');
     await record('desktop.blog-back', async () => {
       await page.goBack({waitUntil: 'domcontentloaded'});
       await page.getByRole('heading', {name: 'Blog', exact: true}).waitFor({state: 'visible'});
     });
     await record('desktop.discography', async () => {
-      await page.getByRole('link', {name: 'Discography', exact: true}).first().click();
+      await page.getByText('Discography', {exact: true}).first().click();
       await page.getByRole('heading', {name: 'Discography', exact: true}).waitFor({state: 'visible'});
       await waitForText(page, 'Synthetic release');
-      await scanA11y(page, result, 'desktop.discography');
     }, 'discography');
+    await scanA11y(page, result, 'desktop.discography');
   } finally {
     await context.close();
   }
@@ -161,6 +165,7 @@ async function runRepeat(browser, server, repeat) {
   mobile.on('requestfailed', (request) => result.failedRequests.push({url: request.url(), failure: request.failure()?.errorText ?? 'unknown'}));
   try {
     const startedAt = performance.now();
+    const resourceStart = await mobile.evaluate(() => performance.getEntriesByType('resource').length);
     await mobile.goto(`${baseUrl}/`, {waitUntil: 'domcontentloaded'});
     await waitForText(mobile, 'ThinaticSystem');
     const viewport = mobile.viewportSize();
@@ -177,10 +182,12 @@ async function runRepeat(browser, server, repeat) {
     await mobile.getByText('Blog', {exact: true}).last().click();
     await mobile.getByRole('heading', {name: 'Blog', exact: true}).waitFor({state: 'visible'});
     await waitForText(mobile, 'Synthetic article one');
-    await scanA11y(mobile, result, 'mobile.menu-blog');
     await waitForVisualReady(mobile);
+    const elapsedInMs = Math.round((performance.now() - startedAt) * 100) / 100;
+    const resourceSummary = await mobile.evaluate((start) => performance.getEntriesByType('resource').slice(start).filter((entry) => entry.name.startsWith(location.origin) && /\.(?:js|css)(?:\?|$)/.test(new URL(entry.name).pathname)).reduce((summary, entry) => ({count: summary.count + 1, transferSizeInBytes: summary.transferSizeInBytes + Number(entry.transferSize ?? 0), decodedBodySizeInBytes: summary.decodedBodySizeInBytes + Number(entry.decodedBodySize ?? 0)}), {count: 0, transferSizeInBytes: 0, decodedBodySizeInBytes: 0}), resourceStart);
+    await scanA11y(mobile, result, 'mobile.menu-blog');
     result.observations.push({name: 'mobile.viewport-and-reflow', viewport, reflow, reducedMotion: 'reduce', keyboardMenu: true});
-    result.journeys.push({name: 'mobile.menu-blog', url: mobile.url(), elapsedInMs: Math.round((performance.now() - startedAt) * 100) / 100, requestCount: mobileRequestLog.length});
+    result.journeys.push({name: 'mobile.menu-blog', url: mobile.url(), elapsedInMs, requestCount: mobileRequestLog.length, resourceSummary});
     result.staticResourceSummary = await mobile.evaluate(() => performance.getEntriesByType('resource').filter((entry) => entry.name.startsWith(location.origin)).reduce((summary, entry) => ({count: summary.count + 1, transferSizeInBytes: summary.transferSizeInBytes + Number(entry.transferSize ?? 0), decodedBodySizeInBytes: summary.decodedBodySizeInBytes + Number(entry.decodedBodySize ?? 0)}), {count: 0, transferSizeInBytes: 0, decodedBodySizeInBytes: 0}));
   } finally {
     await mobileContext.close();
@@ -193,7 +200,7 @@ function aggregateRuns(runs) {
   const journeys = Object.fromEntries(names.map((name) => {
     const observations = runs.flatMap((run) => run.journeys.filter((journey) => journey.name === name));
     const elapsed = observations.map(({elapsedInMs}) => elapsedInMs).sort((left, right) => left - right);
-    return [name, {runs: elapsed, medianInMs: elapsed[Math.floor(elapsed.length / 2)], requestCounts: observations.map(({requestCount}) => requestCount)}];
+    return [name, {runs: elapsed, medianInMs: elapsed[Math.floor(elapsed.length / 2)], requestCounts: observations.map(({requestCount}) => requestCount), resourceSummaries: observations.map(({resourceSummary}) => resourceSummary)}];
   }));
   return {journeys, staticResourceSummaries: runs.map(({staticResourceSummary}) => staticResourceSummary)};
 }
@@ -208,7 +215,7 @@ async function main() {
   try {
     const runs = [];
     for (let repeat = 1; repeat <= repeatCount; repeat += 1) runs.push(await runRepeat(browser, server, repeat));
-    const result = {schema: 'thinaticsystem-modernization/browser-smoke/v2', browser: runs[0].browser, repeatCount, runs, aggregate: aggregateRuns(runs), manualGates: ['visual inspection', 'representative screen-reader operation']};
+    const result = {schema: 'thinaticsystem-modernization/browser-smoke/v3', browser: runs[0].browser, repeatCount, timingSubstrate: {fixture: 'owned synthetic CMS/API data', reducedMotion: 'reduce', readiness: 'waitForVisualReady before timer stop', accessibility: 'axe scan after timer stop', server: 'loopback static artifact server'}, runs, aggregate: aggregateRuns(runs), manualGates: ['visual inspection', 'representative screen-reader operation']};
     if (outputPath) {
       writeFileSync(outputPath, `${JSON.stringify(result, null, 2)}\n`);
     }

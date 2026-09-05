@@ -33,6 +33,13 @@ function readEvidence() {
   const evidence = JSON.parse(readFileSync(browserEvidencePath, 'utf8'));
   if (!Number.isInteger(evidence.repeatCount) || evidence.repeatCount < 3) fail('Performance evidence requires at least three browser repeats.');
   if (!evidence.aggregate?.journeys) fail('Browser evidence does not contain aggregate journey measurements.');
+  if (evidence.schema !== 'thinaticsystem-modernization/browser-smoke/v3') fail('Performance evidence must come from the timing-only browser-smoke v3 harness.');
+  const substrate = evidence.timingSubstrate;
+  if (substrate?.fixture !== 'owned synthetic CMS/API data' || substrate.reducedMotion !== 'reduce' || substrate.readiness !== 'waitForVisualReady before timer stop' || substrate.accessibility !== 'axe scan after timer stop' || substrate.server !== 'loopback static artifact server') fail('Performance evidence does not declare the required shared timing substrate.');
+  if (!Array.isArray(evidence.runs) || evidence.runs.length !== evidence.repeatCount) fail('Performance evidence run count does not match repeatCount.');
+  for (const [name, journey] of Object.entries(evidence.aggregate.journeys)) {
+    if (!Array.isArray(journey.runs) || journey.runs.length !== evidence.repeatCount || !Array.isArray(journey.requestCounts) || journey.requestCounts.length !== evidence.repeatCount || !Array.isArray(journey.resourceSummaries) || journey.resourceSummaries.length !== evidence.repeatCount) fail(`Incomplete repeated evidence for ${name}.`);
+  }
   return evidence;
 }
 
@@ -50,6 +57,11 @@ function main() {
       continue;
     }
     if (observed.requestCounts.some((count) => count > expected.requestCount)) regressions.push(`Request count regression in ${name}: ${JSON.stringify(observed.requestCounts)} > ${expected.requestCount}`);
+    const timingThreshold = baseline.policy.timing.maxRelativeRegression;
+    if (!Number.isFinite(timingThreshold) || timingThreshold < 0) fail('Baseline timing policy must define a non-negative relative regression threshold.');
+    if (!Number.isFinite(observed.medianInMs) || observed.medianInMs > expected.medianInMs * (1 + timingThreshold)) regressions.push(`Timing regression or inconclusive measurement in ${name}: median ${observed.medianInMs}ms > ${expected.medianInMs}ms baseline by more than ${timingThreshold * 100}%.`);
+    const expectedResources = baseline.routeResources?.[name];
+    if (expectedResources && (!observed.resourceSummaries?.length || observed.resourceSummaries.some((resourceSummary) => !resourceSummary || resourceSummary.decodedBodySizeInBytes > expectedResources.rawBytes || resourceSummary.count > expectedResources.requestCount))) regressions.push(`Lazy-route resource regression in ${name}: observed ${JSON.stringify(observed.resourceSummaries)} > ${JSON.stringify(expectedResources)}`);
   }
   for (const key of ['rawBytes', 'gzipBytes', 'brotliBytes']) {
     if (initial.total[key] > baseline.initial[key]) regressions.push(`Initial ${key} regression: ${initial.total[key]} > ${baseline.initial[key]}`);
@@ -58,9 +70,11 @@ function main() {
     schema: 'thinaticsystem-modernization/performance-check/v1',
     baseSha: baseline.baseSha,
     candidateHead: process.env.CANDIDATE_SHA ?? 'not supplied',
+    timingSubstrate: evidence.timingSubstrate,
     sizeComparison,
     journeys: evidence.aggregate.journeys,
     policy: baseline.policy,
+    timingVerdict: regressions.some((regression) => regression.startsWith('Timing regression')) ? 'INCONCLUSIVE_OR_FAIL' : 'COMPARABLE_WITHIN_PRESET_NOISE_RULE',
     regressions,
     verdict: regressions.length === 0 ? 'PASS: size/request non-regression; timing retained as three-repeat lab evidence' : 'FAIL',
   };

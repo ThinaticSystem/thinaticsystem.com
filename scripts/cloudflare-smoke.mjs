@@ -1,9 +1,11 @@
 import {createServer} from 'node:http';
-import {createReadStream, existsSync, statSync} from 'node:fs';
+import {createReadStream, existsSync, readFileSync, statSync} from 'node:fs';
 import {extname, join, normalize} from 'node:path';
 
 const distRoot = process.env.DIST_ROOT ?? 'dist/app/browser';
-const onePixelJson = JSON.stringify([{data: {id: 'fixture-1', type: 'patron', attributes: {full_name: 'Synthetic patron'}}}]);
+const patronsFixturePath = process.env.PATRONS_FIXTURE ?? 'test/fixtures/patrons.json';
+const patronsJson = readFileSync(patronsFixturePath, 'utf8');
+JSON.parse(patronsJson);
 
 function contentType(filePath) {
   return ({'.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png', '.ico': 'image/x-icon'})[extname(filePath)] ?? 'application/octet-stream';
@@ -19,7 +21,7 @@ function createCloudflareLikeServer() {
         return;
       }
       response.writeHead(200, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'});
-      response.end(onePixelJson);
+      response.end(patronsJson);
       return;
     }
     if (requestPath.startsWith('/workers/')) {
@@ -68,7 +70,7 @@ async function main() {
       await check(baseUrl, '/workers/unknown', undefined, 404, 'application/json'),
       await check(baseUrl, '/missing-asset.js', undefined, 404, 'text/plain'),
     ];
-    const result = {schema: 'thinaticsystem-modernization/cloudflare-smoke/v1', distRoot, server: '127.0.0.1 only; no deploy', checks, verdict: 'PASS'};
+    const result = {schema: 'thinaticsystem-modernization/cloudflare-smoke/v2', distRoot, patronsFixturePath, server: '127.0.0.1 only; local static artifact plus explicit fixture API contract; no deploy', externalValidation: 'NOT_RUN', checks, verdict: 'PASS: local contract only'};
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } finally {
     await new Promise((resolve) => server.close(resolve));

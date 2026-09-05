@@ -11,7 +11,7 @@
       pkgs = import nixpkgs {inherit system;};
     in {
       default = pkgs.mkShell {
-        packages = [pkgs.nodejs_26 pkgs.pnpm];
+        packages = [pkgs.nodejs_22 pkgs.pnpm];
         shellHook = ''
           export NIX_NODE_VERSION="$(node --version)"
           export NIX_PNPM_VERSION="$(pnpm --version)"
