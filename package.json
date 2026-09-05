@@ -10,7 +10,7 @@
     "test": "ng test",
     "typecheck": "corepack pnpm exec tsc -p tsconfig.spec.json --noEmit",
     "test:known-defects": "node scripts/verify-known-defects.mjs",
-    "test:known-defects:contract": "node scripts/verify-known-defects-fixtures.mjs",
+    "test:known-defects:contract": "node scripts/verify-known-defects-fixtures.mjs && node scripts/verify-known-defect-runner-probes.mjs",
     "docs:check": "typedoc --options typedoc.json",
     "test:e2e": "EVIDENCE_OUTPUT=.artifacts/browser-smoke.json EVIDENCE_DIR=.artifacts/screenshots node scripts/browser-smoke.mjs",
     "perf:check": "node scripts/performance-check.mjs",

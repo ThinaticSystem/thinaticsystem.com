@@ -8,15 +8,17 @@
       "testName": "still exposes the nested interactive-anchor defect",
       "expected": "assertion-failure",
       "assertion": "semantic-anchor-structure",
+      "assertionLocation": {"line": 26},
       "disposition": "preserve-unfixed-product-defect"
     },
     {
       "id": "blog-http-error-loading",
       "spec": "src/known-defects/requirements.debt.spec.ts",
       "suiteName": "Known defects: executable requirement debt",
-      "testName": "blog request failures release the loading state and expose failure reporting",
+      "testName": "blog request failures release the loading state",
       "expected": "assertion-failure",
       "assertion": "loading-settles-on-http-error",
+      "assertionLocation": {"line": 96},
       "disposition": "preserve-unfixed-product-defect"
     },
     {
@@ -26,6 +28,7 @@
       "testName": "an older blog page response cannot overwrite a newer response",
       "expected": "assertion-failure",
       "assertion": "latest-page-response-wins",
+      "assertionLocation": {"line": 115},
       "disposition": "preserve-unfixed-product-defect"
     },
     {
@@ -35,6 +38,7 @@
       "testName": "reloads an article when the route parameter changes",
       "expected": "assertion-failure",
       "assertion": "route-parameter-transition",
+      "assertionLocation": {"line": 136},
       "disposition": "preserve-unfixed-product-defect"
     },
     {
@@ -44,6 +48,7 @@
       "testName": "releases article loading after a handled 404 redirect",
       "expected": "assertion-failure",
       "assertion": "article-error-loading-cleanup",
+      "assertionLocation": {"line": 154},
       "disposition": "preserve-unfixed-product-defect"
     },
     {
@@ -53,6 +58,7 @@
       "testName": "keeps a replacement notification visible for its complete lifetime",
       "expected": "assertion-failure",
       "assertion": "replacement-notification-lifetime",
+      "assertionLocation": {"line": 166},
       "disposition": "preserve-unfixed-product-defect"
     },
     {
@@ -62,6 +68,7 @@
       "testName": "settles loading when the discography response is empty",
       "expected": "assertion-failure",
       "assertion": "empty-result-loading-settlement",
+      "assertionLocation": {"line": 178},
       "disposition": "preserve-unfixed-product-defect"
     },
     {
@@ -71,6 +78,7 @@
       "testName": "settles loading when a discography image fails",
       "expected": "assertion-failure",
       "assertion": "image-error-loading-settlement",
+      "assertionLocation": {"line": 193},
       "disposition": "preserve-unfixed-product-defect"
     },
     {
@@ -80,6 +88,7 @@
       "testName": "does not trust unsafe HTML content as safe content",
       "expected": "assertion-failure",
       "assertion": "unsafe-html-boundary",
+      "assertionLocation": {"line": 200},
       "disposition": "security-review-required"
     }
   ]

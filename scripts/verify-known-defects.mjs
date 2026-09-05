@@ -1,13 +1,14 @@
-import {mkdirSync, readFileSync, writeFileSync} from 'node:fs';
+import {mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import {validateKnownDefectRun} from './known-defect-contract.mjs';
 
 const manifest = JSON.parse(readFileSync('test/known-defects.json', 'utf8'));
 mkdirSync('.artifacts', {recursive: true});
 const reportPath = '.artifacts/known-defects-report.json';
+rmSync(reportPath, {force: true});
 const result = spawnSync(
   'corepack',
-  ['pnpm', 'exec', 'ng', 'run', 'thinaticsystem-com:known-defects', '--watch=false', '--progress=false', '--reporters=json', `--output-file=${reportPath}`],
+  ['pnpm', 'exec', 'ng', 'run', 'thinaticsystem-com:known-defects', '--watch=false', '--progress=false'],
   {encoding: 'utf8'},
 );
 const rawOutput = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;

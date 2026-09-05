@@ -72,6 +72,7 @@ export function validateKnownDefectRun({manifest, status, signal, error, report,
     }
     if (testCase.expected !== 'assertion-failure') errors.push(`The known-defect case ${testCase.id} has an unsupported or missing expected outcome.`);
     if (testCase.suiteName !== undefined && (typeof testCase.suiteName !== 'string' || testCase.suiteName.trim() === '')) errors.push(`The known-defect case ${testCase.id} has an invalid suite name.`);
+    if (!isRecord(testCase.assertionLocation) || !Number.isInteger(testCase.assertionLocation.line) || testCase.assertionLocation.line < 1) errors.push(`The known-defect case ${testCase.id} has no valid assertion location.`);
     if (expectedIds.has(testCase.id)) errors.push(`The known-defect manifest duplicates case ${testCase.id}.`);
     if (expectedAssertionNames.has(expectedAssertionName(testCase))) errors.push(`The known-defect manifest duplicates assertion identity ${expectedAssertionName(testCase)}.`);
     expectedIds.add(testCase.id);
@@ -90,11 +91,14 @@ export function validateKnownDefectRun({manifest, status, signal, error, report,
     errors.push('The structured test report is missing or invalid.');
     return errors;
   }
+  if (report.schema !== 'thinaticsystem-com/vitest-authoritative/v1') errors.push('The structured test report was not produced by the supported authoritative reporter.');
   for (const field of ['failureMessage', 'testExecError', 'runExecError', 'unhandledErrors']) {
     const value = report[field];
     if ((Array.isArray(value) && value.length > 0) || (typeof value === 'string' && value.trim() !== '')) errors.push(`The structured report contains a runner error in ${field}.`);
   }
   if (report.success !== false) errors.push('The structured report did not record an expected failing run.');
+  if (!Array.isArray(report.unhandledErrors) || report.unhandledErrors.length > 0) errors.push('The structured report contains unhandled runner errors.');
+  if (!Array.isArray(report.runnerErrors) || report.runnerErrors.length > 0) errors.push('The structured report contains collection or suite runner errors.');
   if (report.numTotalTests !== expectedCases.length || report.numFailedTests !== expectedCases.length || report.numPassedTests !== 0 || report.numPendingTests !== 0 || report.numTodoTests !== 0) {
     errors.push(`The structured test counts did not match the manifest: ${JSON.stringify({total: report.numTotalTests, failed: report.numFailedTests, passed: report.numPassedTests, pending: report.numPendingTests, todo: report.numTodoTests})}.`);
   }
@@ -118,7 +122,12 @@ export function validateKnownDefectRun({manifest, status, signal, error, report,
     const matchingAssertions = assertions.filter((assertion) => isRecord(assertion) && assertion.fullName === expectedAssertionName(testCase));
     const expectedAssertions = expectedCases.filter((candidate) => isRecord(candidate) && candidate.spec === testCase.spec).map(expectedAssertionName);
     const hasUnexpectedAssertion = assertions.some((assertion) => !isRecord(assertion) || !expectedAssertions.includes(assertion.fullName));
-    if (suite.status !== 'failed' || suite.message || assertions.length !== expectedAssertions.length || hasUnexpectedAssertion || matchingAssertions.length !== 1 || matchingAssertions[0].status !== 'failed' || !Array.isArray(matchingAssertions[0].failureMessages) || matchingAssertions[0].failureMessages.length === 0) {
+    const matchingAssertion = matchingAssertions[0];
+    const failureDetails = matchingAssertion?.failureDetails;
+    const detail = Array.isArray(failureDetails) && failureDetails.length === 1 ? failureDetails[0] : null;
+    const location = detail?.location;
+    const authoritativeAssertion = detail?.origin === 'test' && detail.name === 'AssertionError' && isRecord(location) && normalizedPath(location.file) === testCase.spec && location.line === testCase.assertionLocation?.line;
+    if (suite.status !== 'failed' || suite.message || assertions.length !== expectedAssertions.length || hasUnexpectedAssertion || matchingAssertions.length !== 1 || matchingAssertion.status !== 'failed' || !Array.isArray(matchingAssertion.failureMessages) || matchingAssertion.failureMessages.length === 0 || !authoritativeAssertion) {
       errors.push(`Expected one failed structured assertion for ${testCase.id}; observed ${JSON.stringify({status: suite.status, message: suite.message, assertions}).slice(0, 2_000)}.`);
     }
   }

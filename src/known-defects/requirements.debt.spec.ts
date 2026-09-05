@@ -5,8 +5,8 @@ import {render} from '@testing-library/angular';
 import {provideHttpClient} from '@angular/common/http';
 import {provideHttpClientTesting, HttpTestingController} from '@angular/common/http/testing';
 import {TestBed} from '@angular/core/testing';
-import {BehaviorSubject, of, Subject, throwError} from 'rxjs';
-import {vi} from 'vitest';
+import {BehaviorSubject, config as rxjsConfig, of, Subject, throwError} from 'rxjs';
+import {afterEach, vi} from 'vitest';
 import IndexComponent from '../app/blog/index/index.component';
 import ArticleComponent from '../app/blog/article/article.component';
 import DiscographyComponent from '../app/discography/discography.component';
@@ -21,21 +21,38 @@ import {environment} from '../environments/environment';
 const title = {setTitle: () => undefined} as unknown as Title;
 const navigate = {go: () => undefined} as unknown as NavigateService;
 
-const isRecord = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object';
-const expectedHttpErrors: unknown[] = [];
-const handleExpectedHttpError = (error: unknown): void => {
-  const errorBody = error instanceof HttpErrorResponse ? error.error : error;
-  const message = isRecord(errorBody) && typeof errorBody['message'] === 'string' ? errorBody['message'] : '';
-  if (message === 'fixture failure' || message === 'missing') {
-    expectedHttpErrors.push(error);
-    return;
-  }
-  throw error;
-};
+const initialRxjsUnhandledError = rxjsConfig.onUnhandledError;
 
-// NOTE: The product subscribes without an error handler. This test-owned boundary
-// records only the two expected fixture errors so they cannot masquerade as runner failures.
-process.on('uncaughtException', handleExpectedHttpError);
+afterEach(() => {
+  expect(rxjsConfig.onUnhandledError).toBe(initialRxjsUnhandledError);
+});
+
+const flushUnhandledErrors = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+
+const runWithExpectedRxjsErrors = async (
+  expectedErrors: readonly unknown[],
+  run: () => Promise<void> | void,
+): Promise<unknown[]> => {
+  const originalHandler = rxjsConfig.onUnhandledError;
+  const observedErrors: unknown[] = [];
+  rxjsConfig.onUnhandledError = (error: unknown): void => {
+    if (expectedErrors.includes(error)) {
+      observedErrors.push(error);
+      return;
+    }
+    if (originalHandler) {
+      originalHandler(error);
+      return;
+    }
+    throw error;
+  };
+  try {
+    await run();
+    return observedErrors;
+  } finally {
+    rxjsConfig.onUnhandledError = originalHandler;
+  }
+};
 
 const blog = (id: number): Blog => ({
   id,
@@ -64,15 +81,18 @@ const artwork = {
 const discography = {title: 'Fixture', release: '2024-01-01', artwork} as unknown as Discography;
 
 describe('Known defects: executable requirement debt', () => {
-  it('blog request failures release the loading state and expose failure reporting', async () => {
+  it('blog request failures release the loading state', async () => {
     const loading = {loading: true} as unknown as LoadingService;
     const error = new HttpErrorResponse({status: 503, error: {message: 'fixture failure'}});
     const http = {
       get: (url: string) => url.endsWith('/count') ? of(0) : throwError(() => error),
     } as unknown as HttpClient;
-    new IndexComponent(http, title, navigate, loading).ngOnInit();
-    await Promise.resolve();
+    const observedErrors = await runWithExpectedRxjsErrors([error], async () => {
+      new IndexComponent(http, title, navigate, loading).ngOnInit();
+      await flushUnhandledErrors();
+    });
 
+    expect(observedErrors).toEqual([error]);
     expect(loading.loading).toBe(false);
   });
 
@@ -109,8 +129,11 @@ describe('Known defects: executable requirement debt', () => {
     const loading = {loading: true} as unknown as LoadingService;
     const component = new ArticleComponent(route, http, title, navigate, loading);
     component.ngOnInit();
+    responses[0]!.next(blog(1));
     params.next(convertToParamMap({id: 'second'}));
 
+    if (responses.length === 2) responses[1]!.next(blog(2));
+    expect(component.blog()).toEqual(blog(2));
     expect(responses).toHaveLength(2);
   });
 
@@ -119,10 +142,14 @@ describe('Known defects: executable requirement debt', () => {
     const navigations: string[] = [];
     const localNavigate = {go: (path: string) => navigations.push(path)} as unknown as NavigateService;
     const route = {snapshot: {paramMap: convertToParamMap({id: 'missing'})}} as unknown as ActivatedRoute;
-    const http = {get: () => throwError(() => new HttpErrorResponse({status: 404, error: {message: 'missing'}}))} as unknown as HttpClient;
-    new ArticleComponent(route, http, title, localNavigate, loading).ngOnInit();
-    await Promise.resolve();
+    const expectedError = new HttpErrorResponse({status: 404, error: {message: 'missing'}});
+    const localHttp = {get: () => throwError(() => expectedError)} as unknown as HttpClient;
+    const observedErrors = await runWithExpectedRxjsErrors([expectedError.error], async () => {
+      new ArticleComponent(route, localHttp, title, localNavigate, loading).ngOnInit();
+      await flushUnhandledErrors();
+    });
 
+    expect(observedErrors).toEqual([expectedError.error]);
     expect(navigations).toEqual(['/404']);
     expect(loading.loading).toBe(false);
   });
@@ -158,8 +185,10 @@ describe('Known defects: executable requirement debt', () => {
     const http = TestBed.inject(HttpTestingController);
     const loading = TestBed.inject(LoadingService);
     http.expectOne(`${environment.cmsUrl}/discographies`).flush([discography]);
-    const image = rendered.container.querySelector('img');
-    image?.dispatchEvent(new Event('error'));
+    await rendered.fixture.whenStable();
+    rendered.fixture.detectChanges();
+    const image = await rendered.findByRole('img', {name: 'fixture'});
+    image.dispatchEvent(new Event('error'));
 
     expect(loading.loading).toBe(false);
   });

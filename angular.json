@@ -106,7 +106,8 @@
             "include": ["src/known-defects/**/*.spec.ts"],
             "watch": false,
             "providersFile": "src/test-providers.ts",
-            "setupFiles": ["src/test-setup.ts"]
+            "setupFiles": ["src/test-setup.ts"],
+            "runnerConfig": "vitest.known-defects.config.mjs"
           }
         },
         "lint": {
