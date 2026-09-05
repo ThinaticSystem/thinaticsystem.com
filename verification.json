@@ -1,0 +1,36 @@
+{
+  "schema": "thinaticsystem-modernization/verification/v1",
+  "repository": "/home/hermes/projects/thinaticsystem.com",
+  "branch": "chore/modernization-local",
+  "candidateVerifiedCommit": "da9b15c48190d5759e605aebcba649f37258a3f5",
+  "comparisonBaseSha": "33b4ef4e8d21276130127a61aede6f0a8e1c47cb",
+  "commands": [
+    {"command": "corepack pnpm install --frozen-lockfile --offline --reporter=append-only", "exitCode": 0, "evidence": ".artifacts/install.log"},
+    {"command": "corepack pnpm run check", "exitCode": 0, "evidence": ".artifacts/check.log", "details": {"unitTests": "17 files / 19 tests passed", "knownDefectRaw": "1 registered assertion failure", "knownDefectGate": "PASS"}},
+    {"command": "NG_BUILD_MAX_WORKERS=2 corepack pnpm run build", "exitCode": 0, "evidence": ".artifacts/build.log", "artifact": "dist/app/browser"},
+    {"command": "corepack pnpm run docs:check", "exitCode": 0, "evidence": ".artifacts/docs.log", "artifact": ".artifacts/typedoc"},
+    {"command": "corepack pnpm run test:e2e", "exitCode": 0, "evidence": ".artifacts/e2e.log", "artifact": ".artifacts/browser-smoke.json", "repeats": 3, "a11yViolations": 0, "consoleErrors": 0, "pageErrors": 0, "failedRequests": 0, "blockedExternalRequests": 0},
+    {"command": "corepack pnpm run perf:check", "exitCode": 0, "evidence": ".artifacts/perf.log", "artifact": ".artifacts/performance.json", "regressions": []},
+    {"command": "corepack pnpm run deploy:check", "exitCode": 0, "evidence": ".artifacts/deploy.log", "verdict": "PASS; local only"},
+    {"command": "git diff --check", "exitCode": 0}
+  ],
+  "requiredChecks": {
+    "frozenInstall": "PASS",
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "unit": "PASS",
+    "knownDefectContract": "PASS",
+    "productionBuild": "PASS",
+    "typedoc": "PASS",
+    "browserA11yKeyboardMobile": "PASS",
+    "performanceComparison": "PASS",
+    "cloudflareLocalSmoke": "PASS",
+    "remoteGitHubActions": "NOT_RUN",
+    "humanVisualScreenReader": "PENDING",
+    "cloudflareAccountOrLiveDeploy": "NOT_RUN",
+    "agentsGuide": "BLOCKED_BY_PROTECTED_FILE_APPROVAL"
+  },
+  "performance": {"initialRawDeltaBytes": -98135, "initialGzipDeltaBytes": -28199, "initialBrotliDeltaBytes": -24288},
+  "manualGaps": ["remote GitHub Actions", "human visual inspection", "representative screen-reader operation", "Cloudflare account/project binding and live deployment", "AGENTS.md protected-file approval"],
+  "sideEffects": ["No push", "No PR", "No merge", "No publish", "No deploy", "No DNS mutation", "No CMS write", "No infrastructure mutation"]
+}
