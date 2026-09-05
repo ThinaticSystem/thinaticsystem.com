@@ -36,4 +36,4 @@ corepack pnpm start
 - このmigrationの基準SHAは`33b4ef4e8d21276130127a61aede6f0a8e1c47cb`である
 - Cloudflare account、branch binding、remote Actions実行、本番deploy、DNS変更はこのrepositoryのlocal checkでは確認しない
 
-既存の配信責務`/workers/*`はSPA fallbackと別のAPIである。`docs/quality.md`、`docs/architecture.md`、`typedoc.json`に品質契約と境界を記録している。詳細なagent向け制約は`AGENTS.md`を参照する
+既存の配信責務`/workers/*`はSPA fallbackと別のAPIである。`docs/quality.md`、`docs/architecture.md`、`typedoc.json`に品質契約と境界を記録している
