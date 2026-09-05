@@ -30,5 +30,7 @@ describe('IndexComponent', () => {
     fixture.detectChanges();
 
     expect(component).toBeTruthy();
+    expect(component.blogs()).toEqual([]);
+    expect(component.totalItems()).toBe(0);
   });
 });

@@ -13,5 +13,13 @@ describe('SanitizeHtmlPipe', () => {
     expect(pipe).toBeTruthy();
   });
 
+  it('preserves legitimate embedded content', () => {
+    const domSanitizer = TestBed.inject(DomSanitizer);
+    const pipe = new SanitizeHtmlPipe(domSanitizer);
+    const content = '<p>fixture</p><iframe src="https://player.example.test/embed/1"></iframe>';
+
+    expect(String(pipe.transform(content))).toContain(content);
+  });
+
 
 });

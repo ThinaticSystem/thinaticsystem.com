@@ -27,5 +27,11 @@ describe('ShareComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('does not report a rejected copy as a successful copy', () => {
+    fixture.nativeElement.querySelector('button').dispatchEvent(new Event('cbOnError'));
+
+    expect(component.Notification.showNotification).toBe(false);
+  });
+
 
 });

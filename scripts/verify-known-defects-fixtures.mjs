@@ -16,11 +16,16 @@ const validReport = {
   numPassedTests: 0,
   numPendingTests: 0,
   numTodoTests: 0,
+  numTotalTestSuites: 2,
+  numFailedTestSuites: 2,
+  numPassedTestSuites: 0,
+  numPendingTestSuites: 0,
   testResults: [{
     status: 'failed',
     message: '',
     name: `${process.cwd()}/${testCase.spec}`,
     assertionResults: [{
+      ancestorTitles: [testCase.suiteName],
       fullName: `${testCase.suiteName} ${testCase.testName}`,
       status: 'failed',
       failureMessages: ['expected failure'],
@@ -39,6 +44,9 @@ assert.ok(validateKnownDefectRun({manifest, status: 1, signal: null, error: null
 assert.ok(validateKnownDefectRun({manifest, status: 1, signal: null, error: null, report: null}).some((message) => message.includes('structured test report')));
 assert.ok(validateKnownDefectRun({manifest, status: 1, signal: null, error: null, report: {...validReport, success: true}}).some((message) => message.includes('expected failing run')));
 assert.ok(validateKnownDefectRun({manifest, status: 1, signal: null, error: null, report: {...validReport, numPassedTests: 1}}).some((message) => message.includes('structured test counts')));
+assert.ok(validateKnownDefectRun({manifest, status: 1, signal: null, error: null, report: {...validReport, numTotalTestSuites: 1, numFailedTestSuites: 1}}).some((message) => message.includes('structured suite counters')));
+assert.deepEqual(validateKnownDefectRun({manifest, status: 1, signal: null, error: null, report: {...validReport, numTotalTestSuites: 2, numFailedTestSuites: 2, numPassedTestSuites: 0, numPendingTestSuites: 0}}), []);
+assert.ok(validateKnownDefectRun({manifest: {...manifest, cases: [testCase, {...testCase, id: 'duplicate-identity'}]}, status: 1, signal: null, error: null, report: validReport}).some((message) => message.includes('duplicates assertion identity')));
 assert.ok(validateKnownDefectRun({manifest, status: 1, signal: null, error: null, report: {...validReport, testResults: []}}).some((message) => message.includes('structured suite')));
 assert.ok(validateKnownDefectRun({manifest, status: 1, signal: null, error: null, report: {...validReport, testResults: [validReport.testResults[0], validReport.testResults[0]]}}).some((message) => message.includes('observed 2')));
 assert.ok(validateKnownDefectRun({manifest, status: 1, signal: null, error: null, report: {...validReport, testResults: [{...validReport.testResults[0], assertionResults: [...validReport.testResults[0].assertionResults, {fullName: 'unknown', status: 'failed', failureMessages: ['unexpected']}]}]}}).some((message) => message.includes('one failed structured assertion')));
