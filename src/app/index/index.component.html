@@ -47,12 +47,15 @@
 <div class="relative mb-12">
   <div class="max-w-7xl mx-auto">
     <h2>おしらせ</h2>
+    @if (notificationsError()) {
+      <p role="alert" class="mt-5">おしらせを読み込めませんでした</p>
+    }
     <ul class="mt-5 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-2 auto-cols-auto" role="list">
 
       @for (data of notifications() | orderBy: 'published_at' | reverse; track data) {
         <li class="col-span1 flex shadow-md rounded-md h-full">
           <a (click)="$event.preventDefault(); data.urlOrigin === origin ? navigate.go(data.url) : openNewTab(data.url)"
-             [href]="data.url" class="cursor-pointer">
+             [href]="data.url" class="flex w-full cursor-pointer">
             <div
               class="flex-1 flex items-center justify-between border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md">
               <div class="flex-1 px-4 py-8">
@@ -115,7 +118,7 @@
           </button>
         </div>
       </div>
-      <p class="text-lg">✨Debobigego API (GET <a [href]="'https://api.thinaticsystem.com/v1/debobigego'">api.thinaticsystem.com/v1/debobigego</a>)
+      <p class="text-lg">✨Debobigego API (GET <a class="api-link" [href]="'https://api.thinaticsystem.com/v1/debobigego'">api.thinaticsystem.com/v1/debobigego</a>)
         is Now Available!</p>
     </div>
   </div>

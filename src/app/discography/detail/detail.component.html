@@ -6,7 +6,7 @@
         <div class="lg:row-end-1 lg:col-span-4">
           <div class="rounded-3xl shadow-lg bg-gray-100 overflow-hidden">
             @if (discography?.artwork) {
-              <img (load)="loadingService.loading = false"
+              <img
                    [alt]="discography.artwork.alternativeText"
                    [src]="environment.cmsUrl + discography.artwork.url" class="aspect-square object-cover" width="100%">
             }
@@ -28,7 +28,6 @@
           </div>
           <!-- 紹介文 -->
           <div [innerHTML]="discography.detail | markdown | async" class="description text-gray-500 dark:text-gray-300">
-            <p>読み込み中...</p>
           </div>
           <!-- 詳細情報がある場合 -->
           @if (discography.detailComponent.length !== 0) {
@@ -95,7 +94,7 @@
               @for (demo of discography.demoComponent; track demo) {
                 <div class="my-4">
                   <p class="text-sm text-gray-500 dark:text-gray-300">{{ demo.title }}</p>
-                  <div [innerHTML]="demo.iframe | sanitizeHtml"></div>
+                  <app-media-embed [html]="demo.iframe" [title]="demo.title"></app-media-embed>
                 </div>
               }
             </div>

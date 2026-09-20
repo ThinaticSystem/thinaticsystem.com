@@ -1,23 +1,33 @@
-import {Injectable} from '@angular/core';
+import {Injectable, signal} from '@angular/core';
+import type {OnDestroy} from '@angular/core';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class NotificationService {
-  showNotification: boolean;
-  message: string;
+@Injectable({providedIn: 'root'})
+export class NotificationService implements OnDestroy {
+  readonly #showNotification = signal(false);
+  readonly #message = signal('');
 
-  constructor() {
-    this.showNotification = false;
-    this.message = '';
+  // NOTE: Timer expiry and repeated copy successes must update the zoneless shell without another click.
+  get showNotification(): boolean { return this.#showNotification(); }
+  set showNotification(value: boolean) { this.#showNotification.set(value); }
+  get message(): string { return this.#message(); }
+  #timer: ReturnType<typeof setTimeout> | null = null;
+  #destroyed = false;
+
+  show(message: string | undefined): void {
+    if (this.#destroyed) return;
+    if (this.#timer !== null) clearTimeout(this.#timer);
+    this.showNotification = true;
+    this.#message.set(message || 'コピーしました！');
+    this.#timer = setTimeout(() => {
+      this.#timer = null;
+      this.showNotification = false;
+    }, 3_000);
   }
 
-  show(message: string | undefined) {
-    this.showNotification = true;
-    this.message = message ? message : 'コピーしました！';
-
-    setTimeout(() => {
-      this.showNotification = false;
-    }, 3000);
+  ngOnDestroy(): void {
+    this.#destroyed = true;
+    if (this.#timer !== null) clearTimeout(this.#timer);
+    this.#timer = null;
+    this.showNotification = false;
   }
 }

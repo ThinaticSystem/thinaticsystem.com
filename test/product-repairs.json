@@ -1,0 +1,169 @@
+{
+  "schema": "thinaticsystem-com/product-repairs/v1",
+  "archive": ".artifacts/product-repairs-2026-09-12/source-before.tar.gz",
+  "cases": [
+    {
+      "id": "blog-card-nested-anchor",
+      "prior": {
+        "id": "blog-card-nested-anchor",
+        "spec": "src/known-defects/blog-card.nested-anchor.spec.ts",
+        "suiteName": "Known defects: BlogCardComponent",
+        "testName": "still exposes the nested interactive-anchor defect",
+        "expected": "assertion-failure",
+        "assertion": "semantic-anchor-structure",
+        "assertionLocation": {
+          "line": 26
+        },
+        "disposition": "preserve-unfixed-product-defect"
+      },
+      "spec": "src/app/components/blog-card/blog-card-navigation.spec.ts",
+      "testName": "it('[blog-card-nested-anchor] exposes independent article and tag links in keyboard order', async () => {",
+      "requirement": "normal passing assertion; no accepted unhandled errors"
+    },
+    {
+      "id": "blog-http-error-loading",
+      "prior": {
+        "id": "blog-http-error-loading",
+        "spec": "src/known-defects/requirements.debt.spec.ts",
+        "suiteName": "Known defects: executable requirement debt",
+        "testName": "blog request failures release the loading state",
+        "expected": "assertion-failure",
+        "assertion": "loading-settles-on-http-error",
+        "assertionLocation": {
+          "line": 96
+        },
+        "disposition": "preserve-unfixed-product-defect"
+      },
+      "spec": "src/app/blog/index/index.component.spec.ts",
+      "testName": "it('[blog-http-error-loading] handles a failed page without an unhandled error and releases loading', async () => {",
+      "requirement": "normal passing assertion; no accepted unhandled errors"
+    },
+    {
+      "id": "blog-concurrent-page-order",
+      "prior": {
+        "id": "blog-concurrent-page-order",
+        "spec": "src/known-defects/requirements.debt.spec.ts",
+        "suiteName": "Known defects: executable requirement debt",
+        "testName": "an older blog page response cannot overwrite a newer response",
+        "expected": "assertion-failure",
+        "assertion": "latest-page-response-wins",
+        "assertionLocation": {
+          "line": 115
+        },
+        "disposition": "preserve-unfixed-product-defect"
+      },
+      "spec": "src/app/blog/index/index.component.spec.ts",
+      "testName": "it('[blog-concurrent-page-order] cancels the older page and only the current request settles loading', () => {",
+      "requirement": "normal passing assertion; no accepted unhandled errors"
+    },
+    {
+      "id": "article-route-parameter-transition",
+      "prior": {
+        "id": "article-route-parameter-transition",
+        "spec": "src/known-defects/requirements.debt.spec.ts",
+        "suiteName": "Known defects: executable requirement debt",
+        "testName": "reloads an article when the route parameter changes",
+        "expected": "assertion-failure",
+        "assertion": "route-parameter-transition",
+        "assertionLocation": {
+          "line": 136
+        },
+        "disposition": "preserve-unfixed-product-defect"
+      },
+      "spec": "src/app/blog/article/article.component.spec.ts",
+      "testName": "it('[article-route-parameter-transition] resets old content and reloads title and share URL on reused routes', () => {",
+      "requirement": "normal passing assertion; no accepted unhandled errors"
+    },
+    {
+      "id": "article-404-loading-cleanup",
+      "prior": {
+        "id": "article-404-loading-cleanup",
+        "spec": "src/known-defects/requirements.debt.spec.ts",
+        "suiteName": "Known defects: executable requirement debt",
+        "testName": "releases article loading after a handled 404 redirect",
+        "expected": "assertion-failure",
+        "assertion": "article-error-loading-cleanup",
+        "assertionLocation": {
+          "line": 154
+        },
+        "disposition": "preserve-unfixed-product-defect"
+      },
+      "spec": "src/app/blog/article/article.component.spec.ts",
+      "testName": "it('[article-404-loading-cleanup] handles 404 without unhandled errors and releases loading after redirect', async () => {",
+      "requirement": "normal passing assertion; no accepted unhandled errors"
+    },
+    {
+      "id": "notification-replacement-lifetime",
+      "prior": {
+        "id": "notification-replacement-lifetime",
+        "spec": "src/known-defects/requirements.debt.spec.ts",
+        "suiteName": "Known defects: executable requirement debt",
+        "testName": "keeps a replacement notification visible for its complete lifetime",
+        "expected": "assertion-failure",
+        "assertion": "replacement-notification-lifetime",
+        "assertionLocation": {
+          "line": 166
+        },
+        "disposition": "preserve-unfixed-product-defect"
+      },
+      "spec": "src/app/services/notification-lifetime.spec.ts",
+      "testName": "it('[notification-replacement-lifetime] gives each replacement its full three seconds', () => {",
+      "requirement": "normal passing assertion; no accepted unhandled errors"
+    },
+    {
+      "id": "discography-empty-loading",
+      "prior": {
+        "id": "discography-empty-loading",
+        "spec": "src/known-defects/requirements.debt.spec.ts",
+        "suiteName": "Known defects: executable requirement debt",
+        "testName": "settles loading when the discography response is empty",
+        "expected": "assertion-failure",
+        "assertion": "empty-result-loading-settlement",
+        "assertionLocation": {
+          "line": 178
+        },
+        "disposition": "preserve-unfixed-product-defect"
+      },
+      "spec": "src/app/discography/discography.component.spec.ts",
+      "testName": "it('[discography-empty-loading] settles an empty result without inventing an image completion', () => {",
+      "requirement": "normal passing assertion; no accepted unhandled errors"
+    },
+    {
+      "id": "discography-image-error-loading",
+      "prior": {
+        "id": "discography-image-error-loading",
+        "spec": "src/known-defects/requirements.debt.spec.ts",
+        "suiteName": "Known defects: executable requirement debt",
+        "testName": "settles loading when a discography image fails",
+        "expected": "assertion-failure",
+        "assertion": "image-error-loading-settlement",
+        "assertionLocation": {
+          "line": 193
+        },
+        "disposition": "preserve-unfixed-product-defect"
+      },
+      "spec": "src/app/discography/discography.component.spec.ts",
+      "testName": "it('[discography-image-error-loading] settles each failed image once including fallback artwork', () => {",
+      "requirement": "normal passing assertion; no accepted unhandled errors"
+    },
+    {
+      "id": "unsafe-html-content",
+      "prior": {
+        "id": "unsafe-html-content",
+        "spec": "src/known-defects/requirements.debt.spec.ts",
+        "suiteName": "Known defects: executable requirement debt",
+        "testName": "does not trust unsafe HTML content as safe content",
+        "expected": "assertion-failure",
+        "assertion": "unsafe-html-boundary",
+        "assertionLocation": {
+          "line": 10
+        },
+        "disposition": "security-review-required"
+      },
+      "archive": ".artifacts/embed-policy-2026-09-11T23-57-59.143Z/source-before.tar.gz",
+      "spec": "src/app/pipes/sanitize-html.pipe.spec.ts",
+      "testName": "[unsafe-html-content] removes executable scripts rather than trusting HTML",
+      "requirement": "Sanitize ordinary markup; allow only canonical, approved media iframe URLs via the dedicated component"
+    }
+  ]
+}

@@ -5,21 +5,21 @@
         <h1 class="text-3xl font-extrabold tracking-tight sm:text-4xl">Discography</h1>
       </div>
       <div class="lg:col-span-2">
+        @if (error()) {
+          <div role="alert"><p>作品を読み込めませんでした</p><button type="button" class="underline" (click)="loadDiscographies()">再試行</button></div>
+        } @else if (discographies()?.length === 0) {
+          <p>まだ作品がありません</p>
+        }
         <ul class="space-y-12 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:gap-x-8" role="list">
 
           @for (data of discographies() | orderBy: 'release' | reverse; track data) {
             <li>
               <a [routerLink]="'/discography/' + data.id" class="space-y-4 cursor-pointer">
                 <div class="artwork">
-                  @if (data?.artwork) {
-                    <img (load)="imageLoaded()"
-                         [alt]="$safeNavigationMigration(data?.artwork.alternativeText)"
-                         [src]="environment.cmsUrl + data?.artwork.formats.small.url" width="100%">
-                  }
-                  @if (!data?.artwork) {
-                    <img (load)="imageLoaded()"
-                         [src]="environment.cmsUrl + '/uploads/noimage_f16114bd25.png'" alt="画像がありません">
-                  }
+                  <img (load)="imageLoaded(data, $event)" (error)="imageLoaded(data, $event)"
+                       [alt]="data.artwork ? data.artwork.alternativeText : '画像がありません'"
+                       [src]="environment.cmsUrl + (data.artwork ? data.artwork.formats.small.url : '/uploads/noimage_f16114bd25.png')"
+                       [attr.width]="data.artwork ? '100%' : null">
                 </div>
                 <div class="text-lg leading-6 font-medium space-y-1">
                   <h2>{{ data.title }}</h2>

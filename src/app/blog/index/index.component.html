@@ -4,6 +4,12 @@
       <h1 class="text-3xl font-extrabold tracking-tight sm:text-4xl">Blog</h1>
     </div>
     <div class="lg:col-span-2">
+      @if (error()) {
+        <div role="alert"><p>記事を読み込めませんでした</p><button type="button" class="underline" (click)="loadPage(page)">再試行</button></div>
+      }
+      @if (countError()) {
+        <div role="alert"><p>件数を読み込めませんでした</p><button type="button" class="underline" (click)="loadCount()">件数を再試行</button></div>
+      }
       @let articles = blogs();
       @if (articles?.length) {
       <div class="mt-6 grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 sm:gap-y-10">
@@ -15,9 +21,9 @@
         }
       </div>
       <div class="text-center my-12">
-        <pagination-controls (pageChange)="page = $event; loadPage($event)"></pagination-controls>
+        <pagination-controls (pageChange)="changePage($event)"></pagination-controls>
       </div>
-      } @else {
+      } @else if (articles && !error()) {
       <div class="animate__animated animate__fadeIn">
         <p class="text-2xl font-semibold text-gray-600">まだ記事がありません</p>
         <div class="go-home w-fit">

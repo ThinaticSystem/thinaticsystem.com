@@ -1,4 +1,5 @@
-import { MarkedOptions, MarkedRenderer } from "ngx-markdown";
+import { MarkedRenderer } from "ngx-markdown";
+import type { MarkedOptions } from "ngx-markdown";
 import { environment } from "src/environments/environment";
 
 export const markedOptionsFactory = (): MarkedOptions => {
@@ -6,9 +7,10 @@ export const markedOptionsFactory = (): MarkedOptions => {
 
   // 相対リンクの場合はcmsホストに対する相対URLなのでcmsの絶対URLに置換する
   const imageRenderer = renderer.image;
-  renderer.image = (token) => {
+  // NOTE: Marked binds its active parser through the invocation receiver, not this factory's renderer.
+  renderer.image = function (token) {
     const isRelativeUrl = token.href.startsWith('/');
-    return imageRenderer.call(renderer, {
+    return imageRenderer.call(this, {
       ...token,
       href: isRelativeUrl ? `${environment.cmsUrl}${token.href}` : token.href,
     });
@@ -16,9 +18,9 @@ export const markedOptionsFactory = (): MarkedOptions => {
 
   // Markdownのリンクが外部リンクの場合、aタグのtarget="_blank"を付与する
   const linkRenderer = renderer.link;
-  renderer.link = (token) => {
+  renderer.link = function (token) {
     const localLink = token.href.startsWith(`${location.protocol}//${location.hostname}`) || token.href.startsWith('/');
-    const html = linkRenderer.call(renderer, token);
+    const html = linkRenderer.call(this, token);
     return localLink ? html : html.replace(/^<a /, `<a target="_blank" rel="noreferrer noopener nofollow" `);
   };
 

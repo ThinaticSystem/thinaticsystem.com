@@ -1,5 +1,6 @@
 import {existsSync, readFileSync, writeFileSync, mkdirSync} from 'node:fs';
-import {join, basename} from 'node:path';
+import {join, basename, resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {gzipSync, brotliCompressSync, constants} from 'node:zlib';
 
 const distRoot = process.env.DIST_ROOT ?? 'dist/app/browser';
@@ -11,7 +12,7 @@ function fail(message) {
   throw new Error(message);
 }
 
-function initialFiles() {
+export function collectInitialAssets(distRoot) {
   const index = readFileSync(join(distRoot, 'index.html'), 'utf8');
   const references = [...index.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g)].map((match) => match[1].split('?')[0]);
   const files = [...new Set(references)].map((reference) => {
@@ -33,9 +34,9 @@ function readEvidence() {
   const evidence = JSON.parse(readFileSync(browserEvidencePath, 'utf8'));
   if (!Number.isInteger(evidence.repeatCount) || evidence.repeatCount < 3) fail('Performance evidence requires at least three browser repeats.');
   if (!evidence.aggregate?.journeys) fail('Browser evidence does not contain aggregate journey measurements.');
-  if (evidence.schema !== 'thinaticsystem-modernization/browser-smoke/v3') fail('Performance evidence must come from the timing-only browser-smoke v3 harness.');
+  if (!['thinaticsystem-modernization/browser-smoke/v3', 'thinaticsystem-modernization/browser-smoke/v4'].includes(evidence.schema)) fail('Performance evidence must come from the timing-only browser-smoke v3 harness.');
   const substrate = evidence.timingSubstrate;
-  if (substrate?.fixture !== 'owned synthetic CMS/API data' || substrate.reducedMotion !== 'reduce' || substrate.readiness !== 'waitForVisualReady before timer stop' || substrate.accessibility !== 'axe scan after timer stop' || substrate.server !== 'loopback static artifact server') fail('Performance evidence does not declare the required shared timing substrate.');
+  if (substrate?.fixture !== 'owned synthetic CMS/API data' || substrate.reducedMotion !== 'reduce' || substrate.readiness !== (evidence.schema.endsWith('/v4') ? 'loading image fade then finite motion settled before timer stop' : 'waitForVisualReady before timer stop') || substrate.accessibility !== 'axe scan after timer stop' || substrate.server !== 'loopback static artifact server') fail('Performance evidence does not declare the required shared timing substrate.');
   if (!Array.isArray(evidence.runs) || evidence.runs.length !== evidence.repeatCount) fail('Performance evidence run count does not match repeatCount.');
   for (const [name, journey] of Object.entries(evidence.aggregate.journeys)) {
     if (!Array.isArray(journey.runs) || journey.runs.length !== evidence.repeatCount || !Array.isArray(journey.requestCounts) || journey.requestCounts.length !== evidence.repeatCount || !Array.isArray(journey.resourceSummaries) || journey.resourceSummaries.length !== evidence.repeatCount) fail(`Incomplete repeated evidence for ${name}.`);
@@ -47,7 +48,10 @@ function main() {
   if (!existsSync(join(distRoot, 'index.html'))) fail(`Build artifact missing: ${join(distRoot, 'index.html')}`);
   const baseline = JSON.parse(readFileSync(baselinePath, 'utf8'));
   const evidence = readEvidence();
-  const initial = initialFiles();
+  if (evidence.schema.endsWith('/v4') || baseline.schema?.endsWith('/v4')) {
+    if (baseline.schema !== evidence.schema || JSON.stringify(baseline.timingSubstrate) !== JSON.stringify(evidence.timingSubstrate) || baseline.browser?.version !== evidence.browser?.version) fail('Visible-readiness evidence needs a fresh paired v4 baseline with identical browser/font/theme/readiness. Supply PERFORMANCE_BASELINE; the historical v3 baseline is not comparable.');
+  }
+  const initial = collectInitialAssets(distRoot);
   const sizeComparison = {baseline: baseline.initial, candidate: initial.total, deltas: Object.fromEntries(Object.keys(baseline.initial).map((key) => [key, initial.total[key] - baseline.initial[key]]))};
   const regressions = [];
   for (const [name, expected] of Object.entries(baseline.journeys)) {
@@ -76,7 +80,7 @@ function main() {
     policy: baseline.policy,
     timingVerdict: regressions.some((regression) => regression.startsWith('Timing regression')) ? 'INCONCLUSIVE_OR_FAIL' : 'COMPARABLE_WITHIN_PRESET_NOISE_RULE',
     regressions,
-    verdict: regressions.length === 0 ? 'PASS: size/request non-regression; timing retained as three-repeat lab evidence' : 'FAIL',
+    verdict: regressions.length === 0 ? 'PASS: size/request non-regression; timing retained as repeated local-lab evidence' : 'FAIL',
   };
   mkdirSync(join(outputPath, '..'), {recursive: true});
   writeFileSync(outputPath, `${JSON.stringify(result, null, 2)}\n`);
@@ -84,4 +88,4 @@ function main() {
   if (regressions.length) process.exitCode = 1;
 }
 
-try { main(); } catch (error) { process.stderr.write(`${error.stack ?? error}\n`); process.exitCode = 1; }
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) try { main(); } catch (error) { process.stderr.write(`${error.stack ?? error}\n`); process.exitCode = 1; }

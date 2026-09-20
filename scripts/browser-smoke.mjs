@@ -1,8 +1,12 @@
+import {waitForVisualReady} from './browser-readiness.mjs';
+import {browserEnvironment, browserFont} from './browser-environment.mjs';
 import {createServer} from 'node:http';
 import {createReadStream, existsSync, readFileSync, statSync} from 'node:fs';
 import {extname, join, normalize} from 'node:path';
 import {chromium} from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
+import {writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 
 const distRoot = process.env.DIST_ROOT ?? 'dist/app/browser';
 const baseUrl = process.env.BROWSER_BASE_URL ?? 'http://127.0.0.1:4174';
@@ -71,23 +75,20 @@ async function waitForText(page, text) {
   await page.getByText(text, {exact: true}).first().waitFor({state: 'visible', timeout: 10_000});
 }
 
-async function waitForVisualReady(page) {
-  await page.evaluate(async () => {
-    const animations = document.getAnimations();
-    const allFinished = Promise.all(animations.map((animation) => animation.finished.catch(() => {})));
-    await Promise.race([allFinished, new Promise((resolve) => setTimeout(resolve, 3_000))]);
-  });
-}
 
 async function scanA11y(page, result, name) {
   const scan = await new AxeBuilder({page}).analyze();
-  result.a11y.push({name, violations: scan.violations.map(({id, impact, description, helpUrl, nodes}) => ({id, impact, description, helpUrl, nodes: nodes.map(({target, html}) => ({target, html}))}))});
+  // NOTE: diagnostics are collected after the action timer; incomplete is not a new acceptance gate.
+  const raw = JSON.stringify(scan, null, 2) + '\n';
+  const rawFile = 'axe-' + name + '-repeat-' + result.repeat + '.json';
+  writeFileSync(join(evidenceRoot, rawFile), raw, {flag: 'wx'});
+  result.a11y.push({name, testEngine: scan.testEngine, diagnostics: {file: rawFile, sha256: createHash('sha256').update(raw).digest('hex')}, violations: scan.violations.map(({id, impact, description, helpUrl, nodes}) => ({id, impact, description, helpUrl, nodes: nodes.map(({target, html}) => ({target, html}))}))});
 }
 
 async function runRepeat(browser, server, repeat) {
   const result = {repeat, browser: {name: 'Chromium', executablePath: browserExecutablePath, version: browser.version()}, journeys: [], observations: [], a11y: [], consoleErrors: [], pageErrors: [], failedRequests: [], blockedExternalRequests: [], staticResourceSummary: null};
   const requestLog = [];
-  const context = await browser.newContext({viewport: {width: 1280, height: 900}, reducedMotion: 'reduce'});
+  const context = await browser.newContext({viewport: {width: 1280, height: 900}, reducedMotion: 'reduce', colorScheme: 'light'});
   const routeFixtures = async (route) => {
     const requestUrl = route.request().url();
     const fixture = fixtureFor(requestUrl);
@@ -96,6 +97,7 @@ async function runRepeat(browser, server, repeat) {
     result.blockedExternalRequests.push({url: requestUrl, method: route.request().method()});
     return route.abort('blockedbyclient');
   };
+  await context.addInitScript(() => localStorage.setItem('theme', 'light'));
   await context.route('**/*', routeFixtures);
   const page = await context.newPage();
   page.on('request', (request) => requestLog.push({method: request.method(), url: request.url()}));
@@ -151,12 +153,13 @@ async function runRepeat(browser, server, repeat) {
       await waitForText(page, 'Synthetic release');
     }, 'discography');
     await scanA11y(page, result, 'desktop.discography');
-  } finally {
+  } catch (error) { error.partialRun = result; throw error; } finally {
     await context.close();
   }
 
-  const mobileContext = await browser.newContext({viewport: {width: 375, height: 812}, reducedMotion: 'reduce'});
+  const mobileContext = await browser.newContext({viewport: {width: 375, height: 812}, reducedMotion: 'reduce', colorScheme: 'light'});
   const mobileRequestLog = [];
+  await mobileContext.addInitScript(() => localStorage.setItem('theme', 'light'));
   await mobileContext.route('**/*', routeFixtures);
   const mobile = await mobileContext.newPage();
   mobile.on('request', (request) => mobileRequestLog.push({method: request.method(), url: request.url()}));
@@ -168,6 +171,8 @@ async function runRepeat(browser, server, repeat) {
     const resourceStart = await mobile.evaluate(() => performance.getEntriesByType('resource').length);
     await mobile.goto(`${baseUrl}/`, {waitUntil: 'domcontentloaded'});
     await waitForText(mobile, 'ThinaticSystem');
+    await waitForText(mobile, 'Synthetic notice');
+    await waitForVisualReady(mobile);
     const viewport = mobile.viewportSize();
     const reflow = await mobile.evaluate(() => ({scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth}));
     if (!viewport || viewport.width !== 375 || viewport.height !== 812) throw new Error(`Unexpected mobile viewport: ${JSON.stringify(viewport)}`);
@@ -186,10 +191,11 @@ async function runRepeat(browser, server, repeat) {
     const elapsedInMs = Math.round((performance.now() - startedAt) * 100) / 100;
     const resourceSummary = await mobile.evaluate((start) => performance.getEntriesByType('resource').slice(start).filter((entry) => entry.name.startsWith(location.origin) && /\.(?:js|css)(?:\?|$)/.test(new URL(entry.name).pathname)).reduce((summary, entry) => ({count: summary.count + 1, transferSizeInBytes: summary.transferSizeInBytes + Number(entry.transferSize ?? 0), decodedBodySizeInBytes: summary.decodedBodySizeInBytes + Number(entry.decodedBodySize ?? 0)}), {count: 0, transferSizeInBytes: 0, decodedBodySizeInBytes: 0}), resourceStart);
     await scanA11y(mobile, result, 'mobile.menu-blog');
+    await mobile.screenshot({path: join(evidenceRoot, `browser-mobile-blog-repeat-${repeat}.png`), fullPage: true});
     result.observations.push({name: 'mobile.viewport-and-reflow', viewport, reflow, reducedMotion: 'reduce', keyboardMenu: true});
     result.journeys.push({name: 'mobile.menu-blog', url: mobile.url(), elapsedInMs, requestCount: mobileRequestLog.length, resourceSummary});
     result.staticResourceSummary = await mobile.evaluate(() => performance.getEntriesByType('resource').filter((entry) => entry.name.startsWith(location.origin)).reduce((summary, entry) => ({count: summary.count + 1, transferSizeInBytes: summary.transferSizeInBytes + Number(entry.transferSize ?? 0), decodedBodySizeInBytes: summary.decodedBodySizeInBytes + Number(entry.decodedBodySize ?? 0)}), {count: 0, transferSizeInBytes: 0, decodedBodySizeInBytes: 0}));
-  } finally {
+  } catch (error) { error.partialRun = result; throw error; } finally {
     await mobileContext.close();
   }
   return result;
@@ -210,21 +216,25 @@ async function main() {
   const {mkdirSync, writeFileSync} = await import('node:fs');
   mkdirSync(evidenceRoot, {recursive: true});
   const server = createStaticServer();
-  await new Promise((resolve) => server.listen(new URL(baseUrl).port, '127.0.0.1', resolve));
-  const browser = await chromium.launch({headless: true, executablePath: browserExecutablePath, args: ['--no-sandbox', '--disable-dev-shm-usage']});
+  let browser = null;
   try {
+    if (!Number.isInteger(repeatCount) || repeatCount < 1 || repeatCount > 9) throw new Error('Browser repeats must be an integer from 1 to 9');
+    await new Promise((resolve, reject) => { server.once('error', reject); server.listen(new URL(baseUrl).port, '127.0.0.1', resolve); });
+    browser = await chromium.launch({headless: true, executablePath: browserExecutablePath, env: await browserEnvironment(), args: ['--no-sandbox', '--disable-dev-shm-usage']});
     const runs = [];
     for (let repeat = 1; repeat <= repeatCount; repeat += 1) runs.push(await runRepeat(browser, server, repeat));
-    const result = {schema: 'thinaticsystem-modernization/browser-smoke/v3', browser: runs[0].browser, repeatCount, timingSubstrate: {fixture: 'owned synthetic CMS/API data', reducedMotion: 'reduce', readiness: 'waitForVisualReady before timer stop', accessibility: 'axe scan after timer stop', server: 'loopback static artifact server'}, runs, aggregate: aggregateRuns(runs), manualGates: ['visual inspection', 'representative screen-reader operation']};
+    const result = {schema: 'thinaticsystem-modernization/browser-smoke/v4', browser: runs[0].browser, toolchain: {node: process.version, playwright: JSON.parse(readFileSync('node_modules/playwright/package.json')).version, axe: runs[0].a11y[0].testEngine.version}, repeatCount, timingSubstrate: {fixture: 'owned synthetic CMS/API data', reducedMotion: 'reduce', readiness: 'loading image fade then finite motion settled before timer stop', font: browserFont, colorScheme: 'light', initialTheme: 'light', accessibility: 'axe scan after timer stop', server: 'loopback static artifact server'}, runs, aggregate: aggregateRuns(runs), manualGates: ['visual inspection', 'representative screen-reader operation']};
     if (outputPath) {
       writeFileSync(outputPath, `${JSON.stringify(result, null, 2)}\n`);
     }
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     const violations = runs.flatMap(({a11y}) => a11y.flatMap(({violations: items}) => items));
     if (runs.some((run) => run.consoleErrors.length || run.pageErrors.length || run.failedRequests.length || run.blockedExternalRequests.length) || violations.length) process.exitCode = 1;
+  } catch (error) {
+    writeFileSync(join(evidenceRoot, 'partial-failure.json'), JSON.stringify({error: error.stack ?? String(error), run: error.partialRun ?? null}, null, 2));
+    throw error;
   } finally {
-    await browser.close();
-    await new Promise((resolve) => server.close(resolve));
+    try { await browser?.close(); } finally { if (server.listening) await new Promise((resolve) => server.close(resolve)); }
   }
 }
 

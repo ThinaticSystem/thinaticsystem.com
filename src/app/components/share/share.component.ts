@@ -20,6 +20,10 @@ interface Share {
 export class ShareComponent {
   @Input() share!: Share;
 
+  get tweetUrl(): string {
+    return 'https://twitter.com/intent/tweet?' + new URLSearchParams({text: this.share.text + '\n', url: this.share.url});
+  }
+
   constructor(
     public Notification: NotificationService
   ) {

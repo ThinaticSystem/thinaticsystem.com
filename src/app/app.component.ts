@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
 import { NgClickOutsideDelayOutsideDirective } from 'ng-click-outside2';
 import { ClipboardService } from 'ngx-clipboard';
@@ -27,6 +27,7 @@ export class AppComponent implements OnInit, OnDestroy {
   // Footerコピーライト表示用西暦取得
   year = new Date().getFullYear();
   enviroment = environment;
+  readonly loadingArtworkFailed = signal(false);
 
   // テーマ切り替え
   darkMode = false;

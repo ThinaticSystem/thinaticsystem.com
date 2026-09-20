@@ -1,0 +1,228 @@
+{
+  "baseSha": "33b4ef4e8d21276130127a61aede6f0a8e1c47cb",
+  "provenance": "browser-ready-fix final four baseline runs; frozen before paired CI implementation",
+  "disposition": "Historical comparison control only; critical/serious axe defects are NOT accessibility acceptance. Candidate must have zero defects. Any signature change requires review, never auto-enrollment.",
+  "optionalPageErrors": {
+    "message": "NG0953",
+    "url": "http://127.0.0.1:4174/",
+    "maximumPerRun": 2
+  },
+  "axe": [
+    {
+      "name": "desktop.home",
+      "violations": [
+        {
+          "id": "button-name",
+          "impact": "critical",
+          "targets": [
+            [
+              ".hover\\:text-yellow-400"
+            ]
+          ]
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "targets": [
+            [
+              ".text-white"
+            ]
+          ]
+        },
+        {
+          "id": "link-name",
+          "impact": "serious",
+          "targets": [
+            [
+              ".hover\\:text-sky-400"
+            ]
+          ]
+        },
+        {
+          "id": "listitem",
+          "impact": "serious",
+          "targets": [
+            [
+              ".col-span1"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "desktop.theme-toggle",
+      "violations": [
+        {
+          "id": "button-name",
+          "impact": "critical",
+          "targets": [
+            [
+              ".hover\\:text-yellow-400"
+            ]
+          ]
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "targets": [
+            [
+              ".big-hero > p"
+            ],
+            [
+              ".text-white"
+            ]
+          ]
+        },
+        {
+          "id": "link-name",
+          "impact": "serious",
+          "targets": [
+            [
+              ".hover\\:text-sky-400"
+            ]
+          ]
+        },
+        {
+          "id": "listitem",
+          "impact": "serious",
+          "targets": [
+            [
+              ".col-span1"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "desktop.blog-list",
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "targets": [
+            [
+              "html"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > .sr-only"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "desktop.blog-article",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "targets": [
+            [
+              "a[href$=\"fixture\"]"
+            ],
+            [
+              ".text-gray-500"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "desktop.discography",
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "targets": [
+            [
+              "html"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mobile.menu-blog",
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "targets": [
+            [
+              "html"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > .sr-only"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

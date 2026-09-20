@@ -22,9 +22,7 @@ export default class IndexComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.titleService.setTitle('用語集 | しなちくシステム');
-    setTimeout(() => {
-      this.loadingService.loading = false;
-    }, 500);
+    this.loadingService.loading = false;
   }
 
   ngOnDestroy(): void {

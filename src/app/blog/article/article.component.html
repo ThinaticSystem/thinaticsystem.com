@@ -1,4 +1,11 @@
 <div class="min-h-screen">
+  <a routerLink="/blog" class="inline-block py-4 underline">記事一覧へ</a>
+  @if (!blog() && !error()) {
+    <p role="status" class="sr-only">記事を読み込み中…</p>
+  }
+  @if (error()) {
+    <div role="alert" class="py-12"><p>記事を読み込めませんでした</p><button type="button" class="underline" (click)="loadArticle()">再試行</button></div>
+  }
   @if (blog(); as article) {
     @if (article.eyecatch; as eyecatch) {
       <div [style.background-image]="'url(' + environment.cmsUrl + eyecatch.url + ')'" class="eyecatch"></div>
@@ -6,10 +13,12 @@
     <div class="mx-auto py-12 max-w-7xl lg:py-24">
       <div class="space-y-12 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
         <div class="space-y-5 sm:space-y-4">
-          <h2 class="text-3xl font-extrabold tracking-tight sm:text-3xl">{{ article.title }}</h2>
+          <h1 class="text-3xl font-extrabold tracking-tight sm:text-3xl">{{ article.title }}</h1>
           <div class="tag">
             @for (tag of article.blogTags; track tag) {
-              <a [routerLink]="'/blog/tag/' + $safeNavigationMigration(tag?.tag)">{{ tag?.tag }}</a>
+              @if (tag?.tag?.trim()) {
+                <a [routerLink]="['/blog/tag', tag?.tag]">{{ tag?.tag }}</a>
+              }
             }
           </div>
           <!-- 共有ボタン -->

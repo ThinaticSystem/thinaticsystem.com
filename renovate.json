@@ -1,0 +1,93 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "baseBranchPatterns": ["develop"],
+  "useBaseBranchConfig": "merge",
+  "enabledManagers": ["npm", "github-actions", "nix", "custom.regex"],
+  "nix": {"enabled": true},
+  "timezone": "Asia/Tokyo",
+  "schedule": ["* 0-5 * * 1"],
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2,
+  "dependencyDashboard": true,
+  "automerge": false,
+  "platformAutomerge": false,
+  "rangeStrategy": "pin",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "dependencyDashboardApproval": true,
+    "schedule": ["* 0-5 1 * *"]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/.github/workflows/renovate-config.yml$/"],
+      "matchStrings": ["# renovate: datasource=(?<datasource>npm) depName=(?<depName>renovate)\\s+RENOVATE_VERSION: \"(?<currentValue>[^\"]+)\""]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Wait for ordinary npm releases; retain pnpm's stricter install-time policy.",
+      "matchDatasources": ["npm"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Keep Angular framework, build tools and template lint updates together.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@angular\//", "/^@angular-devkit\//", "/^@schematics\//", "/^@angular-eslint\//", "angular-eslint"],
+      "groupName": "Angular framework and tooling"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@typescript-eslint\//", "typescript-eslint"],
+      "groupName": "TypeScript ESLint"
+    },
+    {
+      "description": "Review breaking changes explicitly; never merge automatically.",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Angular compiler/build and TypeDoc currently require TS 6.0; re-evaluate with their peer ranges.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": ">=6.0.0 <6.1.0"
+    },
+    {
+      "description": "Angular build currently supports Vitest 4; review its peer range before lifting.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["vitest"],
+      "allowedVersions": ">=4.0.8 <5.0.0"
+    },
+    {
+      "description": "ngx-markdown currently requires KaTeX 0.16; re-evaluate its peer range before lifting.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["katex"],
+      "allowedVersions": ">=0.16.0 <0.17.0"
+    },
+    {
+      "description": "Tailwind 4 migration remains a separate visual/performance task, not routine dependency maintenance.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["tailwindcss"],
+      "allowedVersions": ">=3.0.0 <4.0.0"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": ">=24.0.0 <25.0.0"
+    },
+    {
+      "description": "Node must change with nixpkgs, both version files and the historical baseline contract; do not update engines alone.",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["engines"],
+      "matchPackageNames": ["node"],
+      "enabled": false
+    },
+    {
+      "description": "Nix updates require approval and coordinated Node pins; preserve flake assertions and historical baseline evidence.",
+      "matchManagers": ["nix"],
+      "dependencyDashboardApproval": true,
+      "groupName": "Nix development environment"
+    }
+  ]
+}

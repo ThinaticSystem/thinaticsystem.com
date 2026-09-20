@@ -1,15 +1,14 @@
-import { Pipe, PipeTransform } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import {Pipe, SecurityContext} from '@angular/core';
+import type {PipeTransform} from '@angular/core';
+import {DomSanitizer} from '@angular/platform-browser';
 
-@Pipe({
-  standalone: true,
-  name: 'sanitizeHtml',
-})
+@Pipe({standalone: true, name: 'sanitizeHtml'})
 export class SanitizeHtmlPipe implements PipeTransform {
-  constructor(private _sanitizer: DomSanitizer) {
-  }
+  constructor(private sanitizer: DomSanitizer) {}
 
-  transform(value: string): SafeHtml {
-    return this._sanitizer.bypassSecurityTrustHtml(value);
+  /** Generic markup never admits executable content; players use the dedicated allowlist. */
+  transform(value: string | null): string {
+    if (typeof value !== 'string') return '';
+    return this.sanitizer.sanitize(SecurityContext.HTML, value) ?? '';
   }
 }

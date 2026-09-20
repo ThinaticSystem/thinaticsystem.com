@@ -4,7 +4,7 @@ import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import {ClipboardModule} from "ngx-clipboard";
 import {NgPipesModule} from 'ngx-pipes';
-import {map, Subject, takeUntil, tap} from 'rxjs';
+import {finalize, map, Subject, takeUntil, tap} from 'rxjs';
 import {environment} from 'src/environments/environment';
 import {LoadingService} from "../services/loading.service";
 import {NavigateService} from "../services/navigate.service";
@@ -54,6 +54,7 @@ export default class IndexComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
 
   notifications = signal<Notifications[] | null>(null);
+  notificationsError = signal(false);
   url = location.href;
   origin = location.origin;
 
@@ -75,6 +76,7 @@ export default class IndexComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const finishLoading = this.loadingService.beginContentLoad();
     this.titleService.setTitle('しなちくシステム');
     this.genDebobi();
 
@@ -90,12 +92,9 @@ export default class IndexComponent implements OnInit, OnDestroy {
           this.notifications.set(urlReplacedNotifications);
         }),
         takeUntil(this.#dispose$),
+        finalize(finishLoading),
       )
-      .subscribe(() => {
-        setTimeout(() => {
-          this.loadingService.loading = false;
-        }, 500);
-      });
+      .subscribe({error: () => this.notificationsError.set(true)});
 
     this.httpClient.get<Patrons[]>(`${environment.publicUrl}/workers/patrons`)
       .pipe(
@@ -124,8 +123,6 @@ export default class IndexComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.loadingService.loading = true;
-
     this.#dispose$.next(null);
   }
 }

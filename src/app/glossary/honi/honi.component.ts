@@ -18,9 +18,7 @@ export default class HoniComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.titleService.setTitle('ほに-用語集 | しなちくシステム');
-    setTimeout(() => {
-      this.loadingService.loading = false;
-    }, 500);
+    this.loadingService.loading = false;
   }
 
   ngOnDestroy(): void {

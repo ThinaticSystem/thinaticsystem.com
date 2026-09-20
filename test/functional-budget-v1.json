@@ -1,0 +1,850 @@
+{
+  "schema": "thinaticsystem/functional-budget/v1",
+  "id": "required-features-v1",
+  "approval": {
+    "kind": "user-explicit",
+    "statement": "承認",
+    "proposalSha256": "acc9d1071435fba0166d4338aca99021d4e9ba4431a71837e1d659f542edc64f",
+    "scope": "Named size ceilings and evaluator only; no publication, timing/request waiver, or automatic missing-route enrollment."
+  },
+  "initial": {
+    "rawBytes": 458752,
+    "gzipBytes": 131072,
+    "brotliBytes": 114688
+  },
+  "detailChunkRawBytes": 16384,
+  "allEmittedJsCssRawBytes": 819200,
+  "journeys": {
+    "desktop.home": {
+      "rawBytes": 602955,
+      "resourceCount": 7,
+      "requestCount": 12
+    },
+    "desktop.theme-toggle": {
+      "rawBytes": 0,
+      "resourceCount": 0,
+      "requestCount": 0
+    },
+    "desktop.blog-list": {
+      "rawBytes": 20480,
+      "resourceCount": 3,
+      "requestCount": 6
+    },
+    "desktop.blog-article": {
+      "rawBytes": 7168,
+      "resourceCount": 2,
+      "requestCount": 3
+    },
+    "desktop.blog-back": {
+      "rawBytes": 0,
+      "resourceCount": 0,
+      "requestCount": 2
+    },
+    "desktop.discography": {
+      "rawBytes": 5120,
+      "resourceCount": 2,
+      "requestCount": 4
+    },
+    "mobile.menu-blog": {
+      "rawBytes": 624526,
+      "resourceCount": 10,
+      "requestCount": 18
+    }
+  },
+  "timingMaxRelativeRegression": 0.2,
+  "unmeasuredScopes": [
+    "cold direct blog article",
+    "cold direct discography detail",
+    "discography list to detail transition"
+  ],
+  "measurementBindings": {
+    "runtime": "v24.19.0",
+    "zlib": "1.3.2",
+    "brotli": "1.2.0",
+    "artifacts": [
+      {
+        "path": "scripts/browser-smoke.mjs",
+        "sha256": "746f4e9e1620fdb8a81c8d7a95f8335ff9b228e4a2b2c03f606ed4a7d718f91a"
+      },
+      {
+        "path": "scripts/browser-environment.mjs",
+        "sha256": "a1a7231808da6d97e403be51b0e7e81951f160ba1e6813943691978638fe0132"
+      },
+      {
+        "path": "scripts/browser-readiness.mjs",
+        "sha256": "c63fda3ad0996489422f6c69fff823aff7e7bdb8a29f52eceb86d596a3150dd3"
+      },
+      {
+        "path": "scripts/performance-check.mjs",
+        "sha256": "e8dc75ac8b86133bcb89d40414e53e508386e8fc11cb1505ab9d12bb828b3b06"
+      },
+      {
+        "path": "scripts/paired-performance.mjs",
+        "sha256": "6b754502b177adc7b52ae8fb2d4a95a0110e02cc04c429053170e0d236ac9722"
+      },
+      {
+        "path": "scripts/paired-performance-contract.mjs",
+        "sha256": "13043fad32a6315e336ef0a08f23f44284bfd6d84d62478ca59986a7ae3cfa9e"
+      },
+      {
+        "path": "test/paired-baseline-control-v2.json",
+        "sha256": "60320084564717481d1c20db4c413fe79f6ad751adb452ebc81ce7c2a83a0e28"
+      },
+      {
+        "path": "scripts/cloudflare-smoke.mjs",
+        "sha256": "dc69be74f97ff6b9956fc9bfc509523e271db1a099e9862c9e8303601064090c"
+      },
+      {
+        "path": "scripts/dev-browser-smoke.mjs",
+        "sha256": "65b96376a5bb32715f14a43cfa026d3983ae82d1c7ac2f588c93418f84a1aa84"
+      },
+      {
+        "path": "scripts/known-defect-contract.mjs",
+        "sha256": "545abbb02a50d148bcc4d9f3df02492f5e3f76bc578b6b321ddae57d0252c9e4"
+      },
+      {
+        "path": "scripts/known-defect-probe-selection.mjs",
+        "sha256": "36e9de89e86808ada98716907c6a22ddf4b4118abf22fd3bbccb3f1ec50abb11"
+      },
+      {
+        "path": "scripts/known-defect-reporter.mjs",
+        "sha256": "524410b95fd7462021cdd18c90f1451cce24c290dc7434f2afcaa76a1c2a7658"
+      },
+      {
+        "path": "scripts/paired-baseline-control.mjs",
+        "sha256": "f2e8d92758ccbe6a545aec40121f280284bdd3c4d729b73bb140334ccaabeea3"
+      },
+      {
+        "path": "scripts/paired-identity.mjs",
+        "sha256": "92024653755291a13ec6710ef6fe0b05adeb590bb12e8a849278ae9b9fa47f30"
+      },
+      {
+        "path": "scripts/paired-process.mjs",
+        "sha256": "ff850d791b4e5a6cdf9aedb7a693bbd1f90d66378beba9ba4d6aed170ae78440"
+      },
+      {
+        "path": "scripts/paired-supervisor.c",
+        "sha256": "cf1b2a1b86048491c906b861bd98fb1c535dbc6c3e359e467d4a51df6c45c707"
+      },
+      {
+        "path": "scripts/resolved-debt-contract.mjs",
+        "sha256": "4df1e51d3329d2784451d1102ff34f5b7d9a31f635d173c9822172492c1b3303"
+      },
+      {
+        "path": "scripts/verify-browser-readiness.mjs",
+        "sha256": "350a18989077d3c45a1e5d71a2f16806923c51c0034a6cb4a6815bc07e3cb656"
+      },
+      {
+        "path": "scripts/verify-known-defect-runner-probes.mjs",
+        "sha256": "a21c4c621022def6081816cfbe52d5cb99ebe68bca99c107faabe69069b1832f"
+      },
+      {
+        "path": "scripts/verify-known-defects-fixtures.mjs",
+        "sha256": "7362cc1f7484bb3f489b1ffa45a649d48d909d5c7e815ca2b9d90265e70172ce"
+      },
+      {
+        "path": "scripts/verify-known-defects.mjs",
+        "sha256": "aa036355083eed8cd67f0abbd98313a2e064f92a7d503cd5b2b5a17c3056faab"
+      },
+      {
+        "path": "test/fixtures/observed-media-embeds.ts",
+        "sha256": "69f9da79bac43b99bd62c8739cec06204903d677f59f0083ea45502aa25426ff"
+      },
+      {
+        "path": "test/fixtures/patrons.json",
+        "sha256": "8af7fe54c029506dc5401c0f59c4f98a80ea62747b025957f641d8160452aee8"
+      }
+    ]
+  },
+  "applicationBoundary": {
+    "kind": "exact-reviewed-application-inputs/v1",
+    "reviewedSourceSha256": "cb406be156dcdf56d01406e9ea45ebd2b0ecbe65d7338b40be16e7193909122b",
+    "files": [
+      {
+        "path": ".baseline-node-version",
+        "kind": "file",
+        "mode": 420,
+        "sizeInBytes": 8,
+        "sha256": "08062faf0d7a2d22f5d7933c50e975dd1527034275597be7c1b3b9fd2b9d079a"
+      },
+      {
+        "path": ".node-version",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 8,
+        "sha256": "7e8a2fa94951112b894a3dbe3d05efef5e9263741fa49125f0a70f40fedab4cc"
+      },
+      {
+        "path": "angular.json",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 4714,
+        "sha256": "4b2445458b72345bb87c02f1ebfaf4794775bc10b8b4ab02439d838582c6cf84"
+      },
+      {
+        "path": "flake.lock",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 567,
+        "sha256": "04d898ce5182a5b6fa86f59144e4f731e58b4b9291b3278abdbef916a92f1dfc"
+      },
+      {
+        "path": "flake.nix",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 1200,
+        "sha256": "aeb9841e6816d5da3572bee8bbb3cb72fde11fd626600fbc563658db1b99fd7e"
+      },
+      {
+        "path": "pnpm-lock.yaml",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 314066,
+        "sha256": "0a4596d3b0ada63f762c66d18348258d6b9621a1004d39ab6792ff667e2dbad3"
+      },
+      {
+        "path": "pnpm-workspace.yaml",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 793,
+        "sha256": "5f41900109c40d54d2a7e6e2b39ae7f64b86c5f594fdb58b31d793dc8a3edef4"
+      },
+      {
+        "path": "src/app/about/about.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 461,
+        "sha256": "3d51f6326257ff96d60a8cc3f61b93b527f25277886a759568013a17ba4504ad"
+      },
+      {
+        "path": "src/app/about/about.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "src/app/about/about.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 1659,
+        "sha256": "0e13a698b5d8ddc064f494fa7fba3fb1c4909f2a4e2880675c4fcb04c854a7b7"
+      },
+      {
+        "path": "src/app/app.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 17262,
+        "sha256": "b11a48d7fa38d8752ea7ee4629d782d2ef967445567256af1214b09c5b14e3e6"
+      },
+      {
+        "path": "src/app/app.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 1061,
+        "sha256": "b078dc0855c1d9f9f243657284829c7d4a3e5ccd30826aa09af1cef63433f6d7"
+      },
+      {
+        "path": "src/app/app.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 3938,
+        "sha256": "2a296ac133b42be3e6c2c499c333783f1daa05273517d25ebd789f748d69a46e"
+      },
+      {
+        "path": "src/app/app.config.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 901,
+        "sha256": "bb5bc65135ccc26c3b6f2f1192dee51a1c9249ef0f932040e5a76bb1f49b4628"
+      },
+      {
+        "path": "src/app/app.routes.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 775,
+        "sha256": "69518c0f523fc2b4349eff6f34e2775c1a534402db3d24a68ff10bcb1bef7674"
+      },
+      {
+        "path": "src/app/blog/article/article.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 1454,
+        "sha256": "28afed1295d1e3386b3ef5efff371538f85cbec65c718071ffbc5acc1553d066"
+      },
+      {
+        "path": "src/app/blog/article/article.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 109,
+        "sha256": "9ab30842df2880e8e02e59eb1d1cfbad5f99ad4af914572b0fb4c48884b44654"
+      },
+      {
+        "path": "src/app/blog/article/article.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 3032,
+        "sha256": "4a972489509bc1fb9036b63cb86b6a764fb2ededc7a005e99b68a884e89f1f57"
+      },
+      {
+        "path": "src/app/blog/blog.routes.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 398,
+        "sha256": "21561f7f79e8a7a9cd5cec6daa7d3fb7d7450c2817574c7e0dad48caf7c0f61b"
+      },
+      {
+        "path": "src/app/blog/index/index.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 1581,
+        "sha256": "07ae3bb4a24848023d0b62d239b0bddea610da66901fe8329279ddd223858c28"
+      },
+      {
+        "path": "src/app/blog/index/index.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "src/app/blog/index/index.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 2794,
+        "sha256": "0a0ca63576fce0f45492db8665b23bddd743f298180f2a0c3e7cbab7eb7dba88"
+      },
+      {
+        "path": "src/app/blog/tag/tag.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 1151,
+        "sha256": "4b5bf865941b74fb891fc57b717a66f7499d2c76e5003e879994243542fb5562"
+      },
+      {
+        "path": "src/app/blog/tag/tag.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "src/app/blog/tag/tag.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 2345,
+        "sha256": "cddb91e41f7b5e0fcc9b10d356ffc186c4de0269d698678f1d17a521ce758a0c"
+      },
+      {
+        "path": "src/app/components/blog-card/blog-card.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 831,
+        "sha256": "2e22339978db93bd8a261266be059b0c926f0da8388b848272680f33c9a7b3d1"
+      },
+      {
+        "path": "src/app/components/blog-card/blog-card.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 848,
+        "sha256": "a3ebe5137358ae7afa1d7e271788c26232a3f6fc82ed6b4545a7ae1164b5adff"
+      },
+      {
+        "path": "src/app/components/blog-card/blog-card.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 632,
+        "sha256": "685954512b50487e67d581742cbecd6417c833b17f5e01c88295f425827a80a0"
+      },
+      {
+        "path": "src/app/components/share/share.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 1829,
+        "sha256": "bd686e7c35d046e5142024f5c6ef79e7d509c6f0d6d06decefa5880cc4616d64"
+      },
+      {
+        "path": "src/app/components/share/share.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "src/app/components/share/share.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 628,
+        "sha256": "377975c9513da7e930ab07366206693b5f2705422920ec4d16c449e46e278a09"
+      },
+      {
+        "path": "src/app/discography/detail/detail.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 4968,
+        "sha256": "01791345350471302fec6632223b16f616ee227265ba045bf43b527d42379867"
+      },
+      {
+        "path": "src/app/discography/detail/detail.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 620,
+        "sha256": "9fdb67ee27b2d5c8db91c4c721ce2e1766a1fef1804c1ae63619983cfa9c5ca8"
+      },
+      {
+        "path": "src/app/discography/detail/detail.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 2647,
+        "sha256": "bd673e136e875e4e1f37ccb41510d5bf19a0c4f959a80caff474eca2fdfc1e46"
+      },
+      {
+        "path": "src/app/discography/detail/detail.routes.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 183,
+        "sha256": "2b2408aaeeeefaf46387bd2d203e2aaeb382e335027d5467103320748c366242"
+      },
+      {
+        "path": "src/app/discography/discography.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 1742,
+        "sha256": "d8ef74d1e193f7682d2d0b6d1cbb19d0caad1787cfad510218a2d4305245e453"
+      },
+      {
+        "path": "src/app/discography/discography.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 141,
+        "sha256": "4366333edf9bf9226ab69f3223bcba9e73b4cb2ca92475e0709f6e11caee73a3"
+      },
+      {
+        "path": "src/app/discography/discography.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 2536,
+        "sha256": "b84dee1d757ab83b442d326c5a2e4215d851ddb7168898e85f7201f2d3672aaf"
+      },
+      {
+        "path": "src/app/discography/discography.routes.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 265,
+        "sha256": "4807890e3df8f85a32a3fb7ad78ece117664f672f4c5c3a20905a93ec4b5be13"
+      },
+      {
+        "path": "src/app/discography/embed/embed-html.ts",
+        "kind": "file",
+        "mode": 420,
+        "sizeInBytes": 1459,
+        "sha256": "0f9440a7bb22a207f9343c41ad3e8a6e275bcaaa6c63371f388529f1b70a04da"
+      },
+      {
+        "path": "src/app/discography/embed/embed-policy.ts",
+        "kind": "file",
+        "mode": 420,
+        "sizeInBytes": 2905,
+        "sha256": "489e6e439484ee62b2c971d223d4f14e3a1f81ffac21f283a28871aaab65f3d0"
+      },
+      {
+        "path": "src/app/discography/embed/media-embed.component.ts",
+        "kind": "file",
+        "mode": 420,
+        "sizeInBytes": 3244,
+        "sha256": "f15974983d327a74673baa3aacecd87b5b918248c7d12606dfb27e80e49ff617"
+      },
+      {
+        "path": "src/app/glossary/glossary.routes.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 363,
+        "sha256": "aa5b3306671f677495cc0f553459e210c35f2249ccb776c53d14a5340fc8ab6d"
+      },
+      {
+        "path": "src/app/glossary/gomamayo/gomamayo.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 6174,
+        "sha256": "1ccb1f20f0a4e402744e21a37b6162f4acadff09d7684f3c1504cf1950724f76"
+      },
+      {
+        "path": "src/app/glossary/gomamayo/gomamayo.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 221,
+        "sha256": "41af32dbe7e16c601cbbc1a0a134f19ebe19cb301215b24ceda70504d648ce94"
+      },
+      {
+        "path": "src/app/glossary/gomamayo/gomamayo.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 838,
+        "sha256": "3c7f108570d80b10859289927dcf43b6c3fb316a0d22c940bc9c317fbee51ebe"
+      },
+      {
+        "path": "src/app/glossary/honi/honi.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 760,
+        "sha256": "b1bd6db5c26ae59995eb38c8a2dd6559d08163a986dba6ad075bbbe241d52efa"
+      },
+      {
+        "path": "src/app/glossary/honi/honi.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 145,
+        "sha256": "583b43b212b9297c8cc4d97466a6fad8720862182bc61e926fbad5496b46323c"
+      },
+      {
+        "path": "src/app/glossary/honi/honi.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 815,
+        "sha256": "5c1c2c3c42e6ad95671adee759130da610957f97e080e5bf71f0d85c9c63f106"
+      },
+      {
+        "path": "src/app/glossary/index/index.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 526,
+        "sha256": "28835147d8f72298856b66981a2b296c0329a0ce1e2efb1e0b1276ec2306e70b"
+      },
+      {
+        "path": "src/app/glossary/index/index.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 88,
+        "sha256": "b68aadce437da8fe0a446af5402235a3d37ef432d3088bed49a18a16e60c102a"
+      },
+      {
+        "path": "src/app/glossary/index/index.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 989,
+        "sha256": "088ff58239dd29e34ad90c9a1e7082f077491434256216371d203db2e00ea8ae"
+      },
+      {
+        "path": "src/app/index/index.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 8196,
+        "sha256": "b9d0965c05f7494ac0feb9f1818e2280dbf42cc44496d214f1cb86b5307c0f05"
+      },
+      {
+        "path": "src/app/index/index.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 760,
+        "sha256": "c0cdeb37f5a16eb1b22879307bca4cd29dbdb2c44c80c8ec467151a3a13808f6"
+      },
+      {
+        "path": "src/app/index/index.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 39899,
+        "sha256": "a9754e1cf2848621db0a9071107807ce47e20e5127418127474b9475dd385e87"
+      },
+      {
+        "path": "src/app/interfaces/blog.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 1018,
+        "sha256": "1b5e05a7d75e8625e38bce9f5b8b174545ff749e3411df1519f456733a3d1ecf"
+      },
+      {
+        "path": "src/app/interfaces/discography.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 945,
+        "sha256": "8486dde5c6318552be31ec84444326b71084fd06d27c48f4935de243277815b0"
+      },
+      {
+        "path": "src/app/notfound/notfound.component.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 223,
+        "sha256": "4b0722aed20933dffb5158df2354f75095e46c553fea87ea96d313ccd501fadb"
+      },
+      {
+        "path": "src/app/notfound/notfound.component.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 420,
+        "sha256": "d0018f989bef2b29b713ad55adcbce148104667f8cd4c8a5f66f2a78a79fcfba"
+      },
+      {
+        "path": "src/app/notfound/notfound.component.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 801,
+        "sha256": "238acecde9d0b588027adf00e80985ada7e66ed19c2a1fdb6e3b5fef94798c9a"
+      },
+      {
+        "path": "src/app/pipes/sanitize-html.pipe.ts",
+        "kind": "file",
+        "mode": 420,
+        "sizeInBytes": 577,
+        "sha256": "08b598cc3fa692e0f852af261cdc94ae2fc7b06b819f39c37ffbe965d638ead4"
+      },
+      {
+        "path": "src/app/providers/markdown/options.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 1102,
+        "sha256": "0b068433ee837174f821c8be7e35518f99be28b23eca940a70ff257fbc7889c5"
+      },
+      {
+        "path": "src/app/services/loading.service.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 284,
+        "sha256": "0617ffdb09687fa5dcfa200914b74a93d46a21cf37a24d2a677162934c795482"
+      },
+      {
+        "path": "src/app/services/navigate.service.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 503,
+        "sha256": "acdaab0b5bdd32155eb76937af0a5dd471e031a23a7815ddb34e8efcc3465d91"
+      },
+      {
+        "path": "src/app/services/notification.service.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 821,
+        "sha256": "c3b947801009a9a4efac4baf4a7e3e4c6421c350b4b9bbee87b897443a1509e6"
+      },
+      {
+        "path": "src/assets/.gitkeep",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "src/assets/link/activity_pub.svg",
+        "kind": "file",
+        "mode": 448,
+        "sizeInBytes": 7723,
+        "sha256": "d6ffacee5875a134b8b6724d54fa3856ebd8f6b4cbcfef41de94d83c09701631"
+      },
+      {
+        "path": "src/assets/link/discord.svg",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 7503,
+        "sha256": "72d557990368ca8dfb82f8645e1a045ced4dbfd2a8d8db4dcad461bd71b8e9e9"
+      },
+      {
+        "path": "src/assets/link/gitlab.svg",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 129,
+        "sha256": "3d75c026618a441cc6c723e0ce3fb8070a7c9930e381053f4242e4aa69efcbfa"
+      },
+      {
+        "path": "src/assets/link/hoshi_imo.svg",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 32648,
+        "sha256": "bed9a3ae47ff1a54bb101fd5460f6c9e86cf71bb93b7691833844586a09607c3"
+      },
+      {
+        "path": "src/assets/link/mastodon.svg",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 129,
+        "sha256": "8f9b9d3df4bdf6b1b9b789459de522e48eb845681cee24c0e24c88e4ec2d3479"
+      },
+      {
+        "path": "src/assets/link/patreon.svg",
+        "kind": "file",
+        "mode": 448,
+        "sizeInBytes": 6633,
+        "sha256": "1b166e7316f1828576ab89ff30b723dc5ec4dfafce80ae855d769f5e0907ae14"
+      },
+      {
+        "path": "src/assets/link/soundcloud.svg",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 10021,
+        "sha256": "cedf9776b0ea69b63c4969187e45fae66badb56e37fdc0f598e9ca85a484f942"
+      },
+      {
+        "path": "src/assets/link/twitter.svg",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 5668,
+        "sha256": "1bde002ca3bacfe187ae7dfffa0f54968ab1b8090970763614214c082b5229cd"
+      },
+      {
+        "path": "src/assets/site_logo.svg",
+        "kind": "file",
+        "mode": 448,
+        "sizeInBytes": 13437,
+        "sha256": "1ef8322a272bdce0e04793e3c627b0110e0ada59970010caee5466515e799180"
+      },
+      {
+        "path": "src/assets/site_logo_inbound.jpg",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 111690,
+        "sha256": "413d34d699fa03cc343d87e01cba753e7995e766033e001fcc8b7dee59ccfd64"
+      },
+      {
+        "path": "src/environments/environment.prod.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 139,
+        "sha256": "0869009db3640c40eddf18a848c3b78675dffb284e6bf77db91e796eca1f0ac6"
+      },
+      {
+        "path": "src/environments/environment.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 746,
+        "sha256": "c984d2f1d45b56a8e70cc78bdaa92683833faaa81c6ac4a6db3266b81e31ae9a"
+      },
+      {
+        "path": "src/favicon.ico",
+        "kind": "file",
+        "mode": 448,
+        "sizeInBytes": 4286,
+        "sha256": "7bfee7a8d0491c456b70acc73ef5137b81d8af44bd9f9ade328122a2af0d8045"
+      },
+      {
+        "path": "src/index.html",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 384,
+        "sha256": "349414e6029440e09f7b5eaad00bdb1a06c4c0df2a40c5d383d5ed0dbab58095"
+      },
+      {
+        "path": "src/main.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 504,
+        "sha256": "4c2bcc82d85e0418c401d11b7ebf1f253f89aab6d4220bdb1f13e39b115a2e9d"
+      },
+      {
+        "path": "src/polyfills.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 2370,
+        "sha256": "4f008734349b166302f8f0a1dddba85230ed0458f3d99370c93c6e89d8ac267e"
+      },
+      {
+        "path": "src/styles.scss",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 7445,
+        "sha256": "938d5d12cfcc435a4139f092ae1dd8574127ce0835ccc298be42ea7a8b0a6212"
+      },
+      {
+        "path": "src/test-providers.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 235,
+        "sha256": "0cbfae42770e1ce0705f60807649efd88af97ccb55bb5cbded5fa4eaf1bc19d0"
+      },
+      {
+        "path": "src/test-setup.ts",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 393,
+        "sha256": "04d271550f561c9fbe5a1c00c4124b192e606869290edd76fa4d55fabc75a8c3"
+      },
+      {
+        "path": "tailwind.config.js",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 554,
+        "sha256": "7514e68b6e304646c17c74cbaddee8a6dd3d53e8ab0924ca37b9e8c56c9de97f"
+      },
+      {
+        "path": "tsconfig.app.json",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 482,
+        "sha256": "7ad10b03c041e02068271f1240d6f6bdbf5d359b8db14d281c46a23a89a9b732"
+      },
+      {
+        "path": "tsconfig.json",
+        "kind": "file",
+        "mode": 384,
+        "sizeInBytes": 863,
+        "sha256": "d80dadacef0043bd830f5c8dc51abe125fd02cd6ed047dbc9c0c7f6db77a1b20"
+      }
+    ],
+    "packageMetadata": {
+      "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457",
+      "name": "thinaticsystem-com",
+      "version": "0.0.0",
+      "private": true,
+      "dependencies": {
+        "@angular/common": "22.1.6",
+        "@angular/compiler": "22.1.6",
+        "@angular/core": "22.1.6",
+        "@angular/forms": "22.1.6",
+        "@angular/platform-browser": "22.1.6",
+        "@angular/router": "22.1.6",
+        "github-markdown-css": "5.9.0",
+        "katex": "0.16.47",
+        "marked": "18.0.12",
+        "marked-katex-extension": "5.1.12",
+        "ng-click-outside2": "20.0.0",
+        "ngx-clipboard": "16.0.0",
+        "ngx-markdown": "22.0.2",
+        "ngx-pagination": "6.0.3",
+        "ngx-pipes": "3.2.2",
+        "rxjs": "7.8.2",
+        "tslib": "2.8.1",
+        "zone.js": "0.16.3"
+      },
+      "devDependencies": {
+        "@angular-eslint/builder": "22.5.0",
+        "@angular-eslint/eslint-plugin": "22.5.0",
+        "@angular-eslint/eslint-plugin-template": "22.5.0",
+        "@angular-eslint/schematics": "22.5.0",
+        "@angular-eslint/template-parser": "22.5.0",
+        "@angular/build": "22.1.8",
+        "@angular/cli": "22.1.8",
+        "@angular/compiler-cli": "22.1.6",
+        "@axe-core/playwright": "4.13.0",
+        "@testing-library/angular": "19.5.0",
+        "@testing-library/user-event": "14.6.7",
+        "@types/node": "24.13.4",
+        "@typescript-eslint/eslint-plugin": "8.70.0",
+        "@typescript-eslint/parser": "8.70.0",
+        "angular-eslint": "22.5.0",
+        "eslint": "10.10.0",
+        "jsdom": "30.0.1",
+        "playwright": "1.63.0",
+        "postcss": "8.5.28",
+        "tailwindcss": "3.4.19",
+        "typedoc": "0.28.20",
+        "typescript": "6.0.3",
+        "typescript-eslint": "8.70.0",
+        "vitest": "4.1.11",
+        "autoprefixer": "10.5.6",
+        "@tailwindcss/aspect-ratio": "0.4.2"
+      },
+      "engines": {
+        "node": "24.19.0"
+      }
+    },
+    "note": "Fail closed when reviewed application/build inputs change. Fresh independent boundary review is required before replacing this witness; this is deliberately conservative, not a claim that hashes prove arbitrary code semantics."
+  },
+  "detailLogicalRoot": {
+    "source": "src/app/discography/detail/detail.component.ts",
+    "selector": "app-detail",
+    "scope": "One emitted component chunk only; never the whole detail route."
+  },
+  "nonGoals": [
+    "real provider playback",
+    "hosted delivery",
+    "human screen-reader acceptance",
+    "release authorization"
+  ]
+}

@@ -2,7 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { MarkdownComponent } from 'ngx-markdown';
-import { Subject, takeUntil, tap } from "rxjs";
+import { finalize, Subject, takeUntil, tap } from "rxjs";
 import { environment } from "../../environments/environment";
 import { LoadingService } from "../services/loading.service";
 
@@ -27,6 +27,7 @@ export interface About {
 export default class AboutComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
 
+  error = signal(false);
   title = signal('');
   body = signal('');
 
@@ -38,6 +39,7 @@ export default class AboutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const finishLoading = this.loadingService.beginContentLoad();
     this.titleService.setTitle('しなちくシステムについて | しなちくシステム');
 
     this.httpClient.get<About>(`${environment.cmsUrl}/about`)
@@ -47,17 +49,12 @@ export default class AboutComponent implements OnInit, OnDestroy {
           this.body.set(data.body);
         }),
         takeUntil(this.#dispose$),
+        finalize(finishLoading),
       )
-      .subscribe(() => {
-        setTimeout(() => {
-          this.loadingService.loading = false;
-        }, 500);
-      });
+      .subscribe({error: () => this.error.set(true)});
   }
 
   ngOnDestroy(): void {
-    this.loadingService.loading = true;
-
     this.#dispose$.next(null);
   }
 }

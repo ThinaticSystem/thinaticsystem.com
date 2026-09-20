@@ -19,9 +19,7 @@ export default class GomamayoComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle('ゴママヨ-用語集 | しなちくシステム');
 
-    setTimeout(() => {
-      this.loadingService.loading = false;
-    }, 500);
+    this.loadingService.loading = false;
   }
 
   ngOnDestroy(): void {

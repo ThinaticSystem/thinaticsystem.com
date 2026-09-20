@@ -1,21 +1,23 @@
 @if (data) {
-  <a [routerLink]="'/blog/article/' + data.id"
+  <div
      [style.background-image]="'url(' + environment.cmsUrl + (data.eyecatch ? data.eyecatch.url :  '/uploads/small_noimage_f16114bd25.png') + ')'"
      class="article">
     <!-- グラデーション部分 -->
     <div aria-hidden="true" class="card-gradient"></div>
     <!-- 記事情報 -->
     <div class="article-info">
-      <div class="title">{{ data.title }}</div>
+      <a class="title article-link" [routerLink]="['/blog/article', data.id]">{{ data.title }}</a>
       <p class="date">{{ data.created_at | date: 'yyyy/MM/dd' }}</p>
       <!-- タグ一覧 -->
       @if (data.blogTags && data.blogTags.length !== 0) {
         <div class="tag">
           @for (tag of data.blogTags; track tag) {
-            <a [routerLink]="'/blog/tag/' + $safeNavigationMigration(tag?.tag)">{{ tag?.tag }}</a>
+            @if (tag?.tag?.trim()) {
+              <a [routerLink]="['/blog/tag', tag?.tag]">{{ tag?.tag }}</a>
+            }
           }
         </div>
       }
     </div>
-  </a>
+  </div>
 }

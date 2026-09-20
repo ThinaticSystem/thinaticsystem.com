@@ -17,14 +17,23 @@ jobs:
   verify:
     name: build, tests, browser, docs, delivery checks
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # immutable historical baseline must exist even for shallow PR checkouts
+      - name: Historical baseline build Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .baseline-node-version
+      - name: Preserve baseline executable before candidate setup
+        run: node -e 'require("node:fs").appendFileSync(process.env.GITHUB_ENV, "BASELINE_NODE_EXECUTABLE=" + process.execPath + "\n")'
       - name: Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 22.22.3
+          node-version-file: .node-version
       - name: Enable Corepack
         run: |
           corepack enable
@@ -42,23 +51,18 @@ jobs:
         run: corepack pnpm run test:known-defects:contract
       - name: Known-defect raw gate
         run: corepack pnpm run test:known-defects
-      - name: Production build
-        run: NG_BUILD_MAX_WORKERS=2 corepack pnpm run build
+      - name: Functional performance budget contract fixtures
+        run: corepack pnpm run test:budget-contract
       - name: Install Chromium
-        run: corepack pnpm exec playwright install chromium
-      - name: Browser, accessibility, keyboard and mobile smoke
-        env:
-          EVIDENCE_OUTPUT: .artifacts/browser-smoke.json
-          EVIDENCE_DIR: .artifacts/screenshots
-        run: corepack pnpm run test:e2e
-      - name: Performance comparison
-        env:
-          EVIDENCE_OUTPUT: .artifacts/browser-smoke.json
-          CANDIDATE_SHA: ${{ github.sha }}
-        run: corepack pnpm run perf:check
+        run: corepack pnpm exec playwright install --with-deps chromium
+      - name: Paired performance contract fixtures
+        run: corepack pnpm run test:paired-contract
+      - name: Same-runner paired build, browser and performance
+        timeout-minutes: 30
+        run: corepack pnpm run perf:paired
       - name: TypeDoc
         run: corepack pnpm run docs:check
-      - name: Cloudflare-compatible local delivery smoke
+      - name: Fixture-only local HTTP contract smoke
         run: corepack pnpm run deploy:check
       - name: Upload verification artifacts
         if: always()
@@ -66,4 +70,10 @@ jobs:
         with:
           name: thinaticsystem-verification-${{ github.sha }}
           if-no-files-found: warn
-          path: .artifacts/
+          include-hidden-files: true # evidence directory is intentionally hidden
+          retention-days: 14
+          path: |
+            .artifacts/paired-ci/
+            .artifacts/known-defects*
+            .artifacts/known-defect-runner-probes/
+            .artifacts/typedoc/
