@@ -21,7 +21,10 @@
     "perf:paired": "node scripts/paired-performance.mjs --baseline-control test/paired-baseline-control-v2.json --baseline-control-sha256 60320084564717481d1c20db4c413fe79f6ad751adb452ebc81ce7c2a83a0e28",
     "test:paired-contract": "node --test scripts/paired-performance-contract.test.mjs scripts/paired-process.test.mjs scripts/paired-continuation.test.mjs",
     "test:budget-contract": "node --test scripts/functional-budget-contract.test.mjs scripts/functional-budget-assets.test.mjs scripts/functional-budget-evidence.test.mjs",
-    "perf:budget": "node scripts/functional-budget.mjs"
+    "perf:budget": "node scripts/functional-budget.mjs",
+    "perf:current": "node scripts/performance/run.mjs",
+    "test:performance-contract": "node --test --test-reporter=tap scripts/performance/contract.test.mjs scripts/performance/recorder.test.mjs",
+    "test:performance-recorder": "node scripts/performance/verify-recorder.mjs"
   },
   "private": true,
   "dependencies": {

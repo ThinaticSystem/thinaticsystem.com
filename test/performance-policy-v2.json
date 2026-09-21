@@ -1,0 +1,36 @@
+{
+  "schema": "thinaticsystem/performance-policy/v2",
+  "version": "comparative-engineering-v2.0",
+  "anchor": {
+    "id": "required-features-v1",
+    "proposalSha256": "acc9d1071435fba0166d4338aca99021d4e9ba4431a71837e1d659f542edc64f",
+    "reference": "historical-ci-35531884637-baseline",
+    "referenceCodeBytes": {
+      "desktop.blog-list": 21571,
+      "desktop.blog-article": 5899,
+      "desktop.discography": 4571
+    }
+  },
+  "caps": {
+    "initial": { "rawBytes": 458752, "gzipBytes": 131072, "brotliBytes": 114688 },
+    "allEmittedJsCssRawBytes": 819200,
+    "warmCodeBytes": {
+      "desktop.blog-list": 20480,
+      "desktop.blog-article": 7168,
+      "desktop.discography": 5120
+    }
+  },
+  "warmScope": {
+    "status": "REVIEW_REQUIRED",
+    "fixtureSha256": null,
+    "harnessSha256": null,
+    "reviewReference": null,
+    "scope": "decoded-code-action-and-tail",
+    "reason": "Rich fixture request graph differs from historical measurement; warm caps and fixed route references are diagnostic only until explicit same-scope compatibility review. Never rebind automatically."
+  },
+  "materiality": { "timingAbsoluteFloorInMs": 50, "resourceAbsoluteFloorInBytes": 1024, "relativeRatio": 0.2 },
+  "schedule": ["baseline", "candidate", "candidate", "baseline", "candidate", "baseline", "baseline", "candidate"],
+  "calibrationSchedule": ["baseline", "candidate", "candidate", "baseline"],
+  "runtimeMajor": 24,
+  "absoluteUxAcceptance": "NOT_ESTABLISHED"
+}

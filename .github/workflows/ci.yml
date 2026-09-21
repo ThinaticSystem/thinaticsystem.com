@@ -57,12 +57,27 @@ jobs:
         run: corepack pnpm exec playwright install --with-deps chromium
       - name: Paired performance contract fixtures
         run: corepack pnpm run test:paired-contract
-      - name: Same-runner paired build, browser and performance
+      - name: Production build
+        id: build
+        run: corepack pnpm run build
+      - name: Current performance contract fixtures
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: corepack pnpm run test:performance-contract
+      - name: Actual-browser recorder canaries
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: corepack pnpm run test:performance-recorder
+      - name: Candidate browser functionality and accessibility
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: corepack pnpm run test:e2e
+      - name: Calibrated same-runner current performance
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         timeout-minutes: 30
-        run: corepack pnpm run perf:paired
+        run: corepack pnpm run perf:current
       - name: TypeDoc
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: corepack pnpm run docs:check
       - name: Fixture-only local HTTP contract smoke
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: corepack pnpm run deploy:check
       - name: Upload verification artifacts
         if: always()
@@ -74,6 +89,13 @@ jobs:
           retention-days: 14
           path: |
             .artifacts/paired-ci/
+            .artifacts/performance-v2/
+            .artifacts/performance-recorder/
+            .artifacts/browser*.json
+            .artifacts/browser*.png
+            .artifacts/screenshots/
+            .artifacts/axe-*.json
+            .artifacts/partial-failure.json
             .artifacts/known-defects*
             .artifacts/known-defect-runner-probes/
             .artifacts/typedoc/

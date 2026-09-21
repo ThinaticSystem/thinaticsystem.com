@@ -1,5 +1,9 @@
 # Quality gates
 
+## Current performance entrypoint
+
+現行CIの性能checkは[`perf:current`](current-performance.md)である。本文/操作可能性を正のendpointとする通常motionの新計測、A/A校正、固定schedule比較、資源予算判定を使う。旧v4の時間値を新計測へ混ぜない。以下のhistorical節は再現手順・制約の記録であり、現行CIの呼出しや受入を上書きしない
+
 ## Local command contract
 
 `pnpm run check`はfrozen install後のbaseline quality gate（typecheck、lint、unit、known-defect contract、known-defect raw gate、性能予算contract fixture）を順に実行する。`pnpm run docs:check`はTypeDocを生成し、`pnpm run test:e2e`はowned synthetic fixtureを使う実Chromiumのsemantic/a11y/browser smoke、`pnpm run perf:paired`は同一runnerでhistorical baselineとcandidateをfresh計測し、`pnpm run deploy:check`は自前のNode fixture serverのHTTP契約だけを検査する。現行feedbackのreadinessとhosting実装の検証範囲は以下の制限に従う
@@ -14,7 +18,7 @@
 
 `test:e2e`はCMS/patronのlive endpointへ接続せず、Chromiumでhome、theme toggle、mobile menu、blog list/article/back、discographyを通る。role/nameまたはvisible textのsemantic locator、keyboard operation、focus、mobile `375x812`、reduced motion、reflow、axe scan、console/page/request error inventoryを記録する。axe passだけではscreen reader usabilityの証明にならないため、代表screen readerでの手動確認は未実施ならpendingである
 
-## Performance
+## Historical performance policy
 
 比較baselineはapproved SHA `33b4ef4e8d21276130127a61aede6f0a8e1c47cb`のsynthetic fixtureとChromiumである。gzip(level9,mtime0)とBrotli(quality11)を同じ方式で計算し、initial artifact sizeとper-route request/lazy-route bytesを比較する。`browser-smoke`はreadiness完了までを計時し、axe scanとscreenshotをtimer外で実行する。timingは3 repeatのmedianを、baselineの固定20% noise/retest ruleで判定し、超過はPASSにせず`INCONCLUSIVE_OR_FAIL`としてgateを止める。local lab timingはfield UX保証ではない
 
@@ -32,15 +36,15 @@ Browser capture uses hash-pinned Noto Sans JP and an Noto Color Emoji fallback v
 
 Historical v4 readiness waits for the semantically named old loading image to fade, then waits for finite page motion to settle; it does not hide the loader or replace waits with fixed sleeps. Desktop/mobile initial theme and color scheme are light. Screenshots/axe stay outside the action timer.
 
-Do not compare v4 user-visible timing against the historical v3 baseline. `perf:check` rejects that mixture. For a fresh same-host pair, supply `PERFORMANCE_BASELINE` and `EVIDENCE_OUTPUT` pointing to matching v4 baseline/candidate records (same browser/font/theme/readiness). The original `test/performance-baseline.json` remains unchanged as historical evidence. The dev pair is at `.artifacts/browser-ready-fix/final/{baseline,candidate,performance}.json`; this is not a hosted-CI baseline. Hosted CI now invokes `perf:paired` to generate both sides on its own runner; no dev timings are consumed. Remote Actions success remains unverified until an authorized push.
+Do not compare v4 user-visible timing against the historical v3 baseline. `perf:check` rejects that mixture. For a fresh same-host pair, supply `PERFORMANCE_BASELINE` and `EVIDENCE_OUTPUT` pointing to matching v4 baseline/candidate records (same browser/font/theme/readiness). The original `test/performance-baseline.json` remains unchanged as historical evidence. The dev pair is at `.artifacts/browser-ready-fix/final/{baseline,candidate,performance}.json`; this is not a hosted-CI baseline. The historical CI invoked `perf:paired`; the current workflow uses the separately versioned `perf:current`. Neither command consumes dev timings as a hosted baseline. Remote Actions success requires the exact pushed revision and actual run result.
 
 ## Current feedback verification boundary
 
 The accepted icon-only feedback uses `role=status` named `ページを読み込み中`, an empty-alt image, delayed admission, and a separately owned decorative exit. Historical v4 does not wait for this lifecycle. Its frozen helper/control/source hashes remain unchanged, so an old-harness PASS is not current-feedback readiness acceptance. Current colocated loading/clipboard tests and the separately retained corner/reduced-motion/browser evidence cover their stated behaviors; final timing needs a separately reviewed current readiness substrate, not a silent replacement of historical controls.
 
-The separately approved [functional budget](functional-performance-budget.md) retains old raw failures and incomplete coverage; it is not a green replacement for the historical comparator. Cold article/detail and full list-to-detail/resource coverage remain release conditions. Automated axe/keyboard checks do not establish real screen-reader usability.
+The separately approved [functional budget](functional-performance-budget.md) retains old raw failures and incomplete coverage; it is not a green replacement for the historical comparator. The successor collector adds cold article/detail and list-to-detail observations; availability in its code does not establish a passing execution. Use its exact current run and limitations to assess coverage. Automated axe/keyboard checks do not establish real screen-reader usability.
 
-## Same-runner paired CI
+## Historical same-runner paired command
 
 Linux and an existing C compiler (cc, provided by the native Nix shell and hosted Ubuntu runner) are required. No package or system setting is installed or changed by the owner bootstrap. After the candidate frozen install and Chromium installation, run `corepack pnpm run test:paired-contract` and `corepack pnpm run perf:paired`. Use the pinned Nix Node24 shell locally; on Linux an explicit `BROWSER_EXECUTABLE_PATH` may select the installed Chromium. Other inherited browser/evidence/baseline controls are discarded. No historical timing file or previous browser result is read by this command.
 
@@ -64,4 +68,4 @@ Evidence: `identity.json` records candidate HEAD plus dirty status and a complet
 - Tailwind4.3.3はofficial upgrade tool、SCSS→CSS/@reference/PostCSS移行、実buildとChromium153 smokeまで試行した。新しいdynamic z-2 utilityによるhomeのstacking差、articleのspacing差、blog route decoded bytesの増加20803→28685を確認し、変更前render/performance契約を優先して3.4.19へ保持する。試行source archive、ログ、画像はignored dependency-modernization artifactに保持し、閾値の緩和や旧debtへの登録はしない
 - Playwright1.63.0/Chromium153.0.8010.12/axe4.13.0で新たなfixture browser結果を作成する。devでは既存Nixライブラリを使うprocess-local browser wrapperのみを用い、global nix-ldやfont設定は変更しない
 - 旧paired runはaxe signature差をfail-closedで拒否した履歴として保持する。独立因果reviewを根拠に別versioned historical-only controlを明示選択し、baseline buildはlocked Node22.23.2へ分離する。旧debtと旧rawは不変であり、旧candidate lockと現lockの差も保持する。新control登録は製品・性能受入ではなく、現在のfull source manifestとfresh frozen install/buildによる全8attemptの結果だけを新しい比較証拠とする。Angular18自体の保守やProduction/hosted CI成功は主張しない
-- CI uploadはpaired-ci、known-defects、runner probes、typedocだけをallowlistとし、local backup/ブラウザーbinary/既存Pages snapshotを.artifacts全体から公開しない。remote ActionsとProductionは未実行である
+- CI uploadはpaired-ci、performance-v2、recorder canary、browser/axe、known-defects、runner probes、typedocの必要証跡をallowlistとし、local backup/ブラウザーbinary/既存Pages snapshotを.artifacts全体から公開しない。remote ActionsとProductionは未実行である
