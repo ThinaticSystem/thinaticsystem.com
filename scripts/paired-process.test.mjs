@@ -10,9 +10,10 @@ import {compileSupervisor, runOwnedCommand} from './paired-process.mjs';
 
 
 test('supervisor reaps worker-thread detached descendants on exit0, exit1, crash, timeout and cancel', {timeout:20_000}, async () => {
-  const {mkdtempSync,writeFileSync,existsSync,rmSync,openSync,closeSync} = await import('node:fs');
+  const {mkdtempSync,mkdirSync,writeFileSync,existsSync,rmSync,openSync,closeSync} = await import('node:fs');
   const {resolve,join} = await import('node:path');
   const {setTimeout:delay} = await import('node:timers/promises');
+  mkdirSync(resolve('.artifacts/paired-ci'),{recursive:true});
   const dir=mkdtempSync(resolve('.artifacts/paired-ci/owner-fixture-'));
   const supervisor=compileSupervisor(dir);
   const unrelated=spawn(process.execPath,['-e','setTimeout(()=>{},15000)'],{stdio:'ignore'});

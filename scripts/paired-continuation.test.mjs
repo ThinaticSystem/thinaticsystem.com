@@ -56,8 +56,9 @@ test('CI selects baseline before candidate, runs required local gates, and never
  const workflow=readFileSync('.github/workflows/ci.yml','utf8');
  const baseline=workflow.indexOf('node-version-file: .baseline-node-version');const saved=workflow.indexOf('BASELINE_NODE_EXECUTABLE=');const candidate=workflow.indexOf('node-version-file: .node-version');
  assert.ok(baseline>=0&&saved>baseline&&candidate>saved);assert.ok(!workflow.includes('continue-on-error'));
- for(const script of ['test:paired-contract','perf:paired','test:known-defects:contract','test:known-defects','docs:check'])assert.ok(workflow.includes('corepack pnpm run '+script),script);
+ for(const script of ['test:paired-contract','perf:current','test:performance-contract','test:performance-recorder','test:e2e','test:known-defects:contract','test:known-defects','docs:check'])assert.ok(workflow.includes('corepack pnpm run '+script),script);
  assert.ok(workflow.includes('if: always()'));assert.ok(workflow.includes('fetch-depth: 0'));
+ for(const name of ['Current performance contract fixtures','Actual-browser recorder canaries','Candidate browser functionality and accessibility','Calibrated same-runner current performance','TypeDoc','Fixture-only local HTTP contract smoke']){const step=workflow.split('      - name: '+name+'\n')[1]?.split('      - name: ')[0];assert.ok(step?.includes("if: ${{ !cancelled() && steps.build.outcome == 'success' }}"),name+' must not be skipped after another check fails');}
  const command=JSON.parse(readFileSync('package.json')).scripts['perf:paired'];assert.ok(command.includes('--baseline-control '+controlSelection.path));assert.ok(command.includes('--baseline-control-sha256 '+controlSelection.sha256));
  const flake=readFileSync('flake.nix','utf8');assert.ok(flake.includes('baselineNode = pkgs.nodejs_22'));assert.ok(flake.includes('assert baselineNode.version == baselineNodeVersion'));assert.ok(flake.includes('BASELINE_NODE_EXECUTABLE = "${baselineNode}/bin/node"'));
 });
