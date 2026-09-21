@@ -29,3 +29,11 @@ requestは開始時に所有し、終端・bodyをbounded drainで確認する�
 build成功を条件として機能/a11y・性能・TypeDoc・fixture配信smokeを独立実行する。性能失敗で後続docs/smokeをskipせず、各stepの失敗はjobに残す。`continue-on-error`で未知失敗を握り潰さない。raw uploadは失敗時も実行する
 
 旧記事遷移+650BのFAILは旧ゼロ増分方針の結果として残る。新しい比較は新schema/readiness/fixtureに紐づく別観測であり、旧データの時刻を新しい測定と称して再利用しない。本番公開・Renovate有効化・default branchへの設定反映はこのgateの権限に含まれない
+
+## メニューのmotion回帰
+
+`node scripts/performance/verify-menu-motion.mjs --dist dist/app/browser --output .artifacts/menu-motion`でproduction buildのメニューを実Chromiumで確認する。出力先は未使用のdirectoryを指定する
+
+標準animationの所要時間は`--animate-duration`を参照し、未指定時のみ1秒へfallbackする。app shellの既存指定0.5秒を保ち、reduced-motionでは1msを優先する。fadeの廃止、keyframeの変更、readiness条件や性能filterの緩和では解決しない
+
+この回帰はnative animationの時間設定・opacity推移・繰返し開閉・Blog遷移を確認する。実ブラウザーのfixture検証であり、人間の見た目評価、実端末の応答性、公開配信の受入とは区別する

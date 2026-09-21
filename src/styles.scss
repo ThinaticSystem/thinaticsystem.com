@@ -5,7 +5,7 @@
 @import 'github-markdown-css/github-markdown.css';
 
 .animate__animated {
-  animation-duration: 1s;
+  animation-duration: var(--animate-duration, 1s);
   animation-fill-mode: both;
 }
 

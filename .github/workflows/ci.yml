@@ -66,6 +66,9 @@ jobs:
       - name: Actual-browser recorder canaries
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: corepack pnpm run test:performance-recorder
+      - name: Native menu motion regression
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: node scripts/performance/verify-menu-motion.mjs --dist dist/app/browser --output .artifacts/menu-motion
       - name: Candidate browser functionality and accessibility
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: corepack pnpm run test:e2e
@@ -91,6 +94,7 @@ jobs:
             .artifacts/paired-ci/
             .artifacts/performance-v2/
             .artifacts/performance-recorder/
+            .artifacts/menu-motion/
             .artifacts/browser*.json
             .artifacts/browser*.png
             .artifacts/screenshots/
