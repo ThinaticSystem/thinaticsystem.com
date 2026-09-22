@@ -1,5 +1,5 @@
 import {readFileSync, writeFileSync} from 'node:fs';
-import {verifyEvidence} from './oracle.mjs';
+import {REPO_ROOT, buildMapping, normalizedProjection, registrations, rowBindingFor, sameRowBinding, verifyEvidence} from './oracle.mjs';
 
 const runDir = process.argv[2];
 if (!runDir) throw new Error('usage: node scripts/observation/v3-full/verify.mjs <run-dir>');
@@ -10,6 +10,25 @@ const valid = verifyEvidence({before, after, events: bundle.events, commands: bu
 const fixtures = JSON.parse(readFileSync(new URL('./negative-fixtures.json', import.meta.url), 'utf8'));
 const rejected = [];
 const stablePassed = [];
+function sourceMutationRejected(fixture, after) {
+  const target = after.find(item => item.oldEntryIndex === 142);
+  if (!target?.finalRowBinding) throw new Error(`source mutation target is missing: ${fixture.name}`);
+  const text = readFileSync(`${REPO_ROOT}/${target.finalFile}`, 'utf8');
+  const range = target.finalRowBinding.registrationRange;
+  const original = text.slice(range.startOffset, range.endOffset);
+  const mutation = fixture.mutation === 'source-mutated-row-input' ? original.replace("'?autoplay=1'", "'?autoplay=2'") : original.replace('.toBeNull()', '.toBeUndefined()');
+  if (mutation === original) throw new Error(`source mutation did not touch target: ${fixture.name}`);
+  const mutatedText = text.slice(0, range.startOffset) + mutation + text.slice(range.endOffset);
+  const candidates = registrations(mutatedText, target.finalFile).filter(item => item.range.startOffset === range.startOffset && item.range.endOffset === range.endOffset);
+  if (candidates.length !== 1) return;
+  try {
+    const mutatedBinding = rowBindingFor(candidates[0], target.finalCaseTitle, target.finalFullId);
+    if (!sameRowBinding(mutatedBinding, target.finalRowBinding)) return;
+  } catch {
+    return;
+  }
+  throw new Error(`source mutation was accepted: ${fixture.name}`);
+}
 for (const fixture of fixtures) {
   const mutatedAfter = structuredClone(after);
   const mutatedEvents = structuredClone(bundle.events);
@@ -79,9 +98,17 @@ for (const fixture of fixtures) {
     const indexes = mutatedEvents.map((event, index) => event.runner === 'angular' ? index : -1).filter(index => index >= 0);
     [mutatedEvents[indexes[0]], mutatedEvents[indexes[1]]] = [mutatedEvents[indexes[1]], mutatedEvents[indexes[0]]];
   }
+  if (fixture.mutation === 'source-mutated-row-input' || fixture.mutation === 'source-mutated-row-expected-outcome') {
+    try { sourceMutationRejected(fixture, after); rejected.push(fixture.name); } catch { throw new Error(`source mutation negative was not rejected: ${fixture.name}`); }
+    continue;
+  }
   try {
     verifyEvidence({before, after: mutatedAfter, events: mutatedEvents, commands: mutatedCommands});
-    if (fixture.expect === 'stable') stablePassed.push(fixture.name);
+    if (fixture.expect === 'stable') {
+      const remapped = buildMapping(before, mutatedEvents).after;
+      if (JSON.stringify(normalizedProjection(remapped)) !== JSON.stringify(normalizedProjection(after))) throw new Error(`report-order projection changed: ${fixture.name}`);
+      stablePassed.push(fixture.name);
+    }
   } catch {
     if (fixture.expect === 'stable') throw new Error(`stability fixture rejected: ${fixture.name}`);
     rejected.push(fixture.name);

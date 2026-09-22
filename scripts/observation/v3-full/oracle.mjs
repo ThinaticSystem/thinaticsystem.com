@@ -114,7 +114,141 @@ function tableBindings(sf, registration) {
   visit(sf);
   return result;
 }
+function sourceContextText(item, file) {
+  if (file === item.file) return item.sourceText;
+  return item.sourceCommit ? textAtCommit(file, item.sourceCommit) : sourceText(file);
+}
+function importTarget(item, sf, name) {
+  let target = null;
+  const visit = node => {
+    if (target || !ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier)) return;
+    const bindings = node.importClause?.namedBindings;
+    if (!ts.isNamedImports(bindings) || !bindings.elements.some(element => (element.propertyName?.text ?? element.name.text) === name)) return;
+    const modulePath = node.moduleSpecifier.text;
+    const directory = item.file.slice(0, item.file.lastIndexOf('/'));
+    const moduleCandidates = /\.(?:ts|tsx|js|mjs|cjs)$/.test(modulePath) ? [modulePath] : [`${modulePath}.ts`, `${modulePath}.mjs`, `${modulePath}/index.ts`];
+    const candidates = moduleCandidates.map(candidate => candidate.startsWith('.') ? resolve('/', directory, candidate) : candidate).map(candidate => candidate.replace(/^\/+/, ''));
+    for (const candidate of candidates) {
+      try { target = {file: candidate, text: sourceContextText(item, candidate)}; break; } catch { /* unsupported import resolution */ }
+    }
+  };
+  visit(sf);
+  sf.forEachChild(node => { if (!target) visit(node); });
+  return target;
+}
+function unwrapExpression(node) { let current = node; while (ts.isParenthesizedExpression(current) || ts.isAsExpression(current) || ts.isTypeAssertionExpression(current)) current = current.expression; return current; }
+function variableInitializer(sf, name) {
+  let result = null;
+  const visit = node => {
+    if (result) return;
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === name && node.initializer) result = unwrapExpression(node.initializer);
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return result;
+}
+function finiteValue(item, sf, node, seen = new Set()) {
+  if (ts.isStringLiteralLike(node)) return node.text;
+  if (ts.isNumericLiteral(node)) return Number(node.text);
+  if (node.kind === ts.SyntaxKind.TrueKeyword) return true;
+  if (node.kind === ts.SyntaxKind.FalseKeyword) return false;
+  if (node.kind === ts.SyntaxKind.NullKeyword) return null;
+  if (ts.isPrefixUnaryExpression(node) && node.operator === ts.SyntaxKind.MinusToken) return -finiteValue(item, sf, node.operand, seen);
+  if (ts.isIdentifier(node)) {
+    if (node.text === 'undefined') return undefined;
+    if (seen.has(node.text)) throw new Error(`cyclic finite source value ${node.text}`);
+    const imported = importTarget(item, sf, node.text);
+    if (imported) {
+      const importedSf = sourceFile(imported.text, imported.file);
+      const initializer = variableInitializer(importedSf, node.text);
+      if (!initializer) throw new Error(`imported finite value is unsupported: ${node.text}`);
+      return finiteValue({...item, file: imported.file, sourceText: imported.text, sourceCommit: item.sourceCommit}, importedSf, initializer, new Set([...seen, node.text]));
+    }
+    const initializer = variableInitializer(sf, node.text);
+    if (!initializer) throw new Error(`finite identifier is unresolved: ${node.text}`);
+    return finiteValue(item, sf, initializer, new Set([...seen, node.text]));
+  }
+  if (ts.isArrayLiteralExpression(node)) return node.elements.map(element => { if (ts.isSpreadElement(element)) throw new Error('spread finite row is unsupported'); return finiteValue(item, sf, element, seen); });
+  if (ts.isObjectLiteralExpression(node)) {
+    const result = {};
+    for (const property of node.properties) {
+      if (ts.isPropertyAssignment(property) && (ts.isIdentifier(property.name) || ts.isStringLiteralLike(property.name))) result[property.name.text] = finiteValue(item, sf, property.initializer, seen);
+      else if (ts.isShorthandPropertyAssignment(property)) result[property.name.text] = finiteValue(item, sf, property.name, seen);
+      else throw new Error('object finite row property is unsupported');
+    }
+    return result;
+  }
+  if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) return finiteValue(item, sf, node.left, seen) + finiteValue(item, sf, node.right, seen);
+  if (ts.isTemplateExpression(node)) {
+    let result = node.head.text;
+    for (const span of node.templateSpans) result += renderValue(finiteValue(item, sf, span.expression, seen)) + span.literal.text;
+    return result;
+  }
+  if (ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
+  if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'repeat' && node.arguments.length === 1) {
+    const value = finiteValue(item, sf, node.expression.expression, seen);
+    const count = finiteValue(item, sf, node.arguments[0], seen);
+    if (typeof value !== 'string' || !Number.isInteger(count) || count < 0 || count > 20_000) throw new Error('finite repeat is unsupported');
+    return value.repeat(count);
+  }
+  throw new Error(`unsupported finite source expression: ${normalizedText(sf, node)}`);
+}
+function renderValue(value) { return value === undefined ? 'undefined' : value === null ? 'null' : typeof value === 'object' ? JSON.stringify(value) : String(value); }
+function renderTitleBinding(value) { return typeof value === 'string' ? `'${value.replaceAll("'", "\\\\'")}'` : renderValue(value); }
+function finiteRows(item) {
+  const sf = sourceFile(item.sourceText, item.file);
+  const table = item.tableNode;
+  if (!table) throw new Error(`dynamic row has no table expression: ${item.file}:${item.range.startLine}`);
+  if (ts.isCallExpression(table) && ts.isPropertyAccessExpression(table.expression) && table.expression.name.text === 'filter' && table.arguments.length === 1 && (ts.isArrowFunction(table.arguments[0]) || ts.isFunctionExpression(table.arguments[0]))) {
+    const receiver = table.expression.expression;
+    if (!ts.isIdentifier(receiver)) throw new Error('filtered table receiver is unsupported');
+    const predicate = table.arguments[0];
+    if (predicate.parameters.length !== 1 || !ts.isIdentifier(predicate.parameters[0].name) || !ts.isBinaryExpression(predicate.body) || predicate.body.operatorToken.kind !== ts.SyntaxKind.ExclamationEqualsEqualsToken || !ts.isPropertyAccessExpression(predicate.body.left) || !ts.isIdentifier(predicate.body.left.expression) || predicate.body.left.expression.text !== predicate.parameters[0].name.text || predicate.body.left.name.text !== 'html' || predicate.body.right.kind !== ts.SyntaxKind.NullKeyword) throw new Error('filtered table predicate is unsupported');
+    const imported = importTarget(item, sf, receiver.text);
+    if (!imported) throw new Error(`filtered table import is unresolved: ${receiver.text}`);
+    const importedSf = sourceFile(imported.text, imported.file);
+    const initializer = variableInitializer(importedSf, receiver.text);
+    if (!initializer || !ts.isArrayLiteralExpression(initializer)) throw new Error('filtered table source is not a literal array');
+    return initializer.elements.filter(element => ts.isObjectLiteralExpression(element) && element.properties.some(property => ts.isPropertyAssignment(property) && (ts.isIdentifier(property.name) || ts.isStringLiteralLike(property.name)) && property.name.text === 'html' && finiteValue({...item, file: imported.file, sourceText: imported.text}, importedSf, property.initializer) !== null)).map(element => ({value: finiteValue({...item, file: imported.file, sourceText: imported.text}, importedSf, element), sourceNode: element, sourceFile: imported.file}));
+  }
+  if (!ts.isArrayLiteralExpression(table)) throw new Error(`dynamic table form is unsupported: ${item.tableExpression}`);
+  return table.elements.map(element => { if (ts.isSpreadElement(element)) throw new Error('spread dynamic table is unsupported'); return {value: finiteValue(item, sf, element), sourceNode: element, sourceFile: item.file}; });
+}
+function parameterBindings(callback, value) {
+  if (!callback?.parameters?.length) throw new Error('dynamic callback has no row parameter');
+  const parameter = callback.parameters[0].name;
+  const bindings = {};
+  if (ts.isIdentifier(parameter)) bindings[parameter.text] = value;
+  else if (ts.isObjectBindingPattern(parameter) && value && typeof value === 'object' && !Array.isArray(value)) for (const element of parameter.elements) if (ts.isBindingElement(element) && ts.isIdentifier(element.name) && ts.isIdentifier(element.propertyName ?? element.name)) bindings[element.name.text] = value[element.propertyName?.text ?? element.name.text];
+  else throw new Error('dynamic callback parameter form is unsupported');
+  return bindings;
+}
+function renderExpressionValue(value) { return value === undefined ? 'undefined' : JSON.stringify(value); }
+function substituteBindings(expression, bindings) { return expression.replace(/\b[A-Za-z_$][A-Za-z0-9_$]*\b/g, name => Object.hasOwn(bindings, name) ? renderExpressionValue(bindings[name]) : name); }
+function expectedAssertion(assertion, bindings) {
+  const operands = assertion.arguments.length ? assertion.arguments.map(source => ({source, substituted: substituteBindings(source, bindings)})) : ({toBeNull: [{source: 'null', substituted: 'null'}], toBeUndefined: [{source: 'undefined', substituted: 'undefined'}], toBeTruthy: [{source: 'true', substituted: 'true'}], toBeFalsy: [{source: 'false', substituted: 'false'}]}[assertion.matcher] ?? []);
+  const result = assertion.arguments.length ? operands : (assertion.matcher === 'toBeNull' ? [{source: 'null', value: null}] : assertion.matcher === 'toBeUndefined' ? [{source: 'undefined', value: {type: 'undefined'}}] : assertion.matcher === 'toBeTruthy' ? [{source: 'true', value: true}] : assertion.matcher === 'toBeFalsy' ? [{source: 'false', value: false}] : []);
+  return {operator: assertion.operator, matcher: assertion.matcher, negated: assertion.negated, sourceRange: assertion.source, actualOperands: assertion.operands.map(source => ({source, substituted: substituteBindings(source, bindings)})), expectedOperands: operands, expectedResult: result};
+}
+function dynamicRowBinding(item, actualTitle, fullId) {
+  if (!item.tableRange) return null;
+  const rows = finiteRows(item);
+  const matches = rows.map((row, rowIndex) => { const bindings = parameterBindings(item.callback, row.value); const titleBindings = row.value && typeof row.value === 'object' && !Array.isArray(row.value) ? {...row.value, ...bindings} : bindings; let placeholder = item.titleNode ? (ts.isStringLiteralLike(item.titleNode) ? item.titleNode.text : ts.isTemplateExpression(item.titleNode) ? item.titleNode.getText(item.sourceText) : item.titleExpression) : item.titleExpression; const values = ts.isIdentifier(item.callback.parameters[0].name) ? [row.value] : []; let index = 0; const rendered = placeholder.replace(/\$([A-Za-z_][A-Za-z0-9_]*)|%s/g, (_, name) => name ? renderTitleBinding(titleBindings[name]) : renderValue(values[index++])); return {...row, rowIndex, bindings, rendered}; }).filter(row => row.rendered === actualTitle);
+  if (matches.length !== 1) throw new Error(`dynamic row binding is ${matches.length === 0 ? 'missing' : 'ambiguous'} for ${item.file}:${item.range.startLine}:${actualTitle}`);
+  const row = matches[0];
+  const rowRange = rangeOf(sourceFile(row.sourceFile === item.file ? item.sourceText : sourceContextText(item, row.sourceFile), row.sourceFile), row.sourceNode, row.sourceFile);
+  const bindingValues = Object.fromEntries(Object.entries(row.bindings).map(([name, value]) => [name, finiteData(value)]));
+  const expectedResult = {assertions: item.assertions.map(assertion => expectedAssertion(assertion, row.bindings))};
+  const rowInput = {mechanism: row.sourceFile === item.file ? 'literal-table-row' : 'imported-fixture-row', tableExpression: item.tableExpression, tableRange: item.tableRange, rowRange, rowIndex: row.rowIndex, operands: [{source: normalizedText(sourceFile(row.sourceFile === item.file ? item.sourceText : sourceContextText(item, row.sourceFile), row.sourceFile), row.sourceNode), value: finiteData(row.value)}], bindings: bindingValues, title: actualTitle, fullId};
+  const callbackRange = rangeOf(sourceFile(item.sourceText, item.file), item.callback, item.file);
+  const assertionRanges = item.assertions.map(assertion => assertion.source);
+  const rowKey = sha(JSON.stringify({file: item.file, registrationRange: item.range, callbackRange, assertionRanges, tableRange: item.tableRange, rowInput, expectedResult}));
+  return {registrationRange: item.range, callbackRange, assertionRanges, tableRange: item.tableRange, callsiteRange: item.range, bindingRanges: item.bindingRanges, tableExpression: item.tableExpression, rowInput, expectedResult, rowKey};
+}
+function finiteData(value) { if (value === undefined) return {type: 'undefined'}; if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value; if (Array.isArray(value)) return value.map(finiteData); return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, finiteData(entry)])); }
 function rowBindingFor(item, actualTitle, fullId) {
+  const dynamic = dynamicRowBinding(item, actualTitle, fullId);
+  if (dynamic) return dynamic;
   const registrationRange = item.range;
   const tableRange = item.tableRange ?? null;
   const bindingRanges = item.bindingRanges ?? [item.range];
@@ -170,14 +304,14 @@ function helperSemantic(evidence) {
   return {kind: evidence.kind, supported: evidence.supported, contractAssertions: semanticPart(evidence.contractAssertions ?? []), calls: (evidence.calls ?? []).map(({operands}) => ({operands})), operations: (evidence.operations ?? []).map(({kind, callee, operands, target, operator, value}) => ({kind, callee, operands, target, operator, value})), tableBindings: (evidence.tableBindings ?? []).map(({name, values}) => ({name, values})), expectedOutcome: evidence.expectedOutcome ?? []};
 }
 function sameHelperEvidence(left, right) { return JSON.stringify(helperSemantic(left)) === JSON.stringify(helperSemantic(right)); }
-function registrations(text, file) {
+function registrations(text, file, sourceCommit = null) {
   const sf = sourceFile(text, file);
   const result = [];
   const visit = (node, ancestors = []) => {
     if (isRegistration(node)) {
       const parts = registrationParts(node);
       const titleNode = parts.title;
-      result.push({file, title: literalText(titleNode), titlePattern: titlePattern(sf, titleNode), titleExpression: normalizedText(sf, titleNode), tableExpression: parts.table ? normalizedText(sf, parts.table) : null, tableRange: parts.table ? rangeOf(sf, parts.table, file) : null, bindingRanges: sourceBindingRanges(sf, {node, range: rangeOf(sf, node, file)}), ancestors, range: rangeOf(sf, node, file), assertions: assertionSignatures(sf, parts.callback), helperEvidence: helperEvidence(sf, {node, range: rangeOf(sf, node, file)}), node});
+      result.push({file, title: literalText(titleNode), titleNode, titlePattern: titlePattern(sf, titleNode), titleExpression: normalizedText(sf, titleNode), tableExpression: parts.table ? normalizedText(sf, parts.table) : null, tableRange: parts.table ? rangeOf(sf, parts.table, file) : null, tableNode: parts.table, callback: parts.callback, sourceText: text, sourceCommit, bindingRanges: sourceBindingRanges(sf, {node, range: rangeOf(sf, node, file)}), ancestors, range: rangeOf(sf, node, file), assertions: assertionSignatures(sf, parts.callback), helperEvidence: helperEvidence(sf, {node, range: rangeOf(sf, node, file)}), node});
       return;
     }
     if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'describe' && node.arguments.length >= 2 && literalText(node.arguments[0]) !== null) {
@@ -201,7 +335,7 @@ function buildRegistry(commit = null) {
   for (const file of filesAtCommit(commit)) {
     let text;
     try { text = commit ? textAtCommit(file, commit) : readFileSync(resolve(REPO_ROOT, file), 'utf8'); } catch { continue; }
-    for (const item of registrations(text, file)) result.push(item);
+    for (const item of registrations(text, file, commit)) result.push(item);
   }
   return result;
 }
@@ -439,4 +573,4 @@ export function verifyEvidence({before, after, events, commands, sourceRoot = RE
 export function normalizedProjection(after) { return after.map(item => ({oldEntryIndex: item.oldEntryIndex, oldFullId: item.oldFullId, baseFile: item.baseFile, baseSourceRange: item.baseSourceRange, baseRegistrationOrdinal: item.baseRegistrationOrdinal, baseRowBinding: item.baseRowBinding ?? null, finalFile: item.finalFile, finalFullId: item.finalFullId, finalSourceRange: item.finalSourceRange, finalRowBinding: item.finalRowBinding ?? null, eventIdentity: {eventId: item.runnerEvidence.eventId, runner: item.runnerEvidence.runner, file: item.runnerEvidence.file, fullId: item.runnerEvidence.fullId}, assertions: {base: item.baseAssertions, final: item.finalAssertions}, helperSemantics: {base: helperSemantic(item.baseHelperEvidence), final: helperSemantic(item.finalHelperEvidence)}, assertionSemantics: item.assertionSemantics, status: item.status})); }
 export function loadObservationMap() { return JSON.parse(readFileSync(BEFORE_MAP, 'utf8')); }
 export function loadBeforeTap() { return readFileSync(BEFORE_TAP, 'utf8'); }
-export {buildRegistry, filesAtCommit, fullId, identity, registrations, semanticKey, textAtCommit, rowBindingFor, sameRowBinding};
+export {buildRegistry, filesAtCommit, fullId, identity, registrations, semanticKey, textAtCommit, rowBindingFor, sameRowBinding, finiteRows};

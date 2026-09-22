@@ -80,6 +80,14 @@
     "mutation": "changed-row-expected-outcome"
   },
   {
+    "name": "source-mutated Angular old 142 row URL operand",
+    "mutation": "source-mutated-row-input"
+  },
+  {
+    "name": "source-mutated Angular old 142 expected null outcome",
+    "mutation": "source-mutated-row-expected-outcome"
+  },
+  {
     "name": "reordered Angular report assertions preserve source mapping",
     "mutation": "reordered-angular-assertions",
     "expect": "stable"
