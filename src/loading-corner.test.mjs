@@ -4,7 +4,7 @@ import {test} from 'node:test';
 import {chromium} from 'playwright';
 
 // NOTE: Native CSS fixture only; the full application/GIF/lifecycle is covered by parent browser QA.
-test('native corner headings hold on edges, survive child replacement, and reset for reduced motion', async () => {
+test('When the recorded scenario is exercised Then the contract demonstrates that native corner headings hold on edges, survive child replacement, and reset for reduced motion', async () => {
   const styles = readFileSync(process.env.CORNER_CSS_SOURCE ?? new URL('./styles.scss', import.meta.url), 'utf8');
   const start = styles.indexOf('.loading-feedback {');
   const end = styles.indexOf('\n.markdown-body {', start);

@@ -3,10 +3,10 @@ import {render, screen} from '@testing-library/angular';
 import {vi} from 'vitest';
 import {AppComponent} from './app.component';
 
-describe('Icon-only loading feedback', () => {
+describe('Icon-only loading feedback Given the owner is initialized', () => {
   afterEach(() => {TestBed.resetTestingModule(); vi.useRealTimers();});
 
-  it('retains the original GIF with a native static reduced-motion source and removes pending semantics at completion', async () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that retains the original GIF with a native static reduced-motion source and removes pending semantics at completion', async () => {
     const {fixture} = await render(AppComponent);
     vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout']});
     const loading = fixture.componentInstance.loadingService;
@@ -45,7 +45,7 @@ describe('Icon-only loading feedback', () => {
     expect(shell.getElementsByTagName('picture').length).toBe(0);
   });
 
-  it('keeps a static fallback icon after artwork failure without visible text or false completion', async () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that keeps a static fallback icon after artwork failure without visible text or false completion', async () => {
     const {fixture} = await render(AppComponent);
     vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout']});
     const loading = fixture.componentInstance.loadingService;

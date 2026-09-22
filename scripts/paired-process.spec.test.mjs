@@ -9,7 +9,7 @@ const controlArgs=['--baseline-control',controlSelection.path,'--baseline-contro
 import {compileSupervisor, runOwnedCommand} from './paired-process.mjs';
 
 
-test('supervisor reaps worker-thread detached descendants on exit0, exit1, crash, timeout and cancel', {timeout:20_000}, async () => {
+test('When the recorded scenario is exercised Then the contract demonstrates that supervisor reaps worker-thread detached descendants on exit0, exit1, crash, timeout and cancel', {timeout:20_000}, async () => {
   const {mkdtempSync,mkdirSync,writeFileSync,existsSync,rmSync,openSync,closeSync} = await import('node:fs');
   const {resolve,join} = await import('node:path');
   const {setTimeout:delay} = await import('node:timers/promises');
@@ -48,7 +48,7 @@ test('supervisor reaps worker-thread detached descendants on exit0, exit1, crash
   } finally {unrelated.kill('SIGKILL');await unrelatedClosed;rmSync(dir,{recursive:true,force:true});}
 });
 
-test('SIGTERM during registered worktree creation removes only that owned worktree', {timeout: 20_000}, async () => {
+test('When the recorded scenario is exercised Then the contract demonstrates that SIGTERM during registered worktree creation removes only that owned worktree', {timeout: 20_000}, async () => {
   const {mkdtempSync, mkdirSync, writeFileSync, existsSync, rmSync} = await import('node:fs');
   const {resolve, join, delimiter} = await import('node:path');
   const {execFileSync} = await import('node:child_process');
@@ -84,7 +84,7 @@ test('SIGTERM during registered worktree creation removes only that owned worktr
 });
 
 
-test('real runner reaps detached orphan after failed install before cleanup:true', {timeout:20_000}, async () => {
+test('When the recorded scenario is exercised Then the contract demonstrates that real runner reaps detached orphan after failed install before cleanup:true', {timeout:20_000}, async () => {
   const {mkdtempSync,writeFileSync,existsSync,rmSync} = await import('node:fs');
   const {resolve,join,delimiter} = await import('node:path');
   const {execFileSync} = await import('node:child_process');
@@ -125,7 +125,7 @@ test('real runner reaps detached orphan after failed install before cleanup:true
 });
 
 
-test('owner receipt absence, malformed data and unverified cleanup fail closed', async () => {
+test('When the recorded scenario is exercised Then the contract demonstrates that owner receipt absence, malformed data and unverified cleanup fail closed', async () => {
   const {mkdtempSync,writeFileSync,rmSync,openSync,closeSync} = await import('node:fs');
   const {resolve,join} = await import('node:path');
   const dir=mkdtempSync(resolve('.artifacts/paired-ci/receipt-fixture-'));

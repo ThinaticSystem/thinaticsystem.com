@@ -1,0 +1,10 @@
+[
+  {"name":"missing runner event ID","mutation":"missing-id"},
+  {"name":"duplicate runner event ID","mutation":"duplicate-id"},
+  {"name":"foreign source range","mutation":"fake-source-range"},
+  {"name":"dropped matcher signature","mutation":"dropped-matcher"},
+  {"name":"failing event forged as PASS","mutation":"forged-pass"},
+  {"name":"truncated registered case range","mutation":"truncated-range"},
+  {"name":"duplicate runner file full ID with a distinct event ID","mutation":"duplicate-identity"},
+  {"name":"nonzero Angular command","mutation":"nonzero-command"}
+]

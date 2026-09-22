@@ -8,17 +8,17 @@ import {validateBudgetReceipt,historicalRegressions} from './functional-budget-e
 
 const receipt={status:1,signal:null,error:null,timedOut:false,interrupted:false,cleanup:true,cleanupErrors:[],supervisor:{status:0,signal:null}};
 const raw={schema:1,status:1,signal:null,timedOut:false,interrupted:0,spawnErrno:0,cleanup:true,cleanupErrno:0};
-test('clean expected comparator FAIL remains usable data, not whole-job PASS',()=>assert.deepEqual(validateBudgetReceipt(receipt,raw,1),[]));
+test('When the recorded scenario is exercised Then the contract demonstrates that clean expected comparator FAIL remains usable data, not whole-job PASS',()=>assert.deepEqual(validateBudgetReceipt(receipt,raw,1),[]));
 for(const [key,value] of [['status',0],['signal','SIGTERM'],['error','TypeError'],['timedOut',true],['interrupted',true],['cleanup',false],['cleanupErrors',['lost child']],['supervisor',{status:1,signal:null}]]) test('reject receipt '+key,()=>assert.ok(validateBudgetReceipt({...receipt,[key]:value},raw,1).length));
 for(const [key,value] of [['schema',2],['status',0],['signal',15],['timedOut',true],['interrupted',1],['spawnErrno',2],['cleanup',false],['cleanupErrno',1]]) test('reject raw supervision '+key,()=>assert.ok(validateBudgetReceipt(receipt,{...raw,[key]:value},1).length));
-test('missing raw/owner receipt rejected',()=>{assert.ok(validateBudgetReceipt(null,raw,1).length);assert.ok(validateBudgetReceipt(receipt,null,1).length);});
-test('historical size plus timing plus requests remain distinct exact failures',()=>{
+test('When the recorded scenario is exercised Then the contract demonstrates that missing raw/owner receipt rejected',()=>{assert.ok(validateBudgetReceipt(null,raw,1).length);assert.ok(validateBudgetReceipt(receipt,null,1).length);});
+test('When the recorded scenario is exercised Then the contract demonstrates that historical size plus timing plus requests remain distinct exact failures',()=>{
  const baseline={initial:{rawBytes:1,gzipBytes:1,brotliBytes:1},policy:{timing:{maxRelativeRegression:0.2}},journeys:{example:{requestCount:1,medianInMs:100}},routeResources:{example:{rawBytes:1,requestCount:1}}};
  const candidate={aggregate:{journeys:{example:{requestCounts:[2,2,2,2],medianInMs:121,resourceSummaries:[{count:2,decodedBodySizeInBytes:2,transferSizeInBytes:602}]}}}};
  const failures=historicalRegressions(baseline,candidate,{rawBytes:2,gzipBytes:2,brotliBytes:2});
  assert.equal(failures.length,6);assert.match(failures[0],/^Request count regression/);assert.match(failures[1],/^Timing regression/);assert.match(failures[2],/^Lazy-route resource regression/);
 });
-test('real CLI writes a new explicit failure on every invalid invocation; no stale PASS receipt',()=>{
+test('When the recorded scenario is exercised Then the contract demonstrates that real CLI writes a new explicit failure on every invalid invocation; no stale PASS receipt',()=>{
  const root=mkdtempSync(join(tmpdir(),'functional-cli-'));const cli=resolve('scripts/functional-budget.mjs');
  try {
   for(const args of [[],['--unknown'],['--paired-run','missing','--paired-exit','missing.exit.json']]) {

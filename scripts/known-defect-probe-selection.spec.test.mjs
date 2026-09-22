@@ -6,7 +6,7 @@ const spec = 'scripts/known-defects/fixtures/unhandled-typeerror.fixture.mjs';
 const testName = 'actual unhandled asynchronous error';
 const valid = () => ({numTotalTests: 1, testResults: [{name: spec, assertionResults: [{fullName: testName}]}]});
 
-test('returns the sole expected assertion without mutating the report', () => {
+test('When the recorded scenario is exercised Then the contract demonstrates that returns the sole expected assertion without mutating the report', () => {
   const report = valid();
   Object.freeze(report.testResults[0].assertionResults[0]);
   Object.freeze(report.testResults[0].assertionResults);

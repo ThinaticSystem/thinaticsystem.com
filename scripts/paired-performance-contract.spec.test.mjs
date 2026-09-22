@@ -13,7 +13,7 @@ function fixture(side = 'candidate') {
   return structuredClone({side, evidence, debt, browser, receipt: {status: side === 'baseline' ? 1 : 0, signal: null, error: null, timedOut: false, stderr: ''}});
 }
 
-test('accept complete candidate and precisely scoped historical control, not product PASS', () => {
+test('When the recorded scenario is exercised Then the contract demonstrates that accept complete candidate and precisely scoped historical control, not product PASS', () => {
   assert.deepEqual(validateAttempt(fixture()), []);
   const base = fixture('baseline');
   assert.deepEqual(validateAttempt(base), []);
@@ -69,13 +69,13 @@ for (const [name, mutate] of Object.entries({
   'excess known error': f => { f.evidence.runs[0].pageErrors = Array.from({length: 3}, () => ({message: 'NG0953', url: 'http://127.0.0.1:4174/'})); },
 })) test(`reject ${name}`, () => { const f = fixture('baseline'); mutate(f); assert.notEqual(validateAttempt(f).length, 0); });
 
-test('aggregate requires all four rows and recomputes rather than trusting supplied medians', () => {
+test('When the recorded scenario is exercised Then the contract demonstrates that aggregate requires all four rows and recomputes rather than trusting supplied medians', () => {
   const rows = [100, 120, 130, 90].map(time => { const e = fixture().evidence; e.runs[0].journeys.forEach(j => { j.elapsedInMs = time; }); e.aggregate = {fake: true}; return e; });
   assert.equal(combineAttempts(rows).aggregate.journeys['desktop.home'].medianInMs, 110);
   assert.throws(() => combineAttempts(rows.slice(0, 3)));
 });
 
-test('real child crash, timeout and missing executable cannot masquerade as known baseline', () => {
+test('When the recorded scenario is exercised Then the contract demonstrates that real child crash, timeout and missing executable cannot masquerade as known baseline', () => {
   for (const [exe, args, timeout] of [[process.execPath, ['-e', 'process.exit(2)'], 2_000], [process.execPath, ['-e', 'setInterval(()=>{},1000)'], 50], ['/nonexistent-paired-test-executable', [], 2_000]]) {
     const child = spawnSync(exe, args, {timeout, encoding: 'utf8'});
     const f = fixture('baseline');
@@ -84,7 +84,7 @@ test('real child crash, timeout and missing executable cannot masquerade as know
   }
 });
 
-test('actual comparison CLI rejects regression in timing/initial/request/route and mismatched v4', () => {
+test('When the recorded scenario is exercised Then the contract demonstrates that actual comparison CLI rejects regression in timing/initial/request/route and mismatched v4', () => {
   mkdirSync('.artifacts/paired-ci', {recursive: true});
   const dir = mkdtempSync(resolve('.artifacts/paired-ci/fixture-'));
   try {
@@ -103,7 +103,7 @@ test('actual comparison CLI rejects regression in timing/initial/request/route a
 });
 
 
-test('standalone comparison rejects schema mixing in BOTH directions, retains v3/v3 and v4/v4', () => {
+test('When the recorded scenario is exercised Then the contract demonstrates that standalone comparison rejects schema mixing in BOTH directions, retains v3/v3 and v4/v4', () => {
   const dir = mkdtempSync(resolve('.artifacts/paired-ci/schema-fixture-'));
   try {
     writeFileSync(join(dir, 'index.html'), '<script src="app.js"></script>');
