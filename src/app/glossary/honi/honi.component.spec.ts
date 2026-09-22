@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import HoniComponent from './honi.component';
 
-describe('HoniComponent', () => {
+describe('HoniComponent Given the owner is initialized', () => {
   let component: HoniComponent;
   let fixture: ComponentFixture<HoniComponent>;
 
@@ -18,7 +18,7 @@ describe('HoniComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('When the owner is created Then it is available', () => {
     expect(component).toBeTruthy();
   });
 });

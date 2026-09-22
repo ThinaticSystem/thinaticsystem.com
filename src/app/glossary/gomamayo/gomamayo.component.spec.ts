@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import GomamayoComponent from './gomamayo.component';
 
-describe('GomamayoComponent', () => {
+describe('GomamayoComponent Given the owner is initialized', () => {
   let component: GomamayoComponent;
   let fixture: ComponentFixture<GomamayoComponent>;
 
@@ -18,7 +18,7 @@ describe('GomamayoComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('When the owner is created Then it is available', () => {
     expect(component).toBeTruthy();
   });
 });

@@ -4,8 +4,8 @@ import {BlogCardComponent} from './blog-card.component';
 import type {Blog} from '../../interfaces/blog';
 
 const data: Blog = {id: 1, title: '記事の見出し', body: '', published_at: '', created_at: '', updated_at: '', blogTags: [{id: 1, tag: 'fixture'}], eyecatch: null};
-describe('BlogCardComponent navigation', () => {
-  it('[blog-card-nested-anchor] exposes independent article and tag links in keyboard order', async () => {
+describe('BlogCardComponent navigation Given the owner is initialized', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that [blog-card-nested-anchor] exposes independent article and tag links in keyboard order', async () => {
     await render(BlogCardComponent, {componentInputs: {data}});
     const article = screen.getByRole('link', {name: /記事の見出し/});
     const tag = screen.getByRole('link', {name: 'fixture'});
@@ -18,7 +18,7 @@ describe('BlogCardComponent navigation', () => {
     await user.tab();
     expect(document.activeElement).toBe(tag);
   });
-  it('does not render an absent input and preserves a tag-free article destination', async () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that does not render an absent input and preserves a tag-free article destination', async () => {
     const rendered = await render(BlogCardComponent);
     expect(screen.queryAllByRole('link')).toHaveLength(0);
     rendered.fixture.componentRef.setInput('data', {...data, id: 2, blogTags: []});
@@ -26,7 +26,7 @@ describe('BlogCardComponent navigation', () => {
     expect(screen.getAllByRole('link')).toHaveLength(1);
     expect(screen.getByRole('link', {name: /記事の見出し/}).getAttribute('href')).toBe('/blog/article/2');
   });
-  it('omits null, missing, empty and whitespace tag labels but preserves valid destinations', async () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that omits null, missing, empty and whitespace tag labels but preserves valid destinations', async () => {
     await render(BlogCardComponent, {componentInputs: {data: {...data, blogTags:
       [null, {tag: ''}, {tag: '  \t\n'}, {tag: 'C++ / A&B?#日本'}]}}});
     expect(screen.getAllByRole('link')).toHaveLength(2);

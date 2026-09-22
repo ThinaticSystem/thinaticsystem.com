@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import AboutComponent from './about.component';
 
-describe('AboutComponent', () => {
+describe('AboutComponent Given the owner is initialized', () => {
   let component: AboutComponent;
   let fixture: ComponentFixture<AboutComponent>;
 
@@ -18,7 +18,7 @@ describe('AboutComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('When the owner is created Then it is available', () => {
     expect(component).toBeTruthy();
   });
 });

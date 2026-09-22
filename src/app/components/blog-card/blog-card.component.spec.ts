@@ -4,7 +4,7 @@ import {BlogCardComponent} from './blog-card.component';
 import {Blog} from '../../interfaces/blog';
 import {formatDate} from '@angular/common';
 
-describe('BlogCardComponent', () => {
+describe('BlogCardComponent Given the owner is initialized', () => {
   let component: BlogCardComponent;
   let fixture: ComponentFixture<BlogCardComponent>;
 
@@ -21,11 +21,11 @@ describe('BlogCardComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('When the owner is created Then it is available', () => {
     expect(component).toBeTruthy();
   });
 
-  it('renders a year boundary using the host runtime time zone', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that renders a year boundary using the host runtime time zone', () => {
     const boundary = '2024-12-31T23:30:00.000Z';
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const data: Blog = {

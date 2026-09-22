@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import IndexComponent from './index.component';
 
-describe('IndexComponent', () => {
+describe('IndexComponent Given the owner is initialized', () => {
   let component: IndexComponent;
   let fixture: ComponentFixture<IndexComponent>;
 
@@ -18,7 +18,7 @@ describe('IndexComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('When the owner is created Then it is available', () => {
     expect(component).toBeTruthy();
   });
 });

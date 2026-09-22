@@ -5,7 +5,7 @@ import {vi} from 'vitest';
 
 import {ShareComponent} from './share.component';
 
-describe('ShareComponent', () => {
+describe('ShareComponent Given the owner is initialized', () => {
   let component: ShareComponent;
   let fixture: ComponentFixture<ShareComponent>;
 
@@ -26,7 +26,7 @@ describe('ShareComponent', () => {
     fixture.detectChanges();
   });
 
-  it('[social-share-reserved] preserves each query value through one URL decoding', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that [social-share-reserved] preserves each query value through one URL decoding', () => {
     const share = {text: 'A&B #C++ ?日本% /', url: 'https://example.test/a%2Fb?q=A+B&next=%23x#section'};
     fixture.componentRef.setInput('share', share);
     fixture.detectChanges();
@@ -37,11 +37,11 @@ describe('ShareComponent', () => {
     expect(url.hash).toBe('');
   });
 
-  it('should create', () => {
+  it('When the owner is created Then it is available', () => {
     expect(component).toBeTruthy();
   });
 
-  it('keeps named native share controls and the external destination', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that keeps named native share controls and the external destination', () => {
     expect(screen.getByRole('heading', {name: 'Share', level: 2})).toBeTruthy();
     expect(screen.getByRole('button', {name: 'このページのURLをコピーします'})).toBeInstanceOf(HTMLButtonElement);
     const link = screen.getByRole('link', {name: 'Twitterでこのページを共有します'});
@@ -54,7 +54,7 @@ describe('ShareComponent', () => {
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
-  it('copies the current input through the directive and only announces success', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that copies the current input through the directive and only announces success', () => {
     const clipboard = TestBed.inject(ClipboardService);
     vi.spyOn(clipboard, 'isSupported', 'get').mockReturnValue(true);
     const copy = vi.spyOn(clipboard, 'copyFromContent').mockReturnValue(false);
@@ -75,7 +75,7 @@ describe('ShareComponent', () => {
     }
   });
 
-  it('does not report a rejected copy as a successful copy', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that does not report a rejected copy as a successful copy', () => {
     fixture.nativeElement.querySelector('button').dispatchEvent(new Event('cbOnError'));
 
     expect(component.Notification.showNotification).toBe(false);

@@ -9,7 +9,7 @@ import {environment} from '../../environments/environment';
 import {LoadingService} from '../services/loading.service';
 
 const release = (id: number, withArtwork = true) => ({id, title: `Release ${id}`, release: '2024-01-01', artwork: withArtwork ? {alternativeText: `Artwork ${id}`, formats: {small: {url: `/uploads/${id}.png`}}} : null});
-describe('DiscographyComponent', () => {
+describe('DiscographyComponent Given the owner is initialized', () => {
   let http: HttpTestingController;
   let fixture: ComponentFixture<DiscographyComponent>;
   let loading: LoadingService;
@@ -21,7 +21,7 @@ describe('DiscographyComponent', () => {
   });
   afterEach(() => {http.verify();});
 
-  it('preserves artwork and fallback image attributes and descending release order', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that preserves artwork and fallback image attributes and descending release order', () => {
     const later = {...release(2, false), release: '2025-01-01'};
     http.expectOne(`${environment.cmsUrl}/discographies`).flush([release(1), later]);
     fixture.detectChanges();
@@ -39,14 +39,14 @@ describe('DiscographyComponent', () => {
     expect(loading.loading).toBe(false);
   });
 
-  it('[discography-empty-loading] settles an empty result without inventing an image completion', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that [discography-empty-loading] settles an empty result without inventing an image completion', () => {
     http.expectOne(`${environment.cmsUrl}/discographies`).flush([]);
     expect(loading.loading).toBe(false);
     fixture.detectChanges();
     expect(screen.getByText('まだ作品がありません')).toBeTruthy();
   });
 
-  it('[discography-image-error-loading] settles each failed image once including fallback artwork', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that [discography-image-error-loading] settles each failed image once including fallback artwork', () => {
     http.expectOne(`${environment.cmsUrl}/discographies`).flush([release(1), release(2, false)]);
     fixture.detectChanges();
     const first = screen.getByRole('img', {name: 'Artwork 1'});
@@ -63,7 +63,7 @@ describe('DiscographyComponent', () => {
     expect(loading.loading).toBe(true);
   });
 
-  it('settles a mixture of successful and failed images without changing destinations', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that settles a mixture of successful and failed images without changing destinations', () => {
     http.expectOne(`${environment.cmsUrl}/discographies`).flush([release(1), release(2)]);
     fixture.detectChanges();
     screen.getByRole('img', {name: 'Artwork 1'}).dispatchEvent(new Event('load'));
@@ -73,7 +73,7 @@ describe('DiscographyComponent', () => {
     expect(screen.getByRole('link', {name: /Release 1/}).getAttribute('href')).toBe('/discography/1');
   });
 
-  it('handles HTTP failure without unhandled errors, distinguishes empty success and retries', async () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that handles HTTP failure without unhandled errors, distinguishes empty success and retries', async () => {
     http.expectOne(`${environment.cmsUrl}/discographies`).flush({}, {status: 503, statusText: 'Unavailable'});
     await new Promise(resolve => setTimeout(resolve, 0));
     expect(loading.loading).toBe(false);
@@ -87,7 +87,7 @@ describe('DiscographyComponent', () => {
     expect(screen.getByText('まだ作品がありません')).toBeTruthy();
   });
 
-  it('cancels pending HTTP and ignores image events after destruction', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that cancels pending HTTP and ignores image events after destruction', () => {
     http.expectOne(`${environment.cmsUrl}/discographies`).flush([release(1)]);
     fixture.detectChanges();
     const image = screen.getByRole('img', {name: 'Artwork 1'});
@@ -97,7 +97,7 @@ describe('DiscographyComponent', () => {
     expect(loading.loading).toBe(true);
   });
 
-  it('cancels a still-pending response on destruction', () => {
+  it('When the recorded scenario is exercised Then the contract demonstrates that cancels a still-pending response on destruction', () => {
     const pending = http.expectOne(`${environment.cmsUrl}/discographies`);
     fixture.destroy();
     expect(pending.cancelled).toBe(true);
