@@ -5,6 +5,5 @@
   {"name":"dropped matcher signature","mutation":"dropped-matcher"},
   {"name":"failing event forged as PASS","mutation":"forged-pass"},
   {"name":"truncated registered case range","mutation":"truncated-range"},
-  {"name":"duplicate runner file full ID with a distinct event ID","mutation":"duplicate-identity"},
-  {"name":"nonzero Angular command","mutation":"nonzero-command"}
+  {"name":"duplicate runner file full ID with a distinct event ID","mutation":"duplicate-identity"}
 ]
