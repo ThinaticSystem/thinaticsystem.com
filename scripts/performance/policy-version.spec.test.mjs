@@ -1,13 +1,14 @@
 import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {evaluatePerformance} from './contract.mjs';
+import {evaluatePerformance, validateBaselineRuntimeIdentity} from './contract.mjs';
 import {evidence} from './v3-test-fixtures.mjs';
 
 const v2 = JSON.parse(readFileSync(new URL('./fixtures/performance-policy-v2.json', import.meta.url), 'utf8'));
 const v3 = JSON.parse(readFileSync(new URL('./fixtures/performance-policy-v3.json', import.meta.url), 'utf8'));
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/performance-baseline-v3.json', import.meta.url), 'utf8'));
 const anchor = '7a8352242951516a2380e8fc69c5fb902b0c0e5d';
+const packageManager = 'pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457';
 
 test('Given the v3 policy is compared with its reviewed baseline when the policy receipt is checked Then v3 freezes the reviewed anchor and preserves v2 history', () => {
   assert.equal(v2.schema, 'thinaticsystem/performance-policy/v2');
@@ -16,6 +17,15 @@ test('Given the v3 policy is compared with its reviewed baseline when the policy
   assert.equal(v3.anchor.reference, `candidate-source-${anchor}`);
   assert.equal(baseline.sourceSha, anchor);
   assert.equal(baseline.meaning, 'Fixed comparative reference only; current-source adoption does not establish field UX acceptance.');
+  assert.equal(baseline.runtime.node, 'v24.19.0');
+  assert.equal(baseline.runtime.packageManager, packageManager);
+  assert.deepEqual(validateBaselineRuntimeIdentity({sourceSha:anchor,node:'24.19.0',packageManager,fixture:baseline}), {valid:true, errors:[]});
+});
+
+test('v3 runner identity fails closed when the baseline package-manager differs from the reviewed fixture', () => {
+  const result = validateBaselineRuntimeIdentity({sourceSha:anchor,node:'24.19.0',packageManager:packageManager.replace('12.3.4', '12.3.5'),fixture:baseline});
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some(error => error.includes('packageManager')));
 });
 
 test('Given the v3 policy is compared with its reviewed baseline when the policy receipt is checked Then real v3 evaluator passes healthy same-version evidence', () => {

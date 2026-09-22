@@ -4,6 +4,7 @@
   "capturedFrom": "parent hosted CI run 35684211746 candidate side; retained as the one-time current-source reference, not an absolute UX SLO",
   "runtime": {
     "node": "v24.19.0",
+    "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457",
     "playwright": "1.63.0",
     "chromium": "hosted Chromium from pinned Playwright",
     "fixtureSha256": "4702092ae83d90e956d7038ccbc40e8c3b3c2808b75f4a347b91071e8ad00436",

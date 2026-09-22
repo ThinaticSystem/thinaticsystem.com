@@ -7,7 +7,7 @@ import {isDeepStrictEqual} from 'node:util';
 import {compileSupervisor, runOwnedCommand} from '../paired-process.mjs';
 import {captureSourceIdentity, captureBuildIdentity} from '../paired-identity.mjs';
 import {collectInitialAssets} from '../performance-check.mjs';
-import {evaluatePerformance} from './contract.mjs';
+import {evaluatePerformance, validateBaselineRuntimeIdentity} from './contract.mjs';
 
 const baselineSha = '7a8352242951516a2380e8fc69c5fb902b0c0e5d';
 const schedule = ['baseline', 'candidate', 'candidate', 'baseline', 'candidate', 'baseline', 'baseline', 'candidate'];
@@ -62,6 +62,7 @@ try {
   json('source-before.json', sourceBefore);
   if (process.version !== 'v' + readFileSync('.node-version','utf8').trim()) throw new Error('Candidate Node pin mismatch');
   const policy = JSON.parse(readFileSync('scripts/performance/fixtures/performance-policy-v3.json','utf8'));
+  const baselineFixture = JSON.parse(readFileSync('scripts/performance/fixtures/performance-baseline-v3.json','utf8'));
   json('policy.json', policy);
   json('identity.json', {head:headBefore,sourceSha256:sourceBefore.sha256,policySha256:hash('scripts/performance/fixtures/performance-policy-v3.json'),node:process.version,execPath:process.execPath,host:hostname(),schedule,calibrationSchedule,github:{sha:process.env.GITHUB_SHA??null,runId:process.env.GITHUB_RUN_ID??null}});
   supervisor = compileSupervisor(directory);
@@ -75,15 +76,16 @@ try {
   await command('baseline-runtime', baselineNode, ['-e','console.log(process.version)'], {env:baselineEnv,strictStderr:true});
   if (readFileSync(join(directory,'baseline-runtime.stdout.log'),'utf8').trim() !== 'v'+readFileSync('.baseline-node-version','utf8').trim()) throw new Error('Historical Node pin mismatch');
   const baselinePackage = JSON.parse(readFileSync(join(baselineRoot,'package.json'),'utf8'));
-  if (!baselinePackage.packageManager.startsWith('pnpm@9.10.0+')) throw new Error('Historical pnpm pin mismatch');
+  const baselineIdentity = validateBaselineRuntimeIdentity({sourceSha:baselineSha,node:process.version.slice(1),packageManager:baselinePackage.packageManager,fixture:baselineFixture});
+  if (!baselineIdentity.valid) throw new Error(`Baseline runtime identity mismatch: ${baselineIdentity.errors.join('; ')}`);
   const lockBefore = hash(join(baselineRoot,'pnpm-lock.yaml'));
   await command('baseline-install',baselineNode,[corepack,'pnpm','install','--frozen-lockfile','--package-import-method=copy','--reporter=append-only'],{cwd:baselineRoot,env:baselineEnv,timeoutInMs:480_000});
   await command('baseline-build',baselineNode,[corepack,'pnpm','run','build'],{cwd:baselineRoot,env:baselineEnv});
   if (hash(join(baselineRoot,'pnpm-lock.yaml')) !== lockBefore) throw new Error('Historical lock changed');
   await command('candidate-build','corepack',['pnpm','run','build']);
   const retainedBaseline = join(directory, 'baseline-browser');
-  const baselineOutputIdentity = captureBuildIdentity(join(baselineRoot, 'dist/app'));
-  cpSync(join(baselineRoot, 'dist/app'), retainedBaseline, {recursive:true, errorOnExist:true, force:false});
+  const baselineOutputIdentity = captureBuildIdentity(join(baselineRoot, 'dist/app/browser'));
+  cpSync(join(baselineRoot, 'dist/app/browser'), retainedBaseline, {recursive:true, errorOnExist:true, force:false});
   if (!isDeepStrictEqual(baselineOutputIdentity, captureBuildIdentity(retainedBaseline))) throw new Error('Retained baseline build differs');
   for (const [side,path] of [['baseline',retainedBaseline],['candidate',resolve('dist/app/browser')]]) {
     outputs[side] = {path,identity:captureBuildIdentity(path)};

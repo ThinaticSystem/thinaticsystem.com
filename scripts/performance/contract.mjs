@@ -189,6 +189,19 @@ export function validateObservation(observation) {
   catch (error) { errors.push(`observation: ${error.message}`); }
   return {valid: errors.length === 0, errors, notes};
 }
+
+/** Validate the reviewed v3 baseline identity before the runner installs it. */
+export function validateBaselineRuntimeIdentity({sourceSha, node, packageManager, fixture}) {
+  const errors = [];
+  if (!record(fixture)) return {valid: false, errors: ['baseline fixture: expected object']};
+  requireValue(fixture.schema === 'thinaticsystem/performance-baseline/v3', 'baseline fixture: unsupported schema', errors);
+  requireValue(fixture.sourceSha === sourceSha, 'baseline fixture: source SHA differs from runner anchor', errors);
+  if (shape(fixture.runtime, ['node', 'packageManager'], ['playwright', 'chromium', 'fixtureSha256', 'harnessSha256', 'browser'], 'baseline fixture.runtime', errors)) {
+    requireValue(fixture.runtime.node === `v${node}`, 'baseline fixture.runtime.node: differs from pinned Node identity', errors);
+    requireValue(typeof packageManager === 'string' && packageManager === fixture.runtime.packageManager, 'baseline fixture.runtime.packageManager: differs from worktree packageManager', errors);
+  }
+  return {valid: errors.length === 0, errors};
+}
 function inspectPolicy(policy, errors) {
   if (!shape(policy, ['schema', 'version', 'anchor', 'caps', 'warmScope', 'materiality', 'schedule', 'calibrationSchedule', 'runtimeMajor', 'absoluteUxAcceptance'], [], 'policy', errors)) return;
   const v2 = policy.schema === 'thinaticsystem/performance-policy/v2' && policy.version === 'comparative-engineering-v2.0';
