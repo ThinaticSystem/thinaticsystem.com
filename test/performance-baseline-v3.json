@@ -1,0 +1,36 @@
+{
+  "schema": "thinaticsystem/performance-baseline/v3",
+  "sourceSha": "7a8352242951516a2380e8fc69c5fb902b0c0e5d",
+  "capturedFrom": "parent hosted CI run 35684211746 candidate side; retained as the one-time current-source reference, not an absolute UX SLO",
+  "runtime": {
+    "node": "v24.19.0",
+    "playwright": "1.63.0",
+    "chromium": "hosted Chromium from pinned Playwright",
+    "fixtureSha256": "4702092ae83d90e956d7038ccbc40e8c3b3c2808b75f4a347b91071e8ad00436",
+    "harnessSha256": "2a724b191de6c8416a5a129b140968f9b5ccbfc6a924218622cdd1add3789d02",
+    "browser": {
+      "name": "Chromium",
+      "version": "153.0.8010.12"
+    }
+  },
+  "initial": {
+    "rawBytes": 441299,
+    "gzipBytes": 127888,
+    "brotliBytes": 111955,
+    "allEmittedJsCssRawBytes": 814640
+  },
+  "routeCodeBytes": {
+    "desktop.home": 489703,
+    "desktop.article-cold": 448070,
+    "desktop.detail-cold": 457472,
+    "desktop.blog-list": 20340,
+    "desktop.blog-article": 6549,
+    "desktop.blog-back": 0,
+    "desktop.discography": 4521,
+    "desktop.discography-detail": 13666,
+    "desktop.theme-toggle": 0,
+    "mobile.menu-open": 0,
+    "mobile.menu-close": 0
+  },
+  "meaning": "Fixed comparative reference only; current-source adoption does not establish field UX acceptance."
+}

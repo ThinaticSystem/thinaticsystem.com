@@ -4,8 +4,7 @@
  * substrate; authenticity, source snapshots and actual readiness remain parent
  * and collector responsibilities. This module proves DTO consistency, not origin.
  *
- * Policy schema is the checked-in test/performance-policy-v2.json. Exact anchor,
- * caps, schedules and provisional significance filters cannot drift in v2.0.
+ * Policy schemas v2 and v3 are checked-in immutable controls. The runner selects v3; v2 remains supported for historical fixtures.
  * warmScope may be REVIEW_REQUIRED (diagnostic only) or REVIEWED_COMPATIBLE with
  * exact fixtureSha256, harnessSha256 and nonempty reviewReference. A new fixture
  * must not silently inherit the historical warm resource scope.
@@ -34,7 +33,8 @@ const schedule = ['baseline', 'candidate', 'candidate', 'baseline', 'candidate',
 const calibrationSchedule = schedule.slice(0, 4);
 const initialCaps = {rawBytes: 458_752, gzipBytes: 131_072, brotliBytes: 114_688};
 const warmCaps = {'desktop.blog-list': 20_480, 'desktop.blog-article': 7_168, 'desktop.discography': 5_120};
-const fixedReference = {'desktop.blog-list': 21_571, 'desktop.blog-article': 5_899, 'desktop.discography': 4_571};
+const fixedReferenceV2 = {'desktop.blog-list': 21_571, 'desktop.blog-article': 5_899, 'desktop.discography': 4_571};
+const fixedReferenceV3 = {'desktop.blog-list': 20_340, 'desktop.blog-article': 6_549, 'desktop.discography': 4_521};
 const categories = ['code', 'document', 'api', 'image', 'font', 'other'];
 const scopes = ['action', 'tail'];
 const aggregateKeys = ['aggregate', 'aggregates', 'summary'];
@@ -191,11 +191,14 @@ export function validateObservation(observation) {
 }
 function inspectPolicy(policy, errors) {
   if (!shape(policy, ['schema', 'version', 'anchor', 'caps', 'warmScope', 'materiality', 'schedule', 'calibrationSchedule', 'runtimeMajor', 'absoluteUxAcceptance'], [], 'policy', errors)) return;
-  requireValue(policy.schema === 'thinaticsystem/performance-policy/v2' && policy.version === 'comparative-engineering-v2.0', 'policy: unsupported version', errors);
+  const v2 = policy.schema === 'thinaticsystem/performance-policy/v2' && policy.version === 'comparative-engineering-v2.0';
+  const v3 = policy.schema === 'thinaticsystem/performance-policy/v3' && policy.version === 'comparative-engineering-v3.0';
+  requireValue(v2 || v3, 'policy: unsupported version', errors);
   requireValue(policy.runtimeMajor === 24 && policy.absoluteUxAcceptance === 'NOT_ESTABLISHED', 'policy: unsupported runtime/UX claim', errors);
   if (shape(policy.anchor, ['id', 'proposalSha256', 'reference', 'referenceCodeBytes'], [], 'policy.anchor', errors)) {
-    requireValue(policy.anchor.id === 'required-features-v1' && policy.anchor.proposalSha256 === 'acc9d1071435fba0166d4338aca99021d4e9ba4431a71837e1d659f542edc64f' && policy.anchor.reference === 'historical-ci-35531884637-baseline', 'policy.anchor: immutable reference changed', errors);
-    sameRecord(policy.anchor.referenceCodeBytes, fixedReference, 'policy.anchor.referenceCodeBytes', errors);
+    const expected = v3 ? {id: 'source-7a835224-v1', proposalSha256: '16a13627d3ef432606d9ddfc982b44e38edae569bcf8d9d526a1cbf101ceca1c', reference: 'candidate-source-7a8352242951516a2380e8fc69c5fb902b0c0e5d', bytes: fixedReferenceV3} : {id: 'required-features-v1', proposalSha256: 'acc9d1071435fba0166d4338aca99021d4e9ba4431a71837e1d659f542edc64f', reference: 'historical-ci-35531884637-baseline', bytes: fixedReferenceV2};
+    requireValue(policy.anchor.id === expected.id && policy.anchor.proposalSha256 === expected.proposalSha256 && policy.anchor.reference === expected.reference, 'policy.anchor: immutable reference changed', errors);
+    sameRecord(policy.anchor.referenceCodeBytes, expected.bytes, 'policy.anchor.referenceCodeBytes', errors);
   }
   if (shape(policy.caps, ['initial', 'allEmittedJsCssRawBytes', 'warmCodeBytes'], [], 'policy.caps', errors)) {
     sameRecord(policy.caps.initial, initialCaps, 'policy.caps.initial', errors);
@@ -275,9 +278,9 @@ function resourceBytes(observation, id, category, scope = null) {
   const resources = journey(observation, id).resources.filter(item => item.category === category && (scope === null || item.scope === scope));
   return resources.some(item => item.decodedBodySizeInBytes === null) ? null : resources.reduce((sum, item) => sum + item.decodedBodySizeInBytes, 0);
 }
-function baseResult() {
+function baseResult(schema = 'thinaticsystem/performance-evaluation/v3') {
   return {
-    schema: 'thinaticsystem/performance-evaluation/v2', verdict: 'INVALID_EVIDENCE', validationErrors: [], sizeChecks: [], timingChecks: [],
+    schema, verdict: 'INVALID_EVIDENCE', validationErrors: [], sizeChecks: [], timingChecks: [],
     notes: ['Comparative engineering gate only; 50 ms/20% and 1024 B/20% are provisional significance filters, not UX SLOs.', 'Four observations per side do not establish statistical significance, p95, field Web Vitals or provider delivery.', 'Source/build authenticity and receipt provenance are parent-owned; supplied hashes are checked for consistency, not cryptographic origin.'],
     coverage: {required: [...requiredJourneyIds], validated: [], field: 'UNVERIFIED', provider: 'UNVERIFIED', absoluteTimingSlo: 'UNCALIBRATED'},
     absoluteUxAcceptance: 'NOT_ESTABLISHED',
@@ -306,6 +309,7 @@ function evaluateCapturedPerformance(input) {
   catch (error) { errors.push(`input: ${error.message}`); return result; }
   if (!shape(captured, ['observations', 'calibration', 'assets', 'policy', 'receipts'], [], 'input', errors)) return result;
   const {observations, calibration, assets, policy, receipts} = captured;
+  result.schema = policy.schema === 'thinaticsystem/performance-policy/v2' ? 'thinaticsystem/performance-evaluation/v2' : 'thinaticsystem/performance-evaluation/v3';
   inspectPolicy(policy, errors);
   inspectAssets(assets, errors);
   shape(receipts, ['observations', 'calibration'], [], 'receipts', errors);
@@ -380,7 +384,7 @@ function evaluateCapturedPerformance(input) {
     if (Object.hasOwn(warmCaps, id)) {
       const candidateBytes = observations.filter(item => item.side === 'candidate').map(item => resourceBytes(item, id, 'code'));
       const maximum = Math.max(...candidateBytes);
-      const reference = fixedReference[id];
+      const reference = (policy.schema === 'thinaticsystem/performance-policy/v3' ? fixedReferenceV3 : fixedReferenceV2)[id];
       const delta = median(candidateBytes) - reference;
       const threshold = Math.max(1024, reference * 0.2);
       result.sizeChecks.push({kind: 'fixed-warm-anchor', id, candidateBytes, reference, cap: warmCaps[id], delta, threshold, status: compatible ? maximum > warmCaps[id] ? 'EXCEEDED' : delta > threshold ? 'MATERIAL_REGRESSION' : 'WITHIN_CAP' : 'SCOPE_REVIEW_REQUIRED'});

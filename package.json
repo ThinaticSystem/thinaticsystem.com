@@ -24,7 +24,9 @@
     "perf:budget": "node scripts/functional-budget.mjs",
     "perf:current": "node scripts/performance/run.mjs",
     "test:performance-contract": "node --test --test-reporter=tap scripts/performance/contract.test.mjs scripts/performance/recorder.test.mjs",
-    "test:performance-recorder": "node scripts/performance/verify-recorder.mjs"
+    "test:performance-recorder": "node scripts/performance/verify-recorder.mjs",
+    "test:preview-contract": "node --test scripts/preview-deploy-contract.test.mjs",
+    "test:performance-policy": "node --test scripts/performance/policy-version.test.mjs"
   },
   "private": true,
   "dependencies": {

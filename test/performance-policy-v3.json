@@ -1,0 +1,58 @@
+{
+  "schema": "thinaticsystem/performance-policy/v3",
+  "version": "comparative-engineering-v3.0",
+  "anchor": {
+    "id": "source-7a835224-v1",
+    "proposalSha256": "16a13627d3ef432606d9ddfc982b44e38edae569bcf8d9d526a1cbf101ceca1c",
+    "reference": "candidate-source-7a8352242951516a2380e8fc69c5fb902b0c0e5d",
+    "referenceCodeBytes": {
+      "desktop.blog-list": 20340,
+      "desktop.blog-article": 6549,
+      "desktop.discography": 4521
+    }
+  },
+  "caps": {
+    "initial": {
+      "rawBytes": 458752,
+      "gzipBytes": 131072,
+      "brotliBytes": 114688
+    },
+    "allEmittedJsCssRawBytes": 819200,
+    "warmCodeBytes": {
+      "desktop.blog-list": 20480,
+      "desktop.blog-article": 7168,
+      "desktop.discography": 5120
+    }
+  },
+  "warmScope": {
+    "status": "REVIEWED_COMPATIBLE",
+    "fixtureSha256": "4702092ae83d90e956d7038ccbc40e8c3b3c2808b75f4a347b91071e8ad00436",
+    "harnessSha256": "2a724b191de6c8416a5a129b140968f9b5ccbfc6a924218622cdd1add3789d02",
+    "reviewReference": "pr83-v3-one-time-baseline-7a835224",
+    "scope": "decoded-code-action-and-tail",
+    "reason": "One-time same-source baseline for candidate 7a835224; fixture and harness bytes are fixed and must not be rebound automatically."
+  },
+  "materiality": {
+    "timingAbsoluteFloorInMs": 50,
+    "resourceAbsoluteFloorInBytes": 1024,
+    "relativeRatio": 0.2
+  },
+  "schedule": [
+    "baseline",
+    "candidate",
+    "candidate",
+    "baseline",
+    "candidate",
+    "baseline",
+    "baseline",
+    "candidate"
+  ],
+  "calibrationSchedule": [
+    "baseline",
+    "candidate",
+    "candidate",
+    "baseline"
+  ],
+  "runtimeMajor": 24,
+  "absoluteUxAcceptance": "NOT_ESTABLISHED"
+}

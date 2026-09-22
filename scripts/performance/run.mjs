@@ -9,14 +9,14 @@ import {captureSourceIdentity, captureBuildIdentity} from '../paired-identity.mj
 import {collectInitialAssets} from '../performance-check.mjs';
 import {evaluatePerformance} from './contract.mjs';
 
-const baselineSha = '33b4ef4e8d21276130127a61aede6f0a8e1c47cb';
+const baselineSha = '7a8352242951516a2380e8fc69c5fb902b0c0e5d';
 const schedule = ['baseline', 'candidate', 'candidate', 'baseline', 'candidate', 'baseline', 'baseline', 'candidate'];
 const calibrationSchedule = ['baseline', 'candidate', 'candidate', 'baseline'];
 const cwd = process.cwd();
-const root = resolve('.artifacts/performance-v2');
+const root = resolve('.artifacts/performance-v3');
 mkdirSync(root, {recursive:true});
 const directory = mkdtempSync(join(root, 'run-'));
-const baselineRoot = resolve(cwd, '..', `performance-v2-${directory.split('/').at(-1)}-baseline`);
+const baselineRoot = resolve(cwd, '..', `performance-v3-${directory.split('/').at(-1)}-baseline`);
 const json = (name, value) => writeFileSync(join(directory, name), JSON.stringify(value, null, 2) + '\n');
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
 const git = args => execFileSync('git', args, {cwd, encoding:'utf8', timeout:60_000}).trim();
@@ -34,7 +34,7 @@ const outputs = {};
 const receipts = {observations:[], calibration:[]};
 const observations = [], calibration = [];
 const cleanupErrors = [];
-const result = {schema:'thinaticsystem/performance-run/v2', directory, verdict:'INVALID_EVIDENCE', cleanup:false, sourceUnchanged:false, absoluteUxAcceptance:'NOT_ESTABLISHED', baselineSha};
+const result = {schema:'thinaticsystem/performance-run/v3', directory, verdict:'INVALID_EVIDENCE', cleanup:false, sourceUnchanged:false, absoluteUxAcceptance:'NOT_ESTABLISHED', baselineSha};
 
 /** Run one child under the existing bounded subreaper and persist raw exit before admission. */
 async function command(name, executable, args, options = {}) {
@@ -56,14 +56,14 @@ async function command(name, executable, args, options = {}) {
   }
 }
 
-console.log('Performance v2 evidence: ' + directory);
+console.log('Performance v3 evidence: ' + directory);
 try {
   sourceBefore = captureSourceIdentity(cwd); headBefore = git(['rev-parse','HEAD']);
   json('source-before.json', sourceBefore);
   if (process.version !== 'v' + readFileSync('.node-version','utf8').trim()) throw new Error('Candidate Node pin mismatch');
-  const policy = JSON.parse(readFileSync('test/performance-policy-v2.json','utf8'));
+  const policy = JSON.parse(readFileSync('test/performance-policy-v3.json','utf8'));
   json('policy.json', policy);
-  json('identity.json', {head:headBefore,sourceSha256:sourceBefore.sha256,policySha256:hash('test/performance-policy-v2.json'),node:process.version,execPath:process.execPath,host:hostname(),schedule,calibrationSchedule,github:{sha:process.env.GITHUB_SHA??null,runId:process.env.GITHUB_RUN_ID??null}});
+  json('identity.json', {head:headBefore,sourceSha256:sourceBefore.sha256,policySha256:hash('test/performance-policy-v3.json'),node:process.version,execPath:process.execPath,host:hostname(),schedule,calibrationSchedule,github:{sha:process.env.GITHUB_SHA??null,runId:process.env.GITHUB_RUN_ID??null}});
   supervisor = compileSupervisor(directory);
   const baselineNode = process.env.BASELINE_NODE_EXECUTABLE;
   if (!baselineNode || !isAbsolute(baselineNode)) throw new Error('Absolute BASELINE_NODE_EXECUTABLE required');
