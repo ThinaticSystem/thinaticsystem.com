@@ -1,7 +1,8 @@
+import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
-import {buildBeforeEvidence, buildEvents, buildMapping, buildRegistry, loadBeforeTap, loadObservationMap, verifyEvidence, REPO_ROOT, filesAtCommit} from './oracle.mjs';
+import {buildBeforeEvidence, buildEvents, buildMapping, buildRegistry, loadBeforeTap, loadObservationMap, normalizedProjection, verifyEvidence, REPO_ROOT, filesAtCommit} from './oracle.mjs';
 
 const evidenceRoot = '/home/ts/site-development/pr83-ci-test-delivery-evidence/v3-full';
 mkdirSync(evidenceRoot, {recursive: true});
@@ -74,8 +75,11 @@ writeFileSync(join(runDir, 'before.json'), JSON.stringify({schema: 'pr83-v3-full
 writeFileSync(join(runDir, 'mapping-plan.json'), JSON.stringify({schema: 'pr83-v3-full-mapping-plan', entries: after.map(item => ({oldEntryIndex: item.oldEntryIndex, oldStableKey: item.oldStableKey, oldFullId: item.oldFullId, plannedFinalCases: [{file: item.finalFile, fullId: item.finalFullId}], classification: item.classification}))}, null, 2) + '\n');
 writeFileSync(join(runDir, 'runner-events.json'), JSON.stringify({schema: 'pr83-v3-full-runner-events', commands, events}, null, 2) + '\n');
 writeFileSync(join(runDir, 'after.json'), JSON.stringify({schema: 'pr83-v3-full-after', generatedFrom: ['final-source', 'runner-events.json'], entries: after}, null, 2) + '\n');
+const projectionText = JSON.stringify({schema: 'pr83-v3-full-normalized-projection', entries: normalizedProjection(after)}, null, 2) + '\n';
+writeFileSync(join(runDir, 'normalized-projection.json'), projectionText);
+const projectionSha256 = createHash('sha256').update(projectionText).digest('hex');
 writeFileSync(join(runDir, 'additional-cases.json'), JSON.stringify({schema: 'pr83-v3-full-additional-cases', entries: additionalCases}, null, 2) + '\n');
 writeFileSync(join(runDir, 'precondition-witnesses.json'), JSON.stringify({schema: 'pr83-v3-full-precondition-witnesses', entries: preconditionWitnesses}, null, 2) + '\n');
 writeFileSync(join(runDir, 'commands.json'), JSON.stringify(commands, null, 2) + '\n');
 writeFileSync(join(runDir, 'verification.json'), JSON.stringify(verification, null, 2) + '\n');
-console.log(JSON.stringify({runDir, commands, counts: {oldRows: before.length, afterRows: after.length, events: events.length, additionalCases: additionalCases.length, preconditionWitnesses: preconditionWitnesses.length}, verification}, null, 2));
+console.log(JSON.stringify({runDir, commands, counts: {oldRows: before.length, afterRows: after.length, events: events.length, additionalCases: additionalCases.length, preconditionWitnesses: preconditionWitnesses.length}, projectionSha256, verification}, null, 2));

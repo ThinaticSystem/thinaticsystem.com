@@ -9,6 +9,7 @@ const bundle = JSON.parse(readFileSync(`${runDir}/runner-events.json`, 'utf8'));
 const valid = verifyEvidence({before, after, events: bundle.events, commands: bundle.commands});
 const fixtures = JSON.parse(readFileSync(new URL('./negative-fixtures.json', import.meta.url), 'utf8'));
 const rejected = [];
+const stablePassed = [];
 for (const fixture of fixtures) {
   const mutatedAfter = structuredClone(after);
   const mutatedEvents = structuredClone(bundle.events);
@@ -49,10 +50,47 @@ for (const fixture of fixtures) {
   }
   if (fixture.mutation === 'cross-file-broad-template-capture') mutatedAfter[0].finalFile = mutatedAfter[200].finalFile;
   if (fixture.mutation === 'intra-file-gwt-template-capture') mutatedAfter[0].finalSourceRange = {...mutatedAfter[0].finalSourceRange, startLine: mutatedAfter[0].finalSourceRange.startLine + 1};
-  try { verifyEvidence({before, after: mutatedAfter, events: mutatedEvents, commands: mutatedCommands}); }
-  catch { rejected.push(fixture.name); }
+  if (fixture.mutation === 'same-title-foreign-owner') mutatedAfter[0].finalFile = mutatedAfter.find(item => item.finalFile !== mutatedAfter[0].finalFile).finalFile;
+  if (fixture.mutation === 'same-full-id-foreign-owner') mutatedAfter[0].runnerEvidence.fullId = mutatedAfter[1].runnerEvidence.fullId;
+  if (fixture.mutation === 'shared-dynamic-registration') {
+    const groups = new Map();
+    for (const [index, item] of mutatedAfter.entries()) {
+      const binding = item.finalRowBinding;
+      if (!binding) continue;
+      const key = `${item.finalFile}:${binding.registrationRange.startOffset}:${binding.registrationRange.endOffset}`;
+      const group = groups.get(key) ?? [];
+      group.push(index);
+      groups.set(key, group);
+    }
+    const group = [...groups.values()].find(indexes => indexes.length > 1);
+    if (!group) throw new Error('shared-dynamic-registration fixture has no dynamic group');
+    mutatedAfter[group[1]].finalRowBinding.rowKey = mutatedAfter[group[0]].finalRowBinding.rowKey;
+  }
+  if (fixture.mutation === 'duplicate-old-row-assignment') mutatedAfter[1].runnerEvidence = structuredClone(mutatedAfter[0].runnerEvidence);
+  if (fixture.mutation === 'changed-row-input') {
+    const index = mutatedAfter.findIndex(item => item.finalRowBinding);
+    mutatedAfter[index].runnerEvidence.rowBinding.rowInput.title = 'changed row input';
+  }
+  if (fixture.mutation === 'changed-row-expected-outcome') {
+    const index = mutatedAfter.findIndex(item => item.finalRowBinding);
+    mutatedAfter[index].runnerEvidence.rowBinding.expectedResult.runtimeTitle = 'changed expected outcome';
+  }
+  if (fixture.mutation === 'reordered-angular-assertions') {
+    const indexes = mutatedEvents.map((event, index) => event.runner === 'angular' ? index : -1).filter(index => index >= 0);
+    [mutatedEvents[indexes[0]], mutatedEvents[indexes[1]]] = [mutatedEvents[indexes[1]], mutatedEvents[indexes[0]]];
+  }
+  try {
+    verifyEvidence({before, after: mutatedAfter, events: mutatedEvents, commands: mutatedCommands});
+    if (fixture.expect === 'stable') stablePassed.push(fixture.name);
+  } catch {
+    if (fixture.expect === 'stable') throw new Error(`stability fixture rejected: ${fixture.name}`);
+    rejected.push(fixture.name);
+  }
 }
-if (rejected.length !== fixtures.length) throw new Error(`negative fixtures not rejected: ${rejected.length}/${fixtures.length}`);
-const result = {status: valid.status, valid, negativeFixtures: fixtures.map(fixture => ({name: fixture.name, rejected: true}))};
-writeFileSync(`${runDir}/verification.json`, JSON.stringify(result, null, 2) + '\n');
+const rejectedFixtures = fixtures.filter(fixture => fixture.expect !== 'stable');
+const stableFixtures = fixtures.filter(fixture => fixture.expect === 'stable');
+if (rejected.length !== rejectedFixtures.length) throw new Error(`negative fixtures not rejected: ${rejected.length}/${rejectedFixtures.length}`);
+if (stablePassed.length !== stableFixtures.length) throw new Error(`stability fixtures not preserved: ${stablePassed.length}/${stableFixtures.length}`);
+const result = {status: valid.status, valid, negativeFixtures: rejectedFixtures.map(fixture => ({name: fixture.name, rejected: true})), stabilityFixtures: stableFixtures.map(fixture => ({name: fixture.name, preserved: true}))};
+writeFileSync(`${runDir}/verification.json`, JSON.stringify(result, null, 2) + String.fromCharCode(10));
 console.log(JSON.stringify(result, null, 2));
