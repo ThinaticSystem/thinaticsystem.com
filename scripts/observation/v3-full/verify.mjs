@@ -16,7 +16,7 @@ function sourceMutationRejected(fixture, after) {
   const text = readFileSync(`${REPO_ROOT}/${target.finalFile}`, 'utf8');
   const range = target.finalRowBinding.registrationRange;
   const original = text.slice(range.startOffset, range.endOffset);
-  const mutation = fixture.mutation === 'source-mutated-row-input' ? original.replace("'?autoplay=1'", "'?autoplay=2'") : original.replace('.toBeNull()', '.toBeUndefined()');
+  const mutation = fixture.mutation === 'source-mutated-row-input' ? original.replace("'?autoplay=1'", "'?autoplay=2'") : original.replace("{scenario: 'YouTube autoplay query', value: youtube + '?autoplay=1', expected: null}", "{scenario: 'YouTube autoplay query', value: youtube + '?autoplay=1', expected: undefined}");
   if (mutation === original) throw new Error(`source mutation did not touch target: ${fixture.name}`);
   const mutatedText = text.slice(0, range.startOffset) + mutation + text.slice(range.endOffset);
   const candidates = registrations(mutatedText, target.finalFile).filter(item => item.range.startOffset === range.startOffset && item.range.endOffset === range.endOffset);

@@ -6,9 +6,9 @@ const youtube = 'https://www.youtube.com/embed/EDfYEwWGhlg';
 const soundcloud = 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F911614594';
 
 describe('Given the embed policy receives CMS media metadata', () => {
-  it.each(observedEmbeds.filter(item => item.html !== null))('When release $releaseId demo $demoId provides observed HTML Then it returns a media player', ({html}) => {
+  it.each(observedEmbeds.filter(item => item.html !== null))('When release $releaseId demo $demoId provides observed HTML Then it returns a media player', ({html, expectedType}) => {
     const admitted = readEmbedHtml(html, document);
-    expect(admitted.type).toBe('media');
+    expect(admitted.type).toBe(expectedType);
     if (admitted.type !== 'media' || typeof html !== 'string') throw new Error('Expected an observed player');
     const expectedSource = html.match(/\bsrc="([^"]+)"/)?.[1];
     expect(expectedSource).toBeTruthy();
@@ -61,8 +61,7 @@ describe('Given the embed policy receives CMS media metadata', () => {
     {scenario: 'NUL character', value: youtube + '\u0000', expected: null},
     {scenario: '4,097-character URL', value: 'x'.repeat(4_097), expected: null},
   ])('When the policy receives $scenario Then it returns null', ({value, expected}) => {
-    expect(expected).toBeNull();
-    expect(admitPlayerUrl(value)).toBeNull();
+    expect(admitPlayerUrl(value)).toBe(expected);
   });
   it('When retains safe SoundCloud appearance but fixes autoplay off', () => {
     const admitted = admitPlayerUrl(soundcloud + '&visual=true&color=%23ABCDEF&show_comments=false');
