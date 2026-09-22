@@ -61,12 +61,105 @@ function signatureForCall(sf, node) {
   }
   return null;
 }
-function assertionSignatures(sf, registration) {
+function assertionSignatures(sf, callback) {
   const result = [];
   const visit = node => { if (ts.isCallExpression(node)) { const signature = signatureForCall(sf, node); if (signature) result.push(signature); } ts.forEachChild(node, visit); };
-  visit(registration.arguments[1]);
+  visit(callback);
   return result.sort((left, right) => left.source.startOffset - right.source.startOffset);
 }
+function uniqueRanges(ranges) {
+  const seen = new Set();
+  return ranges.filter(range => { const key = `${range.file}:${range.startOffset}:${range.endOffset}`; if (seen.has(key)) return false; seen.add(key); return true; });
+}
+function sourceBindingRanges(sf, registration) {
+  const ranges = [registration.range];
+  const tableNames = new Set();
+  let parent = registration.node.parent;
+  while (parent && !ts.isSourceFile(parent)) {
+    if (ts.isForStatement(parent) || ts.isForOfStatement(parent) || ts.isForInStatement(parent)) {
+      ranges.push(rangeOf(sf, parent, sf.fileName));
+      const expression = ts.isForStatement(parent) ? parent.initializer ?? parent.condition ?? parent.incrementor : parent.expression;
+      if (expression) {
+        const collect = node => { if (ts.isIdentifier(node)) tableNames.add(node.text); ts.forEachChild(node, collect); };
+        collect(expression);
+      }
+    }
+    parent = parent.parent;
+  }
+  const visit = node => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && tableNames.has(node.name.text)) ranges.push(rangeOf(sf, node, sf.fileName));
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return uniqueRanges(ranges);
+}
+function tableBindings(sf, registration) {
+  const names = new Set();
+  let parent = registration.node.parent;
+  while (parent && !ts.isSourceFile(parent)) {
+    if (ts.isForStatement(parent) || ts.isForOfStatement(parent) || ts.isForInStatement(parent)) {
+      const expression = ts.isForStatement(parent) ? parent.initializer ?? parent.condition ?? parent.incrementor : parent.expression;
+      if (expression) {
+        const collect = node => { if (ts.isIdentifier(node)) names.add(node.text); ts.forEachChild(node, collect); };
+        collect(expression);
+      }
+    }
+    parent = parent.parent;
+  }
+  const result = [];
+  const visit = node => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && names.has(node.name.text) && node.initializer) result.push({name: node.name.text, range: rangeOf(sf, node, sf.fileName), values: normalizedText(sf, node.initializer)});
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return result;
+}
+function helperDefinition(sf, helperName) {
+  let result = null;
+  const visit = node => {
+    if (result) return;
+    if (ts.isFunctionDeclaration(node) && node.name?.text === helperName && node.body) result = {callback: node.body, range: rangeOf(sf, node, sf.fileName)};
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === helperName && node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) result = {callback: node.initializer.body, range: rangeOf(sf, node, sf.fileName)};
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return result;
+}
+function helperOperations(sf, callback) {
+  const operations = [];
+  const visit = node => {
+    if (ts.isBinaryExpression(node) && [ts.SyntaxKind.EqualsToken, ts.SyntaxKind.PlusEqualsToken, ts.SyntaxKind.MinusEqualsToken, ts.SyntaxKind.AsteriskEqualsToken, ts.SyntaxKind.SlashEqualsToken].includes(node.operatorToken.kind)) operations.push({kind: 'assignment', target: normalizedText(sf, node.left), operator: node.operatorToken.getText(sf), value: normalizedText(sf, node.right), range: rangeOf(sf, node, sf.fileName)});
+    else if (ts.isCallExpression(node)) operations.push({kind: 'call', callee: normalizedText(sf, node.expression), operands: node.arguments.map(argument => normalizedText(sf, argument)), range: rangeOf(sf, node, sf.fileName)});
+    ts.forEachChild(node, visit);
+  };
+  visit(callback);
+  return operations;
+}
+function helperEvidence(sf, registration) {
+  const calls = [];
+  const visit = node => { if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'assertInvalid') calls.push(node); ts.forEachChild(node, visit); };
+  visit(registration.node.arguments[1]);
+  if (!calls.length) return null;
+  const definition = helperDefinition(sf, 'assertInvalid');
+  if (!definition) return {kind: 'assertInvalid', supported: false, calls: calls.map(call => ({range: rangeOf(sf, call, sf.fileName), operands: call.arguments.map(argument => normalizedText(sf, argument))})), bindingRanges: sourceBindingRanges(sf, registration)};
+  const contractAssertions = assertionSignatures(sf, definition.callback);
+  return {
+    kind: 'assertInvalid',
+    supported: contractAssertions.length > 0,
+    helperDefinitionRange: definition.range,
+    contractAssertions,
+    calls: calls.map(call => ({range: rangeOf(sf, call, sf.fileName), operands: call.arguments.map(argument => normalizedText(sf, argument))})),
+    operations: helperOperations(sf, registration.node.arguments[1]),
+    bindingRanges: sourceBindingRanges(sf, registration),
+    tableBindings: tableBindings(sf, registration),
+    expectedOutcome: contractAssertions.map(({operator, callKind, negated, matcher, operands, arguments: args}) => ({operator, callKind, negated, matcher, operands, arguments: args})),
+  };
+}
+function helperSemantic(evidence) {
+  if (!evidence) return null;
+  return {kind: evidence.kind, supported: evidence.supported, contractAssertions: semanticPart(evidence.contractAssertions ?? []), calls: (evidence.calls ?? []).map(({operands}) => ({operands})), operations: (evidence.operations ?? []).map(({kind, callee, operands, target, operator, value}) => ({kind, callee, operands, target, operator, value})), tableBindings: (evidence.tableBindings ?? []).map(({name, values}) => ({name, values})), expectedOutcome: evidence.expectedOutcome ?? []};
+}
+function sameHelperEvidence(left, right) { return JSON.stringify(helperSemantic(left)) === JSON.stringify(helperSemantic(right)); }
 function registrations(text, file) {
   const sf = sourceFile(text, file);
   const result = [];
@@ -74,7 +167,7 @@ function registrations(text, file) {
     if (isRegistration(node)) {
       const parts = registrationParts(node);
       const titleNode = parts.title;
-      result.push({file, title: literalText(titleNode), titlePattern: titlePattern(sf, titleNode), titleExpression: normalizedText(sf, titleNode), ancestors, range: rangeOf(sf, node, file), assertions: assertionSignatures(sf, {arguments: [null, parts.callback]}), node});
+      result.push({file, title: literalText(titleNode), titlePattern: titlePattern(sf, titleNode), titleExpression: normalizedText(sf, titleNode), ancestors, range: rangeOf(sf, node, file), assertions: assertionSignatures(sf, parts.callback), helperEvidence: helperEvidence(sf, {node, range: rangeOf(sf, node, file)}), node});
       return;
     }
     if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'describe' && node.arguments.length >= 2 && literalText(node.arguments[0]) !== null) {
@@ -161,17 +254,20 @@ function locateCurrentCase(event, registry, titleOccurrence) {
 }
 export function buildBeforeEvidence(observationMap, baseRegistry, baseTap) {
   const titleCounts = new Map();
+  let angularOrdinal = 0;
   const entries = observationMap.entries ?? [];
   return entries.map((entry, oldEntryIndex) => {
     const title = entry.runner === 'angular' ? entry.scenarioSignificantInput?.title : entry.scenarioSignificantInput?.title ?? entry.oldFullTestId;
     const prior = titleCounts.get(`${entry.runner}\u0000${title}`) ?? 0;
     titleCounts.set(`${entry.runner}\u0000${title}`, prior + 1);
     const found = findBaseCase({...entry, oldEntryIndex}, baseRegistry, prior);
-    return {oldEntryIndex, stableKey: `${entry.runner}:${oldEntryIndex}:${sha(entry.oldFullTestId)}`, runner: entry.runner, oldFullId: entry.oldFullTestId, baseCommit: BASE_COMMIT, baseFile: found.file, proposedFile: entry.proposedFile ?? found.file, baseSourceRange: found.range, baseAncestors: found.ancestors, baseCaseTitle: found.title, meaningfulInput: entry.scenarioSignificantInput ?? null, expectedResult: entry.expectedResult, originalRunnerAssertion: entry.importantAssertion ?? null, baseAssertions: found.assertions, errorBoundary: entry.boundaryObservation ?? [], classification: 'normative-specification'};
+    const runnerOrdinal = entry.runner === 'angular' ? angularOrdinal++ : Number(entry.importantAssertion?.statusLine?.match(/^(?:ok|not ok) (\d+)/)?.[1] ?? oldEntryIndex + 1);
+    return {oldEntryIndex, runnerOrdinal, stableKey: `${entry.runner}:${oldEntryIndex}:${sha(entry.oldFullTestId)}`, runner: entry.runner, oldFullId: entry.oldFullTestId, plannedFinalId: entry.proposedFullTestId ?? null, baseCommit: BASE_COMMIT, baseFile: found.file, proposedFile: entry.proposedFile ?? found.file, baseSourceRange: found.range, baseRegistrationOrdinal: baseRegistry.filter(item => item.file === found.file).indexOf(found), baseAncestors: found.ancestors, baseCaseTitle: found.title, meaningfulInput: entry.scenarioSignificantInput ?? null, expectedResult: entry.expectedResult, originalRunnerAssertion: entry.importantAssertion ?? null, baseAssertions: found.assertions, helperEvidence: found.helperEvidence, errorBoundary: entry.boundaryObservation ?? [], classification: 'normative-specification'};
   });
 }
 export function buildEvents(angularReport, nodeTap, currentRegistry, commands) {
   const events = [];
+  let angularOrdinal = 0;
   const angularTitleCounts = new Map();
   for (const fileResult of angularReport?.testResults ?? []) for (const assertion of fileResult.assertionResults ?? []) {
     const title = assertion.title;
@@ -182,7 +278,7 @@ export function buildEvents(angularReport, nodeTap, currentRegistry, commands) {
     const candidates = currentRegistry.filter(item => item.file === file && matchesTitle(item, title));
     const item = candidates[prior] ?? candidates[0];
     if (!item) throw new Error(`current Angular registration not found: ${file}:${title}`);
-    events.push({eventId: `angular:${file}:${assertion.fullName}`, runner: 'angular', file, fullId: assertion.fullName, status: assertion.status === 'passed' ? 'PASS' : 'FAIL', title, sourceRange: item.range, assertions: item.assertions, command: commands.angular.command, commandExit: commands.angular.exitCode});
+    events.push({eventId: `angular:${file}:${assertion.fullName}`, runner: 'angular', file, fullId: assertion.fullName, status: assertion.status === 'passed' ? 'PASS' : 'FAIL', title, runnerOrdinal: angularOrdinal++, sourceRange: item.range, caseOrdinal: currentRegistry.filter(candidate => candidate.file === file).indexOf(item), assertions: item.assertions, helperEvidence: item.helperEvidence, command: commands.angular.command, commandExit: commands.angular.exitCode});
   }
   const tapEvents = parseTapTitles(nodeTap);
   const nodeTitleCounts = new Map();
@@ -190,7 +286,7 @@ export function buildEvents(angularReport, nodeTap, currentRegistry, commands) {
     const prior = nodeTitleCounts.get(tap.title) ?? 0;
     nodeTitleCounts.set(tap.title, prior + 1);
     const item = locateCurrentCase({title: tap.title}, currentRegistry.filter(candidate => candidate.file.endsWith('.mjs')), prior);
-    events.push({eventId: `node-tap:${tap.ordinal}:${tap.title}`, runner: 'node-tap', file: item.file, fullId: tap.title, status: tap.status, title: tap.title, sourceRange: item.range, assertions: item.assertions, command: commands.node.command, commandExit: commands.node.exitCode});
+    events.push({eventId: `node-tap:${tap.ordinal}:${tap.title}`, runner: 'node-tap', file: item.file, fullId: tap.title, status: tap.status, title: tap.title, runnerOrdinal: tap.ordinal, sourceRange: item.range, caseOrdinal: currentRegistry.filter(candidate => candidate.file === item.file).indexOf(item), assertions: item.assertions, helperEvidence: item.helperEvidence, command: commands.node.command, commandExit: commands.node.exitCode});
   }
   return events;
 }
@@ -202,7 +298,15 @@ export function buildMapping(before, events) {
     const pilot = pilotFinal(entry.oldFullId);
     let candidates;
     if (pilot) candidates = events.filter(event => event.runner === entry.runner && event.file === pilot.file && event.fullId === pilot.fullId);
-    else candidates = events.filter(event => event.runner === entry.runner && event.fullId === entry.oldFullId);
+    else candidates = events.filter(event => event.runner === entry.runner && fileVariants(entry).has(event.file) && event.fullId === entry.oldFullId);
+    if (!candidates.length && entry.plannedFinalId) {
+      candidates = events.filter(event => event.runner === entry.runner && fileVariants(entry).has(event.file) && event.fullId === entry.plannedFinalId);
+      const ordinalMatch = candidates.filter(event => event.runnerOrdinal === entry.runnerOrdinal);
+      if (ordinalMatch.length) candidates = ordinalMatch;
+    }
+    if (!candidates.length) candidates = events.filter(event => event.runner === entry.runner && fileVariants(entry).has(event.file) && event.runnerOrdinal === entry.runnerOrdinal);
+    if (!candidates.length) candidates = events.filter(event => event.runner === entry.runner && event.runnerOrdinal === entry.runnerOrdinal);
+    if (!candidates.length && entry.helperEvidence) candidates = events.filter(event => event.runner === entry.runner && fileVariants(entry).has(event.file) && event.caseOrdinal === entry.baseRegistrationOrdinal && event.helperEvidence);
     if (!candidates.length) {
       const prior = byOldTitle.get(`${entry.runner}\u0000${entry.oldFullId}`) ?? 0;
       byOldTitle.set(`${entry.runner}\u0000${entry.oldFullId}`, prior + 1);
@@ -210,13 +314,16 @@ export function buildMapping(before, events) {
       candidates = candidates.filter(event => !used.has(identity(event)));
       if (!candidates.length) throw new Error(`final runner case not found for old index ${entry.oldEntryIndex}: ${entry.oldFullId}`);
     }
-    candidates = candidates.filter(event => !used.has(identity(event)));
+    const unusedCandidates = candidates.filter(event => !used.has(identity(event)));
+    const reusedIdentity = candidates.length > 0 && unusedCandidates.length === 0;
+    candidates = unusedCandidates.length ? unusedCandidates : candidates;
     if (!candidates.length) throw new Error(`final runner case is ambiguous/used for old index ${entry.oldEntryIndex}: ${entry.oldFullId}`);
     const event = candidates[0];
     used.add(identity(event));
-    const judgment = sameAssertions(entry.baseAssertions, event.assertions) ? 'SUPPORTED_EQUAL' : 'UNKNOWN/manual independent review required';
+    const helperSupported = entry.helperEvidence?.supported && event.helperEvidence?.supported && sameHelperEvidence(entry.helperEvidence, event.helperEvidence);
+    const judgment = entry.helperEvidence ? (helperSupported ? 'SUPPORTED_HELPER_CONTRACT_EQUAL' : 'UNKNOWN/manual independent review required') : (entry.baseAssertions.length === 0 || event.assertions.length === 0 ? 'UNKNOWN/manual independent review required' : (sameAssertions(entry.baseAssertions, event.assertions) ? 'SUPPORTED_EQUAL' : 'UNKNOWN/manual independent review required'));
     const status = EXPECTED_PRECONDITION_INDICES.includes(entry.oldEntryIndex) && event.status === 'FAIL' ? 'PRECONDITION_PRESERVED' : event.status;
-    after.push({oldEntryIndex: entry.oldEntryIndex, oldStableKey: entry.stableKey, oldFullId: entry.oldFullId, classification: pilot?.file.includes('.regression.') ? 'concrete-regression' : entry.classification, finalFile: event.file, finalFullId: event.fullId, finalSourceRange: event.sourceRange, finalCaseTitle: event.title, baseAssertions: entry.baseAssertions, finalAssertions: event.assertions, assertionSemantics: judgment, manualReviewItem: judgment.startsWith('UNKNOWN') ? 'Compare exact source diff and preserved assertion/boundary semantics independently.' : null, errorBoundary: entry.errorBoundary, status, runnerEvidence: {eventId: event.eventId, runner: event.runner, command: event.command, commandExit: event.commandExit, fullId: event.fullId, file: event.file, title: event.title, status: event.status, sourceRange: event.sourceRange, assertions: event.assertions}});
+    after.push({oldEntryIndex: entry.oldEntryIndex, oldStableKey: entry.stableKey, oldFullId: entry.oldFullId, classification: pilot?.file.includes('.regression.') ? 'concrete-regression' : entry.classification, mappingResolution: reusedIdentity ? 'reused-runtime-identity-manual-review' : (fileVariants(entry).has(event.file) ? 'source-file-or-planned-id' : 'runtime-ordinal-manual-review'), finalFile: event.file, finalFullId: event.fullId, finalSourceRange: event.sourceRange, finalCaseOrdinal: event.caseOrdinal, finalCaseTitle: event.title, baseAssertions: entry.baseAssertions, finalAssertions: event.assertions, baseHelperEvidence: entry.helperEvidence, finalHelperEvidence: event.helperEvidence, assertionSemantics: judgment, manualReviewItem: reusedIdentity ? 'Duplicate source identity requires independent row-level reconciliation; not accepted mechanically.' : (judgment.startsWith('UNKNOWN') ? 'Compare exact source diff and preserved assertion/boundary semantics independently.' : null), errorBoundary: entry.errorBoundary, status, runnerEvidence: {eventId: event.eventId, runner: event.runner, command: event.command, commandExit: event.commandExit, fullId: event.fullId, file: event.file, title: event.title, status: event.status, sourceRange: event.sourceRange, assertions: event.assertions, helperEvidence: event.helperEvidence}});
   }
   return {after, mappedIdentities: used};
 }
@@ -235,6 +342,9 @@ export function verifyEvidence({before, after, events, commands, sourceRoot = RE
     const parsed = registrations(sourceText(item.finalFile, sourceRoot), item.finalFile).find(candidate => candidate.range.startOffset === item.finalSourceRange.startOffset && candidate.range.endOffset === item.finalSourceRange.endOffset);
     if (!parsed || !rangesEqual(item.finalSourceRange, parsed.range)) throw new Error(`foreign/truncated final source range: ${item.oldFullId}`);
     if (!sameAssertions(item.finalAssertions ?? [], parsed.assertions)) throw new Error(`assertions are not bound to final case: ${item.oldFullId}`);
+    if (!sameHelperEvidence(item.finalHelperEvidence, parsed.helperEvidence)) throw new Error(`helper evidence is not bound to final case: ${item.oldFullId}`);
+    if ((item.baseAssertions.length === 0 || item.finalAssertions.length === 0) && !item.baseHelperEvidence && item.assertionSemantics === 'SUPPORTED_EQUAL') throw new Error(`empty assertion signatures were accepted without helper evidence: ${item.oldFullId}`);
+    if (item.assertionSemantics === 'SUPPORTED_HELPER_CONTRACT_EQUAL' && (!item.baseHelperEvidence?.supported || !item.finalHelperEvidence?.supported || !sameHelperEvidence(item.baseHelperEvidence, item.finalHelperEvidence))) throw new Error(`helper contract preservation is not source-bound: ${item.oldFullId}`);
     if (item.status === 'PASS') { if (event.status !== 'PASS' || (event.runner === 'angular' ? event.commandExit !== 0 : ![0, 1].includes(event.commandExit))) throw new Error(`non-PASS old row marked PASS: ${item.oldFullId}`); }
     else if (item.status === 'PRECONDITION_PRESERVED') { if (!EXPECTED_PRECONDITION_INDICES.includes(item.oldEntryIndex) || event.status !== 'FAIL') throw new Error(`invalid precondition witness: ${item.oldFullId}`); }
     else throw new Error(`unexpected final failure: ${item.oldFullId}`);

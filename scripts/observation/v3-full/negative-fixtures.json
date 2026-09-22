@@ -5,5 +5,10 @@
   {"name":"dropped matcher signature","mutation":"dropped-matcher"},
   {"name":"failing event forged as PASS","mutation":"forged-pass"},
   {"name":"truncated registered case range","mutation":"truncated-range"},
-  {"name":"duplicate runner file full ID with a distinct event ID","mutation":"duplicate-identity"}
+  {"name":"duplicate runner file full ID with a distinct event ID","mutation":"duplicate-identity"},
+  {"name":"empty helper signature","mutation":"empty-helper-signature"},
+  {"name":"changed helper assertion","mutation":"changed-helper-assertion"},
+  {"name":"changed helper mutation operand","mutation":"changed-helper-operand"},
+  {"name":"changed helper table value","mutation":"changed-helper-table-value"},
+  {"name":"changed helper expected outcome","mutation":"changed-helper-expected-outcome"}
 ]

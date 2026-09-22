@@ -21,6 +21,32 @@ for (const fixture of fixtures) {
   if (fixture.mutation === 'truncated-range') mutatedAfter[1].finalSourceRange = {...mutatedAfter[1].finalSourceRange, endLine: mutatedAfter[1].finalSourceRange.startLine, endOffset: mutatedAfter[1].finalSourceRange.startOffset + 1};
   if (fixture.mutation === 'duplicate-identity') mutatedEvents.push({...mutatedEvents[0], eventId: `${mutatedEvents[0].eventId}:duplicate`});
   if (fixture.mutation === 'nonzero-command') mutatedCommands.angular.exitCode = 2;
+  if (fixture.mutation === 'empty-helper-signature') {
+    const index = mutatedAfter.findIndex(item => item.baseHelperEvidence);
+    mutatedAfter[index].baseHelperEvidence = null;
+    mutatedAfter[index].finalHelperEvidence = null;
+    mutatedAfter[index].assertionSemantics = 'SUPPORTED_EQUAL';
+  }
+  if (fixture.mutation === 'changed-helper-assertion') {
+    const index = mutatedAfter.findIndex(item => item.baseHelperEvidence);
+    mutatedAfter[index].assertionSemantics = 'SUPPORTED_HELPER_CONTRACT_EQUAL';
+    mutatedAfter[index].finalHelperEvidence.contractAssertions[0].operands[1] = "'PASS'";
+  }
+  if (fixture.mutation === 'changed-helper-operand') {
+    const index = mutatedAfter.findIndex(item => item.baseHelperEvidence);
+    mutatedAfter[index].assertionSemantics = 'SUPPORTED_HELPER_CONTRACT_EQUAL';
+    mutatedAfter[index].finalHelperEvidence.calls[0].operands[0] = 'evaluate(other)';
+  }
+  if (fixture.mutation === 'changed-helper-table-value') {
+    const index = mutatedAfter.findIndex(item => item.baseHelperEvidence);
+    mutatedAfter[index].assertionSemantics = 'SUPPORTED_HELPER_CONTRACT_EQUAL';
+    mutatedAfter[index].finalHelperEvidence.tableBindings = [{name: 'malformed', values: 'changed'}];
+  }
+  if (fixture.mutation === 'changed-helper-expected-outcome') {
+    const index = mutatedAfter.findIndex(item => item.baseHelperEvidence);
+    mutatedAfter[index].assertionSemantics = 'SUPPORTED_HELPER_CONTRACT_EQUAL';
+    mutatedAfter[index].finalHelperEvidence.expectedOutcome[0].operands[1] = "'PASS'";
+  }
   try { verifyEvidence({before, after: mutatedAfter, events: mutatedEvents, commands: mutatedCommands}); }
   catch { rejected.push(fixture.name); }
 }

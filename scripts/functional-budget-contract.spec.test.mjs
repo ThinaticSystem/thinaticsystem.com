@@ -64,7 +64,7 @@ const routeCaps = names.map(name => ({name, limit: inputs => inputs.policy.journ
 for (const cap of [...assetCaps, ...routeCaps]) {
   for (const delta of [-1, 0, 1]) {
     if (delta === -1 && ['desktop.theme-toggle', 'desktop.blog-back'].includes(cap.name)) continue;
-    test(`${cap.name}: ${delta < 0 ? 'below' : delta === 0 ? 'equal' : 'one over'} byte cap`, () => {
+    test(`Given the approved ${cap.name} budget cap is known When the candidate measurement is ${delta < 0 ? 'below' : delta === 0 ? 'equal to' : 'one byte over'} the cap Then size is ${delta > 0 ? 'rejected' : 'accepted'}`, () => {
       const result = evaluate(inputs => cap.set(inputs, cap.limit(inputs) + delta));
       assert.equal(result.valid, true);
       assert.equal(result.size.status, delta > 0 ? 'FAIL' : 'PASS');
@@ -78,7 +78,7 @@ for (const name of names) {
     for (const delta of [-1, 0, 1]) {
       const {policy} = fixture();
       if (policy.journeys[name][metric] + delta < 0) continue;
-      test(`${name}: ${metric} approved cap delta ${delta}`, () => {
+      test(`Given the ${name} journey has an approved ${metric} cap When the candidate ${metric} changes by ${delta} Then the request policy is ${delta > 0 ? 'failed' : 'within the cap'}`, () => {
         const result = evaluate(({measurement}) => {
           const journey = measurement.journeys.find(row => row.name === name);
           if (metric === 'requestCount') journey.candidate.requestCounts[3] += delta;
@@ -89,7 +89,7 @@ for (const name of names) {
       });
     }
     if (fixture().policy.journeys[name][metric] > 0) {
-      test(`${name}: ${metric} also cannot exceed fresh baseline maximum`, () => {
+      test(`Given the ${name} journey has a fresh ${metric} maximum When the baseline maximum is reduced by one Then the historical ${metric} comparison fails`, () => {
         const result = evaluate(({measurement}) => {
           const journey = measurement.journeys.find(row => row.name === name);
           if (metric === 'requestCount') journey.baseline.requestCounts = journey.baseline.requestCounts.map(value => value - 1);
@@ -104,7 +104,7 @@ for (const name of names) {
 }
 
 for (const name of ['desktop.home', 'mobile.menu-blog']) {
-  test(`${name}: unchanged decoded bytes also obey fresh baseline maximum`, () => {
+  test(`Given the ${name} journey has unchanged decoded bytes When the fresh baseline maximum is reduced by one Then the size comparison fails`, () => {
     const result = evaluate(({measurement}) => measurement.journeys.find(row => row.name === name).baseline.resourceSummaries.forEach(row => { row.decodedBodySizeInBytes -= 1; }));
     assert.equal(result.size.status, 'FAIL');
     assert.equal(result.historical.status, 'FAIL');
@@ -114,7 +114,7 @@ for (const name of ['desktop.home', 'mobile.menu-blog']) {
 
 for (const name of changed) {
   for (const blocking of ['none', 'request', 'resource', 'timing']) {
-    test(`${name}: historical size is diagnostic, mixed ${blocking} failure stays blocking`, () => {
+    test(`Given the ${name} journey has a historical size difference When the ${blocking} comparison is also exercised Then the diagnostic size result remains ${blocking === 'none' ? 'nonblocking' : 'blocking'}`, () => {
       const result = evaluate(({measurement}) => {
         const journey = measurement.journeys.find(row => row.name === name);
         journey.baseline.resourceSummaries.forEach(row => { row.decodedBodySizeInBytes = 1; });
@@ -132,7 +132,7 @@ for (const name of changed) {
 }
 
 for (const metric of ['rawBytes', 'gzipBytes', 'brotliBytes']) {
-  test(`initial ${metric}: fresh historical size failure remains diagnostic`, () => {
+  test(`Given initial ${metric} is measured against a fresh baseline When the baseline is one unit lower Then the historical size difference remains diagnostic`, () => {
     const result = evaluate(({measurement}) => { measurement.baselineInitial[metric] -= 1; });
     assert.equal(result.size.status, 'PASS');
     assert.equal(result.historical.status, 'FAIL');
@@ -147,14 +147,14 @@ for (const [label, times, expected] of [
   ['above', [120.01, 120.01, 120.01, 120.01], 'INCONCLUSIVE_OR_FAIL'],
   ['unsorted middle two, not mean or supplied median', [1000, 100, 1, 140], 'COMPARABLE_WITHIN_PRESET_NOISE_RULE'],
 ]) {
-  test(`fixed 20% median timing: ${label}`, () => {
+  test(`Given four candidate timings are ${label} the fixed 20% threshold When the median timing rule is evaluated Then the timing status is ${expected}`, () => {
     const result = evaluate(({measurement}) => { measurement.journeys[0].candidate.timesInMs = times; measurement.journeys[0].candidate.medianInMs = 1; });
     assert.equal(result.timing.status, expected);
     assert.equal(result.overall, expected === 'INCONCLUSIVE_OR_FAIL' ? 'FAIL' : 'BLOCKED');
   });
 }
 
-test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then fresh baseline uses the middle two of four unsorted times', () => {
+test('Given four unsorted baseline timings have distinct middle values When the candidate timing is compared Then the middle two values determine the baseline median', () => {
   const result = evaluate(({measurement}) => {
     measurement.journeys[0].baseline.timesInMs = [1000, 80, 100, 1];
     measurement.journeys[0].baseline.medianInMs = 1000;
@@ -163,7 +163,7 @@ test('Given the budget evaluator receives raw observations when the evaluator pr
   assert.equal(result.timing.status, 'INCONCLUSIVE_OR_FAIL');
 });
 
-test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then timing retains the prescribed (middle two sum)/2 rounding at equality', () => {
+test('Given four fractional baseline timings require midpoint rounding When the candidate timing is exactly at the prescribed boundary Then the comparison remains within the timing rule', () => {
   const result = evaluate(({measurement}) => {
     measurement.journeys[0].baseline.timesInMs = [0.04, 0.01, 0.001, 0.03];
     measurement.journeys[0].candidate.timesInMs = [0.024, 0.024, 0.024, 0.024];
@@ -172,7 +172,7 @@ test('Given the budget evaluator receives raw observations when the evaluator pr
   assert.equal(result.overall, 'BLOCKED');
 });
 
-test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then supplied PASS aggregates cannot conceal failing raw observations', () => {
+test('Given raw observations contradict a supplied PASS aggregate When size request and timing failures are present Then raw failures remain visible', () => {
   const result = evaluate(({measurement}) => {
     measurement.aggregate = {status: 'PASS'};
     const journey = measurement.journeys[0];
@@ -188,7 +188,7 @@ test('Given the budget evaluator receives raw observations when the evaluator pr
   assert.equal(result.timing.status, 'INCONCLUSIVE_OR_FAIL');
 });
 
-test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then all caps are conjunctive; independently report size, request and timing failures', () => {
+test('Given every asset and route cap is exceeded When request and timing limits are also exceeded Then size request and timing failures are reported independently', () => {
   const result = evaluate(inputs => {
     for (const cap of assetCaps) cap.set(inputs, cap.limit(inputs) + 1);
     for (const cap of routeCaps) cap.set(inputs, cap.limit(inputs) + 1);
@@ -202,7 +202,7 @@ test('Given the budget evaluator receives raw observations when the evaluator pr
   assert.equal(result.overall, 'FAIL');
 });
 
-test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then fresh baseline maxima, not first observation or supplied aggregates, set ceilings', () => {
+test('Given fresh baseline observations and misleading aggregate ceilings coexist When the evaluator chooses its limits Then fresh maxima set the ceilings', () => {
   const result = evaluate(({measurement}) => {
     const journey = measurement.journeys[0];
     journey.baseline.requestCounts = [1, 2, 12, 3];
@@ -214,7 +214,7 @@ test('Given the budget evaluator receives raw observations when the evaluator pr
   assert.equal(result.overall, 'BLOCKED');
 });
 
-test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then policy caps still bind when fresh baseline maxima are higher', () => {
+test('Given fresh baseline maxima exceed policy caps When the candidate exceeds those policy caps Then policy limits still bind', () => {
   const result = evaluate(({measurement}) => {
     const journey = measurement.journeys[0];
     journey.baseline.requestCounts[2] = 100;
@@ -230,45 +230,45 @@ test('Given the budget evaluator receives raw observations when the evaluator pr
 });
 
 const malformed = [
-  ['empty measurement', inputs => { inputs.measurement = {}; }],
-  ['missing initial', ({measurement}) => { delete measurement.initial; }],
-  ['missing baselineInitial', ({measurement}) => { delete measurement.baselineInitial; }],
-  ['unknown journey', ({measurement}) => { measurement.journeys[0].name = 'unknown'; }],
-  ['duplicate journey', ({measurement}) => { measurement.journeys[1].name = measurement.journeys[0].name; }],
-  ['missing journey', ({measurement}) => { measurement.journeys.pop(); }],
-  ['extra journey', ({measurement}) => { measurement.journeys.push(measurement.journeys[0]); }],
-  ['reordered journeys', ({measurement}) => { measurement.journeys.reverse(); }],
-  ['nonarray journeys', ({measurement}) => { measurement.journeys = {}; }],
-  ['null journey', ({measurement}) => { measurement.journeys[0] = null; }],
-  ['sparse journeys', ({measurement}) => { delete measurement.journeys[0]; }],
-  ['missing baseline', ({measurement}) => { delete measurement.journeys[0].baseline; }],
-  ['null policy', inputs => { inputs.policy = null; }],
-  ['unknown schema', ({policy}) => { policy.schema = 'unknown'; }],
-  ['unknown policy id', ({policy}) => { policy.id = 'unapproved'; }],
-  ['missing policy journey', ({policy}) => { delete policy.journeys[names[0]]; }],
-  ['unknown policy journey', ({policy}) => { policy.journeys.unknown = {}; }],
-  ['reordered policy journeys', ({policy}) => { policy.journeys = Object.fromEntries(Object.entries(policy.journeys).reverse()); }],
-  ['cleared coverage', ({policy}) => { policy.unmeasuredScopes = []; }],
-  ['partial coverage', ({policy}) => { policy.unmeasuredScopes.pop(); }],
-  ['unknown coverage', ({policy}) => { policy.unmeasuredScopes[0] = 'other'; }],
-  ['missing coverage', ({policy}) => { delete policy.unmeasuredScopes; }],
-  ['relaxed timing', ({policy}) => { policy.timingMaxRelativeRegression = 0.3; }],
-  ['changed timing rule', ({policy}) => { policy.timingMaxRelativeRegression = 0.1; }],
-  ['missing timing rule', ({policy}) => { delete policy.timingMaxRelativeRegression; }],
+  {label: 'empty measurement', given: 'the measurement is an empty object', when: 'the evaluator validates the measurement', then: 'validation fails before budget sections run', change: inputs => { inputs.measurement = {}; }},
+  {label: 'missing initial', given: 'the initial measurement is absent', when: 'the evaluator validates the measurement', then: 'validation fails before budget sections run', change: ({measurement}) => { delete measurement.initial; }},
+  {label: 'missing baselineInitial', given: 'the initial baseline is absent', when: 'the evaluator validates the measurement', then: 'validation fails before budget sections run', change: ({measurement}) => { delete measurement.baselineInitial; }},
+  {label: 'unknown journey', given: 'a journey name is unknown', when: 'the evaluator validates journey coverage', then: 'validation fails before budget sections run', change: ({measurement}) => { measurement.journeys[0].name = 'unknown'; }},
+  {label: 'duplicate journey', given: 'two measured journeys share one name', when: 'the evaluator validates journey identity', then: 'validation fails before budget sections run', change: ({measurement}) => { measurement.journeys[1].name = measurement.journeys[0].name; }},
+  {label: 'missing journey', given: 'one required journey is absent', when: 'the evaluator validates journey coverage', then: 'validation fails before budget sections run', change: ({measurement}) => { measurement.journeys.pop(); }},
+  {label: 'extra journey', given: 'an unapproved journey is present', when: 'the evaluator validates journey coverage', then: 'validation fails before budget sections run', change: ({measurement}) => { measurement.journeys.push(measurement.journeys[0]); }},
+  {label: 'reordered journeys', given: 'journeys are in a different order', when: 'the evaluator validates journey identity', then: 'validation fails before budget sections run', change: ({measurement}) => { measurement.journeys.reverse(); }},
+  {label: 'nonarray journeys', given: 'the journey collection is not an array', when: 'the evaluator validates the measurement', then: 'validation fails before budget sections run', change: ({measurement}) => { measurement.journeys = {}; }},
+  {label: 'null journey', given: 'a journey entry is null', when: 'the evaluator validates the measurement', then: 'validation fails before budget sections run', change: ({measurement}) => { measurement.journeys[0] = null; }},
+  {label: 'sparse journeys', given: 'a required journey slot is sparse', when: 'the evaluator validates the measurement', then: 'validation fails before budget sections run', change: ({measurement}) => { delete measurement.journeys[0]; }},
+  {label: 'missing baseline', given: 'one journey baseline is absent', when: 'the evaluator validates the measurement', then: 'validation fails before budget sections run', change: ({measurement}) => { delete measurement.journeys[0].baseline; }},
+  {label: 'null policy', given: 'the policy is null', when: 'the evaluator validates the policy', then: 'validation fails before budget sections run', change: inputs => { inputs.policy = null; }},
+  {label: 'unknown schema', given: 'the policy schema is unknown', when: 'the evaluator validates the policy', then: 'validation fails before budget sections run', change: ({policy}) => { policy.schema = 'unknown'; }},
+  {label: 'unknown policy id', given: 'the policy identifier is unapproved', when: 'the evaluator validates the policy', then: 'validation fails before budget sections run', change: ({policy}) => { policy.id = 'unapproved'; }},
+  {label: 'missing policy journey', given: 'one policy journey is absent', when: 'the evaluator validates the policy', then: 'validation fails before budget sections run', change: ({policy}) => { delete policy.journeys[names[0]]; }},
+  {label: 'unknown policy journey', given: 'the policy declares an unknown journey', when: 'the evaluator validates the policy', then: 'validation fails before budget sections run', change: ({policy}) => { policy.journeys.unknown = {}; }},
+  {label: 'reordered policy journeys', given: 'policy journeys are declared in a different order', when: 'the evaluator validates the policy', then: 'validation fails before budget sections run', change: ({policy}) => { policy.journeys = Object.fromEntries(Object.entries(policy.journeys).reverse()); }},
+  {label: 'cleared coverage', given: 'all unmeasured scopes are removed', when: 'the evaluator validates coverage', then: 'validation fails before budget sections run', change: ({policy}) => { policy.unmeasuredScopes = []; }},
+  {label: 'partial coverage', given: 'one unmeasured scope is removed', when: 'the evaluator validates coverage', then: 'validation fails before budget sections run', change: ({policy}) => { policy.unmeasuredScopes.pop(); }},
+  {label: 'unknown coverage', given: 'coverage names an unknown scope', when: 'the evaluator validates coverage', then: 'validation fails before budget sections run', change: ({policy}) => { policy.unmeasuredScopes[0] = 'other'; }},
+  {label: 'missing coverage', given: 'the coverage declaration is absent', when: 'the evaluator validates coverage', then: 'validation fails before budget sections run', change: ({policy}) => { delete policy.unmeasuredScopes; }},
+  {label: 'relaxed timing', given: 'the policy timing threshold is relaxed', when: 'the evaluator validates policy invariants', then: 'validation fails before budget sections run', change: ({policy}) => { policy.timingMaxRelativeRegression = 0.3; }},
+  {label: 'changed timing rule', given: 'the policy timing threshold is changed', when: 'the evaluator validates policy invariants', then: 'validation fails before budget sections run', change: ({policy}) => { policy.timingMaxRelativeRegression = 0.1; }},
+  {label: 'missing timing rule', given: 'the policy timing threshold is absent', when: 'the evaluator validates policy invariants', then: 'validation fails before budget sections run', change: ({policy}) => { delete policy.timingMaxRelativeRegression; }},
 ];
-for (const [label, change] of malformed) test(`reject ${label}`, () => assertInvalid(evaluate(change)));
-for (const value of [undefined, null, false, 1, 'measurement', []]) test(`reject measurement ${String(value)}`, () => assertInvalid(evaluateFunctionalBudget(fixture().policy, value)));
+for (const row of malformed) test(`Given ${row.given} When ${row.when} Then ${row.then}`, () => assertInvalid(evaluate(row.change)));
+for (const value of [undefined, null, false, 1, 'measurement', []]) test(`Given the measurement input is ${String(value)} When the evaluator validates its shape Then validation fails before budget sections run`, () => assertInvalid(evaluateFunctionalBudget(fixture().policy, value)));
 
 for (const side of ['baseline', 'candidate']) {
   for (const field of ['timesInMs', 'requestCounts', 'resourceSummaries']) {
-    for (const length of [0, 3, 5]) test(`reject ${side}.${field} length ${length}`, () => assertInvalid(evaluate(({measurement}) => {
+    for (const length of [0, 3, 5]) test(`Given the ${side} ${field} array has length ${length} When the evaluator validates observation shape Then validation fails before budget sections run`, () => assertInvalid(evaluate(({measurement}) => {
       const observation = measurement.journeys[0][side];
       observation[field] = Array(length).fill(observation[field][0]);
     })));
-    test(`reject ${side}.${field} sparse array`, () => assertInvalid(evaluate(({measurement}) => { delete measurement.journeys[0][side][field][1]; })));
-    test(`reject ${side}.${field} nonarray`, () => assertInvalid(evaluate(({measurement}) => { measurement.journeys[0][side][field] = {}; })));
+    test(`Given the ${side} ${field} array has a missing element When the evaluator validates observation shape Then validation fails before budget sections run`, () => assertInvalid(evaluate(({measurement}) => { delete measurement.journeys[0][side][field][1]; })));
+    test(`Given the ${side} ${field} value is an object When the evaluator validates observation shape Then validation fails before budget sections run`, () => assertInvalid(evaluate(({measurement}) => { measurement.journeys[0][side][field] = {}; })));
   }
-  for (const value of [NaN, Infinity, -1, 0, '100', null]) test(`reject ${side} timing ${String(value)}`, () => assertInvalid(evaluate(({measurement}) => { measurement.journeys[0][side].timesInMs[1] = value; })));
+  for (const value of [NaN, Infinity, -1, 0, '100', null]) test(`Given the ${side} timing value is ${String(value)} When the evaluator validates timing values Then validation fails before budget sections run`, () => assertInvalid(evaluate(({measurement}) => { measurement.journeys[0][side].timesInMs[1] = value; })));
 }
 
 const integerFields = [
@@ -284,18 +284,18 @@ const integerFields = [
 ];
 for (const field of integerFields) {
   for (const value of [NaN, Infinity, -1, 0.5, '1', null, undefined, Number.MAX_SAFE_INTEGER + 1]) {
-    test(`reject ${field.name} invalid integer ${String(value)}`, () => assertInvalid(evaluate(inputs => field.set(inputs, value))));
+    test(`Given the ${field.name} field receives ${String(value)} When the evaluator validates integer fields Then validation fails before budget sections run`, () => assertInvalid(evaluate(inputs => field.set(inputs, value))));
   }
 }
 
-test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then no argument throws; malformed access is a validation result', () => {
+test('Given the evaluator receives no arguments or an accessor that throws When it validates malformed input Then it returns a validation result without throwing', () => {
   assertInvalid(evaluateFunctionalBudget());
   const {policy, measurement} = fixture();
   Object.defineProperty(measurement, 'initial', {get() { throw new Error('bad input accessor'); }});
   assertInvalid(evaluateFunctionalBudget(policy, measurement));
 });
 
-test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then does not mutate inputs, sort caller arrays, or alias returned coverage', () => {
+test('Given frozen policy and measurement inputs When the evaluator runs twice Then inputs remain unchanged and returned coverage is not aliased', () => {
   const {policy, measurement} = fixture();
   const before = structuredClone({policy, measurement});
   function freeze(value) {
@@ -309,12 +309,12 @@ test('Given the budget evaluator receives raw observations when the evaluator pr
   assert.deepEqual(evaluateFunctionalBudget(policy, measurement).coverage.missing, missing);
 });
 
-test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then extra policy metadata does not alter the approved numeric contract', () => {
+test('Given approved numeric policy data has unrelated metadata When the evaluator runs Then the numeric contract remains unchanged', () => {
   const result = evaluate(({policy}) => { policy.approval = {approved: true}; policy.measurementBindings = {}; policy.applicationBoundary = {}; });
   assert.equal(result.overall, 'BLOCKED');
 });
 
-test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then very large finite positive timings produce finite JSON-safe results', () => {
+test('Given both timing series contain the largest finite values When the evaluator serializes its result Then the timing result remains JSON safe', () => {
   const result = evaluate(({measurement}) => {
     measurement.journeys[0].baseline.timesInMs = Array(4).fill(Number.MAX_VALUE);
     measurement.journeys[0].candidate.timesInMs = Array(4).fill(Number.MAX_VALUE);
