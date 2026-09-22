@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import HoniComponent from './honi.component';
 
-describe('HoniComponent', () => {
+describe('Given the Honi glossary page owner is created', () => {
   let component: HoniComponent;
   let fixture: ComponentFixture<HoniComponent>;
 
@@ -18,7 +18,7 @@ describe('HoniComponent', () => {
     fixture.detectChanges();
   });
 
-  it('When the owner is created Then it is available', () => {
+  it('When the owner is created Then the Honi glossary component is available', () => {
     expect(component).toBeTruthy();
   });
 });

@@ -4,7 +4,7 @@ import {BlogCardComponent} from './blog-card.component';
 import {Blog} from '../../interfaces/blog';
 import {formatDate} from '@angular/common';
 
-describe('BlogCardComponent', () => {
+describe('Given a blog card is rendered with date data', () => {
   let component: BlogCardComponent;
   let fixture: ComponentFixture<BlogCardComponent>;
 
@@ -21,7 +21,7 @@ describe('BlogCardComponent', () => {
     fixture.detectChanges();
   });
 
-  it('When the owner is created Then it is available', () => {
+  it('When the owner is created Then the blog card component is available', () => {
     expect(component).toBeTruthy();
   });
 

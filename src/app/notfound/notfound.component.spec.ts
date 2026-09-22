@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import NotfoundComponent from './notfound.component';
 
-describe('NotfoundComponent', () => {
+describe('Given the not-found page owner is created', () => {
   let component: NotfoundComponent;
   let fixture: ComponentFixture<NotfoundComponent>;
 
@@ -18,7 +18,7 @@ describe('NotfoundComponent', () => {
     fixture.detectChanges();
   });
 
-  it('When the owner is created Then it is available', () => {
+  it('When the owner is created Then the not-found component is available', () => {
     expect(component).toBeTruthy();
   });
 });

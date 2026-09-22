@@ -3,7 +3,7 @@ import {render, screen} from '@testing-library/angular';
 import {vi} from 'vitest';
 import {AppComponent} from './app.component';
 
-describe('Icon-only loading feedback', () => {
+describe('Given loading feedback renders in reduced-motion or failed-artwork state', () => {
   afterEach(() => {TestBed.resetTestingModule(); vi.useRealTimers();});
 
   it('Given loading feedback renders in reduced-motion or failed-artwork state when loading completes or artwork fails Then retains the original GIF with a native static reduced-motion source and removes pending semantics at completion', async () => {

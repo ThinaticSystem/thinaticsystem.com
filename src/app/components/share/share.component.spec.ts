@@ -5,7 +5,7 @@ import {vi} from 'vitest';
 
 import {ShareComponent} from './share.component';
 
-describe('ShareComponent', () => {
+describe('Given a share control receives a URL and clipboard result', () => {
   let component: ShareComponent;
   let fixture: ComponentFixture<ShareComponent>;
 
@@ -26,7 +26,7 @@ describe('ShareComponent', () => {
     fixture.detectChanges();
   });
 
-  it('Given a share control receives a URL and clipboard result when the control receives a URL or copy result Then [social-share-reserved] preserves each query value through one URL decoding', () => {
+  it('When [social-share-reserved] preserves each query value through one URL decoding', () => {
     const share = {text: 'A&B #C++ ?日本% /', url: 'https://example.test/a%2Fb?q=A+B&next=%23x#section'};
     fixture.componentRef.setInput('share', share);
     fixture.detectChanges();
@@ -41,7 +41,7 @@ describe('ShareComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('Given a share control receives a URL and clipboard result when the control receives a URL or copy result Then keeps named native share controls and the external destination', () => {
+  it('When keeps named native share controls and the external destination', () => {
     expect(screen.getByRole('heading', {name: 'Share', level: 2})).toBeTruthy();
     expect(screen.getByRole('button', {name: 'このページのURLをコピーします'})).toBeInstanceOf(HTMLButtonElement);
     const link = screen.getByRole('link', {name: 'Twitterでこのページを共有します'});
@@ -54,7 +54,7 @@ describe('ShareComponent', () => {
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
-  it('Given a share control receives a URL and clipboard result when the control receives a URL or copy result Then copies the current input through the directive and only announces success', () => {
+  it('When copies the current input through the directive and only announces success', () => {
     const clipboard = TestBed.inject(ClipboardService);
     vi.spyOn(clipboard, 'isSupported', 'get').mockReturnValue(true);
     const copy = vi.spyOn(clipboard, 'copyFromContent').mockReturnValue(false);
@@ -75,7 +75,7 @@ describe('ShareComponent', () => {
     }
   });
 
-  it('Given a share control receives a URL and clipboard result when the control receives a URL or copy result Then does not report a rejected copy as a successful copy', () => {
+  it('When does not report a rejected copy as a successful copy', () => {
     fixture.nativeElement.querySelector('button').dispatchEvent(new Event('cbOnError'));
 
     expect(component.Notification.showNotification).toBe(false);

@@ -42,7 +42,7 @@ function reviewed(input) {
   Object.assign(input.policy.warmScope, {status: 'REVIEWED_COMPATIBLE', fixtureSha256: fixtureHash, harnessSha256: harnessHash, reviewReference: 'fixture-only-review-123'});
 }
 
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then valid evidence reports comparative coverage, no absolute or field claim', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then valid evidence reports comparative coverage, no absolute or field claim', () => {
   const result = evaluatePerformance(evidence());
   assert.equal(result.verdict, 'PASS_WITH_NOTES');
   assert.equal(result.absoluteUxAcceptance, 'NOT_ESTABLISHED');
@@ -54,27 +54,27 @@ test('Given the performance evaluator receives a source-and-runtime receipt when
   assert.equal(result.coverage.warmHistoricalScope, 'REVIEW_REQUIRED');
 });
 
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then unvisited output material growth below the cap requires review', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then unvisited output material growth below the cap requires review', () => {
   const result = evaluated(input => { input.assets.baseline.allEmittedJsCssRawBytes = 500_000; input.assets.allEmittedJsCssRawBytes = 810_000; });
   assert.equal(result.verdict, 'REVIEW_REQUIRED');
   assert.equal(result.sizeChecks.find(check => check.kind === 'static-comparison' && check.id === 'allEmittedJsCssRawBytes').delta, 310_000);
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then small static growth stays informational and the exact material boundary is not exceeded', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then small static growth stays informational and the exact material boundary is not exceeded', () => {
   for (const candidate of [500_650, 600_000]) assert.equal(evaluated(input => {
     input.assets.baseline.allEmittedJsCssRawBytes = 500_000; input.assets.allEmittedJsCssRawBytes = candidate;
   }).verdict, 'PASS_WITH_NOTES');
   assert.equal(evaluated(input => { input.assets.baseline.allEmittedJsCssRawBytes = 500_000; input.assets.allEmittedJsCssRawBytes = 600_001; }).verdict, 'REVIEW_REQUIRED');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then each initial compression representation compares to the same baseline scope', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then each initial compression representation compares to the same baseline scope', () => {
   for (const key of ['rawBytes', 'gzipBytes', 'brotliBytes']) assert.equal(evaluated(input => {
     input.assets.baseline.initial[key] = Math.floor(input.assets.initial[key] / 2);
   }).verdict, 'REVIEW_REQUIRED');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then baseline static inventory rejects missing, malformed and contradictory data', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then baseline static inventory rejects missing, malformed and contradictory data', () => {
   for (const mutation of [input => {delete input.assets.baseline;}, input => {input.assets.baseline.initial.rawBytes = NaN;}, input => {input.assets.baseline.allEmittedJsCssRawBytes = 0;}, input => {delete input.assets.baseline.initial.gzipBytes;}, input => {input.assets.baseline.extra = true;}]) assert.equal(evaluated(mutation).verdict, 'INVALID_EVIDENCE');
 });
 
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then theme visual witnesses accept rendered colors and reject persisted-only contradictions', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then theme visual witnesses accept rendered colors and reject persisted-only contradictions', () => {
   const input = evidence();
   for (const item of [...input.observations, ...input.calibration]) {
     const journey = item.journeys.find(j => j.id === 'desktop.theme-toggle');
@@ -85,7 +85,7 @@ test('Given the performance evaluator receives a source-and-runtime receipt when
   input.observations[0].journeys.find(j => j.id === 'desktop.theme-toggle').readinessWitness.theme.backgroundColor = 'rgb(255, 255, 255)';
   assert.equal(evaluatePerformance(input).verdict, 'INVALID_EVIDENCE');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then finite observed name aliases remain explicit and fail closed when empty', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then finite observed name aliases remain explicit and fail closed when empty', () => {
   const input = evidence(); withCollectorExtras(input);
   for (const item of [...input.observations, ...input.calibration]) {
     item.journeys[0].readinessWitness.targets = [{tags:'img', names:['Fixture illustration','**Fixture illustration**']}];
@@ -96,13 +96,13 @@ test('Given the performance evaluator receives a source-and-runtime receipt when
   assert.equal(evaluatePerformance(input).verdict, 'INVALID_EVIDENCE');
 });
 
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then validator returns errors as values and does not mutate', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then validator returns errors as values and does not mutate', () => {
   const input = observation('baseline', 0);
   const before = structuredClone(input);
   assert.deepEqual(validateObservation(input), {valid: true, errors: [], notes: []});
   assert.deepEqual(input, before);
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then evaluation is deterministic and accepts frozen inputs without mutation', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then evaluation is deterministic and accepts frozen inputs without mutation', () => {
   const input = evidence();
   const before = structuredClone(input);
   function freeze(value) { if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value); } }
@@ -110,7 +110,7 @@ test('Given the performance evaluator receives a source-and-runtime receipt when
   assert.deepEqual(evaluatePerformance(input), evaluatePerformance(before));
   assert.deepEqual(input, before);
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then even-sample median, range, MAD and adjacent paired deltas are recomputed', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then even-sample median, range, MAD and adjacent paired deltas are recomputed', () => {
   const result = evaluated(input => setTiming(input, [100, 121, 131, 110, 141, 120, 130, 151]));
   const comparison = result.timingChecks[0].comparison;
   assert.equal(comparison.baseline.median, 115);
@@ -120,7 +120,7 @@ test('Given the performance evaluator receives a source-and-runtime receipt when
   assert.deepEqual(comparison.pairedDeltas.values, [21, 21, 21, 21]);
   assert.deepEqual(comparison.blockDeltas, [21, 21]);
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then forged aggregate cannot turn a raw cap violation into PASS', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then forged aggregate cannot turn a raw cap violation into PASS', () => {
   const result = evaluated(input => {
     input.aggregate = {verdict: 'PASS', timingMedian: 0};
     input.observations[0].aggregates = {median: 0};
@@ -129,7 +129,7 @@ test('Given the performance evaluator receives a source-and-runtime receipt when
   });
   assert.equal(result.verdict, 'FAIL');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then aggregate poison is ignored rather than evaluated', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then aggregate poison is ignored rather than evaluated', () => {
   const input = evidence(); input.aggregate = () => { throw new Error('must not execute'); };
   assert.equal(evaluatePerformance(input).verdict, 'PASS_WITH_NOTES');
 });
@@ -196,7 +196,7 @@ const observationMutations = [
   ['cleanup false', item => { item.cleanup = false; }],
 ];
 for (const [name, mutate] of observationMutations) {
-  test(`observation validation rejects ${name}`, () => {
+  test(`Given a performance observation is malformed When validation receives ${name} Then it rejects the observation`, () => {
     const item = observation('baseline', 0); mutate(item);
     assert.equal(validateObservation(item).valid, false);
     assert.equal(evaluated(input => mutate(input.observations[0])).verdict, 'INVALID_EVIDENCE');
@@ -204,10 +204,10 @@ for (const [name, mutate] of observationMutations) {
   });
 }
 
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then journey order is not identity; complete reordered ID set accepted', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then journey order is not identity; complete reordered ID set accepted', () => {
   assert.equal(evaluated(input => input.observations[0].journeys.reverse()).verdict, 'PASS_WITH_NOTES');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then null non-code size remains UNKNOWN, never replaced by zero', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then null non-code size remains UNKNOWN, never replaced by zero', () => {
   const result = evaluated(input => {
     const resource = input.observations[0].journeys[0].resources[0]; resource.category = 'image'; resource.decodedBodySizeInBytes = null;
   });
@@ -215,7 +215,7 @@ test('Given the performance evaluator receives a source-and-runtime receipt when
   assert.ok(result.notes.some(note => note.includes('UNKNOWN')));
   assert.ok(result.sizeChecks.some(check => check.category === 'image' && check.status === 'UNKNOWN'));
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then known zero bytes and no requests are valid', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then known zero bytes and no requests are valid', () => {
   assert.equal(evaluated(input => { for (const item of [...input.observations, ...input.calibration]) { item.journeys[0].resources = []; item.journeys[0].requestCount = 0; item.journeys[0].elapsedInMs = 0; } }).verdict, 'PASS_WITH_NOTES');
 });
 
@@ -271,105 +271,105 @@ const evidenceMutations = [
   ['asset string', input => { input.assets.allEmittedJsCssRawBytes = '700000'; }],
   ['asset contradiction', input => { input.assets.allEmittedJsCssRawBytes = 100; }],
 ];
-for (const [name, mutate] of evidenceMutations) test(`evaluator rejects ${name}`, () => {
+for (const [name, mutate] of evidenceMutations) test(`Given performance evidence is malformed When evaluation receives ${name} Then it rejects the evidence`, () => {
   const result = evaluated(mutate); assert.equal(result.verdict, 'INVALID_EVIDENCE', result.validationErrors.join('\n')); assert.ok(result.validationErrors.length > 0);
 });
-for (const malformed of [null, undefined, [], 0, 'PASS', true, new Map(), {observations: undefined}]) test(`malformed root ${String(malformed)} is an explicit invalid result`, () => {
+for (const malformed of [null, undefined, [], 0, 'PASS', true, new Map(), {observations: undefined}]) test(`Given the performance evidence root is ${String(malformed)} When evaluation receives it Then it returns an explicit invalid result`, () => {
   assert.equal(evaluatePerformance(malformed).verdict, 'INVALID_EVIDENCE');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then getter is never invoked', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then getter is never invoked', () => {
   const input = evidence(); let invoked = false;
   Object.defineProperty(input, 'policy', {get() { invoked = true; return policy; }, enumerable: true});
   assert.equal(evaluatePerformance(input).verdict, 'INVALID_EVIDENCE'); assert.equal(invoked, false);
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then cycles, sparse arrays, custom collection hooks, symbols and hidden fields fail closed', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then cycles, sparse arrays, custom collection hooks, symbols and hidden fields fail closed', () => {
   for (const mutate of [input => { input.policy = input; }, input => { delete input.observations[0]; }, input => { input.observations.map = () => []; }, input => { input[Symbol('hidden')] = true; }, input => { Object.defineProperty(input, 'hidden', {value: true}); }]) assert.equal(evaluated(mutate).verdict, 'INVALID_EVIDENCE');
 });
 
 for (const [key, cap] of Object.entries(policy.caps.initial)) {
-  test(`approved initial ${key} boundary and plus one`, () => {
+  test(`Given the initial ${key} cap is enforced When the value is at the boundary or one over Then the evaluator reports the corresponding result`, () => {
     assert.equal(evaluated(input => { input.assets.initial[key] = cap; }).verdict, 'PASS_WITH_NOTES');
     assert.equal(evaluated(input => { input.assets.initial[key] = cap + 1; }).verdict, 'FAIL');
   });
 }
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then fixed total asset cap prevents cumulative rolling creep', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then fixed total asset cap prevents cumulative rolling creep', () => {
   for (const bytes of [800_000, 810_000, 819_200]) assert.equal(evaluated(input => { input.assets.allEmittedJsCssRawBytes = bytes; }).verdict, 'PASS_WITH_NOTES');
   assert.equal(evaluated(input => { input.assets.allEmittedJsCssRawBytes = 819_201; }).verdict, 'FAIL');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then +650 bytes within compatible warm cap passes (5899→6549)', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then +650 bytes within compatible warm cap passes (5899→6549)', () => {
   const result = evaluated(input => { reviewed(input); setCode(input, 'baseline', 5899); setCode(input, 'candidate', 6549); });
   assert.equal(result.verdict, 'PASS_WITH_NOTES');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then tiny step exceeds cumulative fixed warm anchor despite moving baseline', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then tiny step exceeds cumulative fixed warm anchor despite moving baseline', () => {
   const result = evaluated(input => { reviewed(input); setCode(input, 'baseline', 7100); setCode(input, 'candidate', 7169); });
   assert.equal(result.verdict, 'FAIL');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then fixed warm anchor detects cumulative material delta within cap', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then fixed warm anchor detects cumulative material delta within cap', () => {
   const result = evaluated(input => { reviewed(input); setCode(input, 'baseline', 7000); setCode(input, 'candidate', 7168); });
   assert.equal(result.verdict, 'REVIEW_REQUIRED');
   assert.ok(result.sizeChecks.some(check => check.kind === 'fixed-warm-anchor' && check.status === 'MATERIAL_REGRESSION'));
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then incompatible rich fixture never silently rebinds old warm caps', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then incompatible rich fixture never silently rebinds old warm caps', () => {
   const result = evaluated(input => { setCode(input, 'baseline', 9000); setCode(input, 'candidate', 9000); });
   assert.equal(result.verdict, 'PASS_WITH_NOTES');
   assert.ok(result.sizeChecks.some(check => check.kind === 'fixed-warm-anchor' && check.status === 'SCOPE_REVIEW_REQUIRED'));
 });
-for (const [candidateMs, expected] of [[250, 'PASS_WITH_NOTES'], [250.01, 'REVIEW_REQUIRED']]) test(`timing absolute 50ms boundary at ${candidateMs}`, () => {
+for (const [candidateMs, expected] of [[250, 'PASS_WITH_NOTES'], [250.01, 'REVIEW_REQUIRED']]) test(`Given timing has a 50ms absolute cap When the candidate is ${candidateMs}ms Then the evaluator returns ${expected}`, () => {
   assert.equal(evaluated(input => { setTiming(input, input.observations.map(item => item.side === 'candidate' ? candidateMs : 200)); }).verdict, expected);
 });
-for (const [candidateMs, expected] of [[1200, 'PASS_WITH_NOTES'], [1200.01, 'REVIEW_REQUIRED']]) test(`timing relative 20% boundary at ${candidateMs}`, () => {
+for (const [candidateMs, expected] of [[1200, 'PASS_WITH_NOTES'], [1200.01, 'REVIEW_REQUIRED']]) test(`Given timing has a 20% relative cap When the candidate is ${candidateMs}ms Then the evaluator returns ${expected}`, () => {
   assert.equal(evaluated(input => { setTiming(input, input.observations.map(item => item.side === 'candidate' ? candidateMs : 1000)); }).verdict, expected);
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then large ratio but tiny elapsed delta does not demand review', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then large ratio but tiny elapsed delta does not demand review', () => {
   assert.equal(evaluated(input => setTiming(input, input.observations.map(item => item.side === 'candidate' ? 40 : 1))).verdict, 'PASS_WITH_NOTES');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then large byte improvement cannot hide slower critical path', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then large byte improvement cannot hide slower critical path', () => {
   assert.equal(evaluated(input => { setCode(input, 'baseline', 10_000); setCode(input, 'candidate', 1000); setTiming(input, input.observations.map(item => item.side === 'candidate' ? 400 : 200)); }).verdict, 'REVIEW_REQUIRED');
 });
-for (const [bytes, expected] of [[2024, 'PASS_WITH_NOTES'], [2025, 'REVIEW_REQUIRED']]) test(`resource absolute 1024-byte boundary ${bytes}`, () => {
+for (const [bytes, expected] of [[2024, 'PASS_WITH_NOTES'], [2025, 'REVIEW_REQUIRED']]) test(`Given resources have a 1024-byte absolute cap When the candidate is ${bytes} bytes Then the evaluator returns ${expected}`, () => {
   assert.equal(evaluated(input => { setCode(input, 'candidate', bytes); }).verdict, expected);
 });
-for (const [bytes, expected] of [[12_000, 'PASS_WITH_NOTES'], [12_001, 'REVIEW_REQUIRED']]) test(`resource relative 20% boundary ${bytes}`, () => {
+for (const [bytes, expected] of [[12_000, 'PASS_WITH_NOTES'], [12_001, 'REVIEW_REQUIRED']]) test(`Given resources have a 20% relative cap When the candidate is ${bytes} bytes Then the evaluator returns ${expected}`, () => {
   assert.equal(evaluated(input => { setCode(input, 'baseline', 10_000); setCode(input, 'candidate', bytes); }).verdict, expected);
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then action/tail splitting cannot conceal total code increase', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then action/tail splitting cannot conceal total code increase', () => {
   const result = evaluated(input => {
     for (const item of input.observations.filter(item => item.side === 'candidate')) { const journey = item.journeys[4]; journey.resources[0].decodedBodySizeInBytes += 800; journey.resources.push({...journey.resources[0], id: 'tail-extra', scope: 'tail', decodedBodySizeInBytes: 800}); journey.requestCount += 1; }
   });
   assert.equal(result.verdict, 'REVIEW_REQUIRED');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then additional zero-byte request is diagnostic, not automatic failure', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then additional zero-byte request is diagnostic, not automatic failure', () => {
   const result = evaluated(input => {
     for (const item of input.observations.filter(item => item.side === 'candidate')) { const journey = item.journeys[0]; journey.resources.push({...journey.resources[0], id: 'extra', decodedBodySizeInBytes: 0}); journey.requestCount += 1; }
   });
   assert.equal(result.verdict, 'PASS_WITH_NOTES');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then stable but very slow lab results do not establish absolute UX acceptance', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then stable but very slow lab results do not establish absolute UX acceptance', () => {
   const result = evaluated(input => { for (const item of [...input.observations, ...input.calibration]) item.journeys.forEach(journey => { journey.elapsedInMs = 100_000; }); });
   assert.equal(result.verdict, 'PASS_WITH_NOTES'); assert.equal(result.absoluteUxAcceptance, 'NOT_ESTABLISHED');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then noisy A/A blocks otherwise clean comparison', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then noisy A/A blocks otherwise clean comparison', () => {
   assert.equal(evaluated(input => setTiming(input, [200, 600, 200, 200], 'calibration')).verdict, 'INCONCLUSIVE');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then stable A/A side bias in either direction is calibration failure', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then stable A/A side bias in either direction is calibration failure', () => {
   for (const values of [[200, 400, 400, 200], [400, 200, 200, 400]]) assert.equal(evaluated(input => setTiming(input, values, 'calibration')).verdict, 'INCONCLUSIVE');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then noisy comparison outlier cannot be removed or best-selected', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then noisy comparison outlier cannot be removed or best-selected', () => {
   assert.equal(evaluated(input => setTiming(input, [200, 200, 200, 200, 200, 200, 200, 1000])).verdict, 'INCONCLUSIVE');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then contradictory ABBA/BAAB blocks do not merge into a confident regression', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then contradictory ABBA/BAAB blocks do not merge into a confident regression', () => {
   assert.equal(evaluated(input => setTiming(input, [200, 400, 400, 200, 100, 200, 200, 100])).verdict, 'INCONCLUSIVE');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then filter-crossing blocks are inconclusive even with low within-side spread', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then filter-crossing blocks are inconclusive even with low within-side spread', () => {
   assert.equal(evaluated(input => setTiming(input, [200, 251, 251, 200, 249, 200, 200, 249])).verdict, 'INCONCLUSIVE');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then resource A/A instability also blocks a comparative pass', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then resource A/A instability also blocks a comparative pass', () => {
   assert.equal(evaluated(input => { input.calibration[0].journeys[0].resources[0].decodedBodySizeInBytes = 5000; }).verdict, 'INCONCLUSIVE');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then raw invalid evidence takes precedence over cap failure', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then raw invalid evidence takes precedence over cap failure', () => {
   assert.equal(evaluated(input => { input.assets.initial.rawBytes = 500_000; input.observations[0].errors.push('pageerror'); }).verdict, 'INVALID_EVIDENCE');
 });
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then independent approved cap failure remains FAIL despite noisy calibration', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then independent approved cap failure remains FAIL despite noisy calibration', () => {
   assert.equal(evaluated(input => { input.assets.initial.rawBytes = 500_000; setTiming(input, [200, 900, 200, 200], 'calibration'); }).verdict, 'FAIL');
 });
 
@@ -386,7 +386,7 @@ function withCollectorExtras(input) {
     item.setup = [setup, {id: 'qa.final-context-1', kind: 'diagnostic-screenshot', screenshot: 'qa.final-context-1.png', resources: [{...setup.resources[0], id: 'qa-resource', scope: 'tail'}], requestCount: 1}];
   }
 }
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then collector page clock, semantic witness, setup and screenshots remain validated but setup excluded from metrics', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then collector page clock, semantic witness, setup and screenshots remain validated but setup excluded from metrics', () => {
   const input = evidence(); withCollectorExtras(input);
   const result = evaluatePerformance(input);
   assert.equal(result.verdict, 'PASS_WITH_NOTES', result.validationErrors.join('\n'));
@@ -426,19 +426,19 @@ const extraMutations = [
   ['screenshot traversal', item => { item.setup[1].screenshot = '../qa.png'; }],
   ['screenshot duplicate ID', item => { item.setup.push(structuredClone(item.setup[1])); }],
 ];
-for (const [name, mutate] of extraMutations) test(`collector extension rejects ${name}`, () => {
+for (const [name, mutate] of extraMutations) test(`Given collector evidence is malformed When validation receives ${name} Then it rejects the evidence`, () => {
   const input = evidence(); withCollectorExtras(input); mutate(input.observations[0]);
   assert.equal(evaluatePerformance(input).verdict, 'INVALID_EVIDENCE');
 });
 
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then asymmetric optional clock and readiness evidence is rejected', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then asymmetric optional clock and readiness evidence is rejected', () => {
   for (const mutate of [input => { delete input.observations[0].journeys[0].pageClock; delete input.observations[0].journeys[0].readinessWitness; }, input => { const home = input.observations[0].journeys[0]; home.readinessWitness.targets[0].text = 'wrong content'; home.pageClock.witness.targets[0].text = 'wrong content'; }]) {
     const input = evidence(); withCollectorExtras(input); mutate(input);
     assert.equal(evaluatePerformance(input).verdict, 'INVALID_EVIDENCE');
   }
 });
 
-test('Given the performance evaluator receives a source-and-runtime receipt when the evidence is evaluated Then all mandatory fields reject deletion at every DTO layer', () => {
+test('Given performance evidence is available When the evaluator compares the receipt Then all mandatory fields reject deletion at every DTO layer', () => {
   const selectors = [input => input, input => input.policy, input => input.policy.materiality, input => input.policy.caps, input => input.policy.anchor, input => input.receipts, input => input.receipts.observations[0], input => input.observations[0], input => input.observations[0].browser, input => input.observations[0].profile, input => input.observations[0].profile.viewport, input => input.observations[0].journeys[0], input => input.observations[0].journeys[0].resources[0]];
   for (const select of selectors) for (const key of Object.keys(select(evidence()))) {
     const input = evidence(); delete select(input)[key];

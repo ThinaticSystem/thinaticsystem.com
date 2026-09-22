@@ -38,7 +38,7 @@ const invalid = [
   ['string total', (report) => ({...report, numTotalTests: '1'})],
 ];
 for (const [name, mutate] of invalid) {
-  test('rejects ' + name, () => {
+  test('Given a known-defect report is malformed When selection receives ' + name + ' Then it rejects the report', () => {
     assert.throws(() => requireSingleProbeAssertion(mutate(valid()), spec, testName), /expected exactly one file|expected exactly one test/);
   });
 }

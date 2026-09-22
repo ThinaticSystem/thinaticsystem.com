@@ -2,7 +2,7 @@ import {TestBed} from '@angular/core/testing';
 
 import {NavigateService} from './navigate.service';
 
-describe('NavigateService', () => {
+describe('Given the navigation service is injected', () => {
   let service: NavigateService;
 
   beforeEach(() => {

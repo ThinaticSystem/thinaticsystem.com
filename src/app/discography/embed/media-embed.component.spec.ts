@@ -19,10 +19,10 @@ class TestResizeObserver implements ResizeObserver {
   }
 }
 
-describe('MediaEmbedComponent', () => {
+describe('Given a media embed receives provider and viewport changes', () => {
   beforeEach(() => { currentWidth = 375; observers.clear(); vi.stubGlobal('ResizeObserver', TestResizeObserver); });
   afterEach(() => vi.unstubAllGlobals());
-  it('Given a media embed receives provider and viewport changes when viewport or provider state changes Then [EMBED-R2] uses an explicit safe link below minimum width and removes a player when narrowed', async () => {
+  it('When [EMBED-R2] uses an explicit safe link below minimum width and removes a player when narrowed', async () => {
     currentWidth = 199;
     const rendered = await render(MediaEmbedComponent, {componentInputs: {html: youtube}});
     expect(screen.queryByTitle('YouTubeで試聴')).toBeNull();
@@ -37,13 +37,13 @@ describe('MediaEmbedComponent', () => {
     expect(screen.queryByTitle('YouTubeで試聴')).toBeNull();
     expect(screen.getByRole('link', {name: 'YouTubeで開く'}).getAttribute('rel')).toBe('noopener noreferrer');
   });
-  it('Given a media embed receives provider and viewport changes when viewport or provider state changes Then disconnects the owned resize observer when destroyed', async () => {
+  it('When disconnects the owned resize observer when destroyed', async () => {
     const rendered = await render(MediaEmbedComponent, {componentInputs: {html: youtube}});
     expect(observers.size).toBe(1);
     rendered.fixture.destroy();
     expect(observers.size).toBe(0);
   });
-  it('Given a media embed receives provider and viewport changes when viewport or provider state changes Then [EMBED-TITLE-1] distinguishes different SoundCloud and YouTube media sharing the supplied Track title', async () => {
+  it('When [EMBED-TITLE-1] distinguishes different SoundCloud and YouTube media sharing the supplied Track title', async () => {
     await render(`
       <app-media-embed [html]="soundcloud" [title]="'Track'" />
       <app-media-embed [html]="youtube" [title]="'Track'" />
@@ -72,7 +72,7 @@ describe('MediaEmbedComponent', () => {
       expect(screen.getByTitle(`${provider}で試聴`)).toBe(frame);
     }
   });
-  it('Given a media embed receives provider and viewport changes when viewport or provider state changes Then owns the iframe security attributes rather than copying CMS markup', async () => {
+  it('When owns the iframe security attributes rather than copying CMS markup', async () => {
     await render(MediaEmbedComponent, {componentInputs: {html: youtube.replace('width="560"', 'allow="camera; microphone" sandbox="allow-top-navigation" style="position:fixed" width="560"'), title: '楽曲の試聴'}});
     const frame = screen.getByTitle('楽曲の試聴 — YouTube');
     expect(frame.getAttribute('src')).toBe('https://www.youtube.com/embed/EDfYEwWGhlg');
@@ -83,7 +83,7 @@ describe('MediaEmbedComponent', () => {
     expect(frame.getAttribute('referrerpolicy')).toBe('strict-origin-when-cross-origin');
     expect(frame.getAttribute('loading')).toBe('lazy');
   });
-  it('Given a media embed receives provider and viewport changes when viewport or provider state changes Then replaces an approved player with a blocked message without retaining its old URL', async () => {
+  it('When replaces an approved player with a blocked message without retaining its old URL', async () => {
     const rendered = await render(MediaEmbedComponent, {componentInputs: {html: youtube}});
     expect(screen.getByTitle('YouTubeで試聴')).toBeTruthy();
     rendered.fixture.componentRef.setInput('html', '<iframe src="https://evil.test/"></iframe>');
@@ -94,12 +94,12 @@ describe('MediaEmbedComponent', () => {
     rendered.fixture.detectChanges();
     expect(screen.queryByRole('status')).toBeNull();
   });
-  it('Given a media embed receives provider and viewport changes when viewport or provider state changes Then escapes the visible title and does not turn it into markup', async () => {
+  it('When escapes the visible title and does not turn it into markup', async () => {
     await render(MediaEmbedComponent, {componentInputs: {html: youtube, title: '<img onerror="unsafe()">'}});
     expect(screen.getByTitle('<img onerror="unsafe()"> — YouTube').getAttribute('title')).toBe('<img onerror="unsafe()"> — YouTube');
     expect(screen.queryByRole('img')).toBeNull();
   });
-  it('Given a media embed receives provider and viewport changes when viewport or provider state changes Then changes provider with its own fixed sandbox and permission policy', async () => {
+  it('When changes provider with its own fixed sandbox and permission policy', async () => {
     const rendered = await render(MediaEmbedComponent, {componentInputs: {html: youtube}});
     rendered.fixture.componentRef.setInput('html', '<iframe src="https://open.spotify.com/embed/track/5OkcBpFUdMIVYpjc88RMC6?utm_source=generator"></iframe>');
     rendered.fixture.detectChanges();

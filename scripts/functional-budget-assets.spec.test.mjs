@@ -16,7 +16,7 @@ function fixture(run) {
  } finally {rmSync(root,{recursive:true,force:true});}
 }
 const policy={detailLogicalRoot:{selector:'app-detail'}};
-test('Given the bundle inventory receives emitted assets when the inventory is built Then inventory counts every emitted JS/CSS file and initial compression separately',()=>fixture(root=>{
+test('Given an emitted-asset fixture is prepared When the inventory is built Then inventory counts every emitted JS/CSS file and initial compression separately',()=>fixture(root=>{
  const r=collectBudgetAssets(root,policy);
  assert.equal(r.initial.rawBytes,51);assert.equal(r.detailChunkRawBytes,26);
  assert.equal(r.allEmittedJsCssRawBytes,77);assert.equal(r.emitted.length,3);
@@ -32,10 +32,10 @@ for(const [name,edit] of [
  ['unrecognized executable class',root=>writeFileSync(join(root,'extra.wasm'),'fixture-not-real-wasm')],
  ['symlink asset',root=>symlinkSync('main.js',join(root,'alias.js'))],
  ['missing initial file',root=>rmSync(join(root,'main.js'))],
-]) test(name+' fails closed',()=>fixture(root=>{edit(root);assert.throws(()=>collectBudgetAssets(root,policy));}));
+]) test('Given an emitted-asset fixture is prepared When the fixture is mutated with ' + name + ' Then asset collection fails closed',()=>fixture(root=>{edit(root);assert.throws(()=>collectBudgetAssets(root,policy));}));
 const source={files:[{path:'src/app/app.routes.ts',kind:'file',sha256:'same',sizeInBytes:10},{path:'src/app/demo.spec.ts',kind:'file',sha256:'test'},{path:'scripts/gate.mjs',kind:'file',sha256:'tool'}]};
 const boundary={applicationBoundary:{kind:'exact-reviewed-application-inputs/v1',files:applicationFiles(source),packageMetadata:{name:'fixture'}}};
-test('Given the bundle inventory receives emitted assets when the inventory is built Then unchanged reviewed application inputs permit tooling-only changes',()=>{
+test('Given an emitted-asset fixture is prepared When the inventory is built Then unchanged reviewed application inputs permit tooling-only changes',()=>{
  assert.deepEqual(validateApplicationBoundary(source,{name:'fixture',scripts:{new:'node script'}},boundary),[]);
 });
 for(const [name,edit] of [
@@ -47,6 +47,6 @@ for(const [name,edit] of [
  const changed=structuredClone(source);edit(changed);
  assert.ok(validateApplicationBoundary(changed,{name:'fixture'},boundary).length);
 });
-test('Given the bundle inventory receives emitted assets when the inventory is built Then dependency metadata changes require review',()=>{
+test('Given an emitted-asset fixture is prepared When the inventory is built Then dependency metadata changes require review',()=>{
  assert.ok(validateApplicationBoundary(source,{name:'fixture',dependencies:{new:'1'}},boundary).length);
 });

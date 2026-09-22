@@ -13,7 +13,7 @@ function fixture(side = 'candidate') {
   return structuredClone({side, evidence, debt, browser, receipt: {status: side === 'baseline' ? 1 : 0, signal: null, error: null, timedOut: false, stderr: ''}});
 }
 
-test('Given a paired comparison receives baseline and candidate receipts when the comparison is evaluated Then accept complete candidate and precisely scoped historical control, not product PASS', () => {
+test('Given a paired comparison receives baseline and candidate receipts When the comparison is evaluated Then it accepts complete candidate and precisely scoped historical control, not product PASS', () => {
   assert.deepEqual(validateAttempt(fixture()), []);
   const base = fixture('baseline');
   assert.deepEqual(validateAttempt(base), []);
@@ -33,8 +33,6 @@ const negatives = {
   'fixture mismatch': f => { f.evidence.timingSubstrate.fixture = 'live'; },
   'missing raw run': f => { f.evidence.runs = []; },
   'repeat mismatch': f => { f.evidence.repeatCount = 4; },
-  'missing journey': f => { f.evidence.runs[0].journeys.pop(); },
-  'duplicate journey': f => { f.evidence.runs[0].journeys[1] = f.evidence.runs[0].journeys[0]; },
   'missing timing': f => { delete f.evidence.runs[0].journeys[0].elapsedInMs; },
   'NaN timing': f => { f.evidence.runs[0].journeys[0].elapsedInMs = NaN; },
   'missing bytes': f => { delete f.evidence.runs[0].journeys[0].resourceSummary; },
@@ -53,6 +51,8 @@ const negatives = {
   'stderr with complete JSON': f => { f.receipt.stderr = 'setup crashed'; },
   'wrong exit': f => { f.receipt.status = 2; },
 };
+test('Given a paired receipt is malformed When it omits a journey Then validation rejects the receipt', () => { const f = fixture('baseline'); f.evidence.runs[0].journeys.pop(); assert.notEqual(validateAttempt(f).length, 0); });
+test('Given a paired receipt is malformed When it duplicates a journey Then validation rejects the receipt', () => { const f = fixture('baseline'); f.evidence.runs[0].journeys[1] = f.evidence.runs[0].journeys[0]; assert.notEqual(validateAttempt(f).length, 0); });
 for (const [name, mutate] of Object.entries(negatives)) test(`reject ${name}`, () => {
   const f = fixture(); mutate(f); assert.notEqual(validateAttempt(f).length, 0);
 });
@@ -69,13 +69,13 @@ for (const [name, mutate] of Object.entries({
   'excess known error': f => { f.evidence.runs[0].pageErrors = Array.from({length: 3}, () => ({message: 'NG0953', url: 'http://127.0.0.1:4174/'})); },
 })) test(`reject ${name}`, () => { const f = fixture('baseline'); mutate(f); assert.notEqual(validateAttempt(f).length, 0); });
 
-test('Given a paired comparison receives baseline and candidate receipts when the comparison is evaluated Then aggregate requires all four rows and recomputes rather than trusting supplied medians', () => {
+test('Given a paired comparison receives baseline and candidate receipts When the comparison is evaluated Then aggregate requires all four rows and recomputes rather than trusting supplied medians', () => {
   const rows = [100, 120, 130, 90].map(time => { const e = fixture().evidence; e.runs[0].journeys.forEach(j => { j.elapsedInMs = time; }); e.aggregate = {fake: true}; return e; });
   assert.equal(combineAttempts(rows).aggregate.journeys['desktop.home'].medianInMs, 110);
   assert.throws(() => combineAttempts(rows.slice(0, 3)));
 });
 
-test('Given a paired comparison receives baseline and candidate receipts when the comparison is evaluated Then real child crash, timeout and missing executable cannot masquerade as known baseline', () => {
+test('Given a paired comparison starts a child process When it crashes, times out, or is missing Then the receipt cannot masquerade as a known baseline', () => {
   for (const [exe, args, timeout] of [[process.execPath, ['-e', 'process.exit(2)'], 2_000], [process.execPath, ['-e', 'setInterval(()=>{},1000)'], 50], ['/nonexistent-paired-test-executable', [], 2_000]]) {
     const child = spawnSync(exe, args, {timeout, encoding: 'utf8'});
     const f = fixture('baseline');
@@ -84,7 +84,7 @@ test('Given a paired comparison receives baseline and candidate receipts when th
   }
 });
 
-test('Given a paired comparison receives baseline and candidate receipts when the comparison is evaluated Then actual comparison CLI rejects regression in timing/initial/request/route and mismatched v4', () => {
+test('Given a paired comparison invokes the comparison CLI When timing, asset, request, route, or schema evidence changes Then it rejects the regression', () => {
   mkdirSync('.artifacts/paired-ci', {recursive: true});
   const dir = mkdtempSync(resolve('.artifacts/paired-ci/fixture-'));
   try {
@@ -103,7 +103,7 @@ test('Given a paired comparison receives baseline and candidate receipts when th
 });
 
 
-test('Given a paired comparison receives baseline and candidate receipts when the comparison is evaluated Then standalone comparison rejects schema mixing in BOTH directions, retains v3/v3 and v4/v4', () => {
+test('Given a standalone comparison receives v3 and v4 evidence When the schema versions differ Then it rejects mixing and accepts matching versions', () => {
   const dir = mkdtempSync(resolve('.artifacts/paired-ci/schema-fixture-'));
   try {
     writeFileSync(join(dir, 'index.html'), '<script src="app.js"></script>');

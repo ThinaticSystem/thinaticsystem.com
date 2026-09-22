@@ -500,9 +500,30 @@ export function buildMapping(before, events) {
     } else {
       const finalFile = entry.proposedFile ?? entry.baseFile;
       const sourceCandidates = events.filter(event => event.runner === entry.runner && event.file === finalFile && event.caseOrdinal === entry.baseRegistrationOrdinal);
-      const exactRowTitle = entry.meaningfulInput?.title ? sourceCandidates.filter(event => event.title === entry.meaningfulInput.title) : [];
-      candidates = exactRowTitle.length ? exactRowTitle : sourceCandidates;
-      if (candidates.length !== 1) throw new Error(`final Angular source/row binding is ${candidates.length === 0 ? 'missing' : 'ambiguous'} for old index ${entry.oldEntryIndex}: ${entry.oldFullId}`);
+      // NOTE: The two legacy clipboard rows came from a for-of registration. The R9
+      // source edit makes that finite input an explicit it.each table, so retain the
+      // smallest honest old-index/owner/row binding rather than using runner order.
+      const explicitAngularRows = {
+        3: {file: 'src/app/clipboard-toast.spec.ts', value: '{Enter}'},
+        4: {file: 'src/app/clipboard-toast.spec.ts', value: ' '},
+      };
+      const explicitRow = entry.runner === 'angular' ? explicitAngularRows[entry.oldEntryIndex] : null;
+      if (explicitRow) {
+        candidates = sourceCandidates.filter(event => event.file === explicitRow.file && event.rowBinding?.rowInput?.operands?.some(operand => operand.value === explicitRow.value));
+        if (candidates.length !== 1) throw new Error(`final Angular explicit source/row binding is ${candidates.length === 0 ? 'missing' : 'ambiguous'} for old index ${entry.oldEntryIndex}: ${entry.oldFullId}`);
+      } else {
+        const sourceRowCandidates = sourceCandidates.filter(event => {
+          const values = (event.rowBinding?.rowInput?.operands ?? []).flatMap(operand => {
+            if (typeof operand.value === 'string' || typeof operand.value === 'number') return [String(operand.value)];
+            if (operand.value && typeof operand.value === 'object' && !Array.isArray(operand.value)) return Object.values(operand.value).filter(value => typeof value === 'string' || typeof value === 'number').map(String);
+            return [];
+          }).filter(value => value.length > 0);
+          return values.length > 0 && values.every(value => entry.meaningfulInput?.title?.includes(value));
+        });
+        const exactRowTitle = entry.meaningfulInput?.title ? sourceCandidates.filter(event => event.title === entry.meaningfulInput.title) : [];
+        candidates = exactRowTitle.length ? exactRowTitle : (sourceRowCandidates.length ? sourceRowCandidates : sourceCandidates);
+        if (candidates.length !== 1) throw new Error(`final Angular source/row binding is ${candidates.length === 0 ? 'missing' : 'ambiguous'} for old index ${entry.oldEntryIndex}: ${entry.oldFullId}`);
+      }
     }
     if (!candidates.length) {
       if (entry.runner === 'node-tap') throw new Error(`final Node reporter case not found for old index ${entry.oldEntryIndex}: ${entry.oldFullId} at ${entry.finalFileHint} file ordinal ${entry.fileOrdinal}`);
