@@ -1,125 +1,121 @@
-# 現行性能検証
+# 現行の性能比較テスト
 
-`corepack pnpm run perf:current`は、通常motion下でコンテンツを利用できるまでの時間をページ内時計で測り、比較する工学的なgate。  
-旧`perf:paired`/v4、historical control、functional budget v1は再現用に残し、古いFAILを上書きしない。
+このテストは、固定した旧版と変更後の版で、コンテンツを利用できるまでの時間と、読み込むファイルの量を比較する。  
+結果は、比較上の悪化、サイズ予算の超過、測定自体の不備を区別して読む。
+管理したテスト用データとブラウザーで得た比較結果を、変更のレビューに使う。
 
-## 実行
+## 比較するもの
 
-Node、Corepack、歴史的baseline用Node、Cコンパイラーは、既存Nix devShellまたはCI設定を使う。
+### コンテンツ表示と操作の応答
 
-- **観測・判定のfixture**
+通常のアニメーションを有効にしたまま、ページ内の時計で表示や操作の応答を測る。  
+デスクトップでは、Home・記事・作品詳細の初回表示、一覧から本文や作品詳細への遷移、一覧へ戻る操作を対象とする。
+モバイルは現段階ではメニュー開閉だけを判定し、本文表示の合否判定は未実装。
 
-  `corepack pnpm run test:performance-contract`で、純粋な観測検証・判定・request所有fixtureを実行する。
+表示の完了は、本文を覆う要素がなくなり、コンテンツを利用できる状態で判断する。
+操作を妨げない装飾の終了までは待たない。  
+測るのはページ内イベントからDOMやアニメーションフレームで状態を観測するまでの時間で、画面への実際の描画時間や、実利用環境のINPとは異なる。
+テーマ切替も保存値だけでなく、実際の背景色・文字色とボタンの状態が揃うまで確認する。
 
-- **計測器canary**
+### 通信量とビルド出力
 
-  `corepack pnpm run test:performance-recorder`で、実Chromiumによる計測器canaryを実行する。
+ブラウザーで操作中に読み込んだファイルと、ビルドで生成した静的ファイルを別々に集計する。
+コード、画像、CMS応答も分けるため、コードのサイズだけを画面全体の転送量とは呼ばない。  
+展開後のサイズと通信時のサイズは別の値として扱い、観測できなかった値を0で補わない。
 
-- **baselineとcandidateの比較**
+初期ファイルのサイズは、ビルド後の`index.html`の`src`・`href`から直接参照されるJS/CSSを合計する。  
+そのJSが後から読み込むファイルまでは含まないため、初回表示で読み込むファイル全体のサイズとは異なる。
 
-  `corepack pnpm run perf:current`で、固定historical baselineと現在のcandidateをbuildする。  
-  candidate同士のA/Aを4観測、ABBA/BAABを8観測する。  
-  raw・process終了・source/build identityを`.artifacts/performance-v2/run-*/`に残す。
+初期ファイルと全出力JS/CSSには、[性能判定の設定](../test/performance-policy-v2.json)で固定した上限を使う。  
+両版を同じプロセス・圧縮器で集計し、未訪問ページ用の遅延読み込みファイルも全出力へ含める。
+上限内でも、全出力が大幅に増えた場合は自動合格にしない。
 
-- **機能・accessibilityの検証**
+新しい通信の集計範囲や画像・APIの絶対上限は、未確定のまま記録する。
 
-  `corepack pnpm run test:e2e`を独立したgateとして実行する。  
-  旧smokeの所要時間は、新しい性能判定へ入力しない。
+### 測定環境
 
-## コンテンツと操作の観測範囲
+PlaywrightのルーティングでCMS応答をテスト用データへ差し替え、本文と画像の条件を揃える。
+HTTPキャッシュは無効にし、SPAやモジュールを読み込み済みの状態と、HTTPキャッシュから取得した状態を区別する。  
+このデータは実CMSや外部プレイヤーのデータ量・可用性を代表せず、画面サイズの指定も実端末のCPU性能を再現しない。
 
-コンテンツ導線は、desktopのcold Home/article/作品詳細、一覧から本文/作品詳細への遷移、一覧へ戻る操作を対象とする。  
-mobileは現段階ではmenu開閉のみを判定し、mobile本文表示の受入は未実装。
+## 実行方法
 
-本文を覆う要素がなくなるまで待ち、操作を妨げない装飾の終了は待たない。  
-ページ内イベントからDOM/rAF観測までの時間は、物理paintやfield INPとは異なる。
+Node、Corepack、旧版のビルド用Node、Cコンパイラーは、既存のNix devShellまたはCI設定を使う。
+観測と判定の実装、ブラウザー内の計測器、新旧の性能比較は、それぞれ別のコマンドで検査する。
 
-themeは保存値だけでなく、bodyの実computed背景/文字色と、存在するaria-pressedの一致を待つ。  
-両凍結buildに共通するwhite/gray-800 paletteを契約とし、色設計が変わる場合は、この限定adapterも見直す。
+- **観測・判定ロジックのテスト**
 
-## fixtureと資源の観測範囲
+  `corepack pnpm run test:performance-contract`で、観測値の検証、合否判定、どの操作が発生させた通信かの記録をテスト用データで確認する。
 
-### 合成CMSとcache
+- **計測器の動作確認**
 
-Playwright routeによる合成CMSを使い、HTTP cacheは無効にする。  
-SPA/moduleのwarmとHTTP cache hitは区別する。
+  `corepack pnpm run test:performance-recorder`で、実Chromiumを使った計測器の確認テスト（canary）を実行する。
 
-CMS本文・画像はfixtureを使い、実CMSや外部playerのpayload/availabilityを代表しない。  
-viewportも実端末CPUの代用にはならない。
+- **旧版と変更後の版の比較**
 
-### requestの所有と観測窓
+  `corepack pnpm run perf:current`で、固定した旧版と現在の変更後の版をビルドする。  
+  まず変更後の版同士を比べるA/Aを4観測し、続いて旧版をA、変更後の版をBとするABBA/BAABを8観測する。
+  生の測定記録（raw）、プロセスの終了結果、ソースとビルドの識別情報を`.artifacts/performance-v2/run-*/`へ残す。
 
-requestは開始時に所有し、終端・bodyをbounded drainで確認する。後続資源はtailへ区別する。  
-tailはdriverによるendpoint取得後250msにdrainを加えた可変観測窓で、ページ時刻のendpoint+250msぴったりのcutではない。
+- **機能・アクセシビリティのテスト**
 
-このscopeを旧warm budgetへ自動継承しない。  
-decoded bytesとwire bytesは別物として扱い、観測不能は0にしない。
+  `corepack pnpm run test:e2e`を性能比較とは独立して実行する。
+  表示や操作が成立するかの検査と、性能差の判定は役割が異なる。
 
-画像・CMSをcode bytesへ混ぜず、codeだけを画面全体の転送量と呼ばない。
+## 結果の読み方
 
-### 静的出力と予算
+比較上の悪化を取り上げる暫定基準として、時間は50msかつ20%、サイズは1,024Bかつ20%を事前に固定する。  
+これは利用者が承認した絶対的なUX目標（SLO）ではなく、小さなサイズ差がボトルネックにならないという証明でもない。
 
-既存承認のinitial index集合と全出力JS/CSS上限を継承する。  
-加えて、baseline/candidateの両方を同一process/compressorで集計する。
+| 判定 | 意味 |
+| --- | --- |
+| `INCONCLUSIVE` | 同じ版同士のA/A測定が、上記の幅で不安定 |
+| `REVIEW_REQUIRED` | 比較で上記の基準に達する悪化が継続している |
+| `FAIL` | 承認済みのサイズ予算を超過 |
+| `INVALID_EVIDENCE` | ソース・ビルド・測定条件（profile）の不整合や欠落、未知のエラー、後片付けの未完了 |
+| `PASS_WITH_NOTES` | この比較テストを通過 |
 
-未訪問lazy chunkを含む静的全出力に大幅な増分があれば、上限内という理由だけで自動合格にしない。  
-初期index集合はcold依存閉包ではない。新しい資源scope・画像/APIの絶対上限は、未確定のまま記録する。
+各版4回の観測からp95や統計的有意性は主張しない。
+最速の結果だけを選んだり、合格するまで再試行したりせず、固定した測定全体を判断材料にする。  
+`PASS_WITH_NOTES`でも、絶対的なUX目標、実端末、本番配信、スクリーンリーダーでの利用を含む受入は未確立。
+出力には`absoluteUxAcceptance: NOT_ESTABLISHED`を残す。
 
-## 判定と受入の限界
+### CIでの扱いと旧結果との関係
 
-50msかつ20%、1,024Bかつ20%を、事前固定する暫定的な工学的重要度filterとして使う。  
-利用者承認済みの絶対UX SLOでも、小さなbyte差が非ボトルネックという証明でもない。
+CIではビルド成功を条件として、機能・アクセシビリティ、性能、TypeDoc、テスト用サーバーの配信確認を独立して実行する。
+性能が失敗しても後続の文書生成や配信確認を省略せず、各ステップの失敗をジョブの結果へ残す。  
+未知の失敗を`continue-on-error`で隠さず、生の記録は失敗時もアップロードする。
+本番公開、Renovateの有効化、デフォルトブランチへの設定反映は、このテストが許可する操作には含まれない。
 
-- **INCONCLUSIVE**
+旧`perf:paired`/v4、旧比較条件（historical control）、functional budget v1は再現用に保持する。
+旧記事遷移+650Bの`FAIL`も、旧ゼロ増分方針の結果として残る。  
+現行の比較は、記録形式・表示完了条件・テスト用データを改めた別の観測なので、旧smokeの所要時間や旧データの時刻を入力として再利用せず、過去の失敗を上書きしない。
 
-  A/Aがこの幅で不安定な場合。
+## 計測と回帰テストの詳細
 
-- **REVIEW_REQUIRED**
+### テーマ切替の完了条件
 
-  継続的に有意量の比較悪化がある場合。
+テーマの保存値に加え、bodyの計算済みスタイル（computed style）の背景色・文字色と、存在する`aria-pressed`の一致を待つ。
+両方の固定ビルドに共通するwhite/gray-800のパレットに限った判定なので、色設計が変わる場合は、この判定用アダプターも見直す。
 
-- **FAIL**
+### 通信を集計する範囲
 
-  承認済みサイズ予算を超過した場合。
+リクエストは開始時に、どの操作に属するかを記録し、一定の上限時間内で通信の終了と本文の取得を確認する。
+その後に続くリソースは、後続分（tail）として区別する。  
+後続分の観測窓は、ドライバーが表示・操作の完了点（endpoint）を取得してから250msに、通信終了を待つ時間を加えた可変の範囲になる。
+ページ内時計のendpoint+250msで厳密に打ち切る方式ではない。
+この集計範囲を、旧方式の読み込み済み状態に対する予算（warm budget）へ自動的に引き継ぐことはしない。
 
-- **INVALID_EVIDENCE**
+### メニューのアニメーション回帰テスト
 
-  source/build/profileの不整合・欠落、未知error、不完全cleanupがある場合。
-
-4回の観測からp95・統計的有意性を主張しない。  
-最速結果の選別や、緑になるまでのretryはしない。
-
-`PASS_WITH_NOTES`が示すのは、**この比較gateの通過**に限る。  
-絶対UX・実端末・本番配信・screen readerの全受入ではなく、出力の`absoluteUxAcceptance: NOT_ESTABLISHED`を残す。
-
-## CIと旧結果
-
-build成功を条件として、機能/a11y・性能・TypeDoc・fixture配信smokeを独立実行する。  
-性能失敗で後続docs/smokeをskipせず、各stepの失敗はjobに残す。
-
-`continue-on-error`で未知失敗を握り潰さない。raw uploadは失敗時も実行する。
-
-旧記事遷移+650BのFAILは、旧ゼロ増分方針の結果として残る。  
-新しい比較は新schema/readiness/fixtureに紐づく別観測で、旧データの時刻を新しい測定と称して再利用しない。
-
-本番公開・Renovate有効化・default branchへの設定反映は、このgateの権限に含まれない。
-
-## メニューのmotion回帰
-
-### 実行と時間設定
-
-production buildのメニューを実Chromiumで確認する。出力先は未使用のdirectoryを指定する。
+メニューの回帰テストは、製品ビルドを実Chromiumで動かし、ブラウザー標準のアニメーションの時間設定、不透明度（opacity）の推移、繰り返し開閉、Blogへの遷移を確認する。
+出力先には未使用のディレクトリを指定する。
 
 ```sh
 node scripts/performance/verify-menu-motion.mjs --dist dist/app/browser --output .artifacts/menu-motion
 ```
 
-標準animationの所要時間は`--animate-duration`を参照し、未指定時のみ1秒へfallbackする。  
-app shellの既存指定0.5秒を保ち、reduced-motionでは1msを優先する。
-
-fadeの廃止、keyframeの変更、readiness条件や性能filterの緩和では解決しない。
-
-### 確認範囲
-
-この回帰では、native animationの時間設定・opacity推移・繰返し開閉・Blog遷移を確認する。  
-実ブラウザーのfixture検証なので、人間の見た目評価、実端末の応答性、公開配信の受入とは区別する。
+標準アニメーションの所要時間は`--animate-duration`を参照し、未指定時のみ1秒を使う。
+アプリ全体の枠組みに指定済みの0.5秒を保ち、reduced-motionでは1msを優先する。  
+フェードの廃止、キーフレームの変更、表示完了条件や性能判定基準の緩和で回帰を解消した扱いにはしない。
+このテストはブラウザーとテスト用データによる確認に限り、人による見た目の評価、実端末の応答性、公開配信の受入とは区別する。

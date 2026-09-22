@@ -1,187 +1,108 @@
-# メディア埋め込みの境界
+# メディアの埋め込み
 
-CMSの`demo.iframe`は、実行可能なHTMLとして扱わない。  
-既存のデータ形式からplayer URLを取り出すための入力としてだけ扱う。
+メディア埋め込みは、CMSに登録された音楽・動画プレーヤーを、許可したURLから表示する処理。
+SoundCloud、Spotify、YouTubeのURLを検証して組み直し、サイト側で定義したiframeに渡す。
+CMSの`demo.iframe`はURLを取り出すための入力としてだけ使い、実行可能なHTMLとして画面に挿入しない。
 
-## 許可するコンテンツ
+## CMS入力から表示まで
 
-2026-09-12の公開CMS読み取りでは、13件のreleaseと21行のdemoを調べた。  
-20個のiframeと1個のnullを確認した。
+`readEmbedHtml`は、長さを制限した文字列を、内容を実行しないtemplate内で解析する。
+単独のHTML iframe以外を拒否し、`srcdoc`やイベント属性が付いたiframeも拒否する。
+CMSのDOMノードは表示中のDOMへ挿入せず、URL以外の属性も転送しない。
+style、class、sandbox、permissionsもCMSからは引き継がない。
 
-互換性確認用の固定fixtureは`test/fixtures/observed-media-embeds.ts`に置く。
+抽出したURLは`admitPlayerUrl`へ渡し、サービスごとに定義した許可範囲に従って再構築する。
+`MediaEmbedComponent`内でAngularのResourceURLを信頼済みにする箇所は一つだけで、この出力だけを受け付ける。
+空欄は何も表示せず、拒否した値には固定文言を表示する。
 
-### providerごとのURLと表示
+この処理とは別に、汎用の`SanitizeHtmlPipe`はAngularのHTML sanitizerを使う。
+汎用HTMLの安全性確認を省略する処理は行わない。
 
-- **SoundCloud**
+## 許可するURLと表示仕様
 
-  `https://w.soundcloud.com/player/`を許可する。  
-  内部の`url`は`https://api.soundcloud.com/tracks/<digits>`だけを受け付ける。
+### SoundCloud
 
-  booleanの表示設定と6桁のcolorだけを再構築し、`auto_play=false`にする。  
-  高さは通常166px、visualでは300pxとする。
+`https://w.soundcloud.com/player/`を許可し、内部の`url`は
+`https://api.soundcloud.com/tracks/<digits>`だけを受け付ける。
+booleanの表示設定と6桁のcolorだけを再構築し、`auto_play=false`にする。
+高さは通常166px、visualでは300pxとする。
 
-- **Spotify**
+### Spotify
 
-  `https://open.spotify.com/embed/track/<22-character-id>`だけを許可する。  
-  `utm_source`は受け付けるが出力しない。高さは80pxとする。
+`https://open.spotify.com/embed/track/<22-character-id>`だけを許可する。
+`utm_source`は受け付けるが出力しない。高さは80pxとする。
 
-- **YouTube**
+### YouTube
 
-  `https://www.youtube.com/embed/<11-character-id>`を許可する。  
-  同じ形式でhostが`www.youtube-nocookie.com`のURLも許可する。  
-  queryは付けず、元のprivacy-mode hostを維持する。
+`https://www.youtube.com/embed/<11-character-id>`と、同じ形式でホストが
+`www.youtube-nocookie.com`のURLを許可する。クエリは付けず、入力URLが指定したプライバシーモードのホストを維持する。
 
-  幅が足りる場合は16:9とし、高さは公式最小値の200px以上にする。  
-  container幅が200px未満の場合や初回計測前はiframeを生成せず、同じ検証済み動画IDから組み立てた「YouTubeで開く」リンクを表示する。
-
-  幅が縮んだ際はiframeを取り外し、操作できない音声だけを残さない。  
-  ResizeObserverはcomponent破棄時にdisconnectする。
+幅が足りる場合は16:9とし、高さは公式最小値の200px以上にする。
+コンテナー幅が200px未満の場合や初回計測前はiframeを生成せず、
+同じ検証済み動画IDから組み立てた「YouTubeで開く」リンクを表示する。
+幅が縮んだ際はiframeを取り外し、操作できない音声だけを残さない。
+ResizeObserverはコンポーネント破棄時にdisconnectする。
 
 ### 共通の拒否条件
 
-次のURLは拒否する。
+| 検査対象 | 拒否する条件 |
+| --- | --- |
+| 通信方式 | HTTPS以外 |
+| 接続先 | userinfo付き、非標準ポート付き、未登録のホストまたはパス |
+| URLの付加情報 | フラグメント付き、クエリの重複、未登録のクエリ |
 
-- HTTPS以外
-- userinfo付き
-- 非標準port付き
-- fragment付き
-- queryの重複
-- 未登録のhost/path/query
+未知のサービスやalbum、playlist、クエリなどを暗黙に許可しない。
+許可範囲を追加する際は、実データ、公式仕様、攻撃を模したテストデータで妥当性を確認する。
 
-未知のproviderやalbum、playlist、queryなどを暗黙に許可しない。  
-許可範囲を追加する際は、次の根拠を確認する。
+## iframeの権限と外部サービスの制約
 
-- 実データ
-- 公式仕様
-- 攻撃fixture
+iframeのsandbox/allow/referrerpolicyなどは、Angular template内の静的属性として定義する。
+sandboxには`allow-scripts allow-same-origin`だけを指定し、
+最上位ページへの移動、ポップアップ、フォーム送信、ダウンロード、プレゼンテーションを許可しない。
 
-## 信頼境界
-
-### CMS入力からURLの承認まで
-
-- **HTMLの解析**
-
-  `readEmbedHtml`は、長さを制限した文字列をinert template内で解析する。  
-  単独のHTML iframe以外を拒否し、`srcdoc`やevent属性が付いたiframeも拒否する。
-
-  CMS nodeをlive DOMへ挿入しない。  
-  URL以外のCMS属性は転送しない。次の属性も引き継がない。
-
-  - style
-  - class
-  - sandbox
-  - permissions
-
-- **player URLの再構築**
-
-  `admitPlayerUrl`は、許可範囲を閉じたprovider policyからURLを再構築する。  
-  `MediaEmbedComponent`内でResourceURLを信頼する唯一の箇所は、この出力だけを受け付ける。
-
-- **汎用HTMLのサニタイズ**
-
-  汎用の`SanitizeHtmlPipe`はAngularのHTML sanitizerを使い、HTML trust bypassを行わない。
-
-- **空欄と拒否値の表示**
-
-  空欄は空表示とし、拒否した値には固定文言を表示する。
-
-### iframeに与える権限
-
-iframeのsandbox/allow/referrerpolicyなどは、Angular template内の静的属性として定義する。  
-sandboxは`allow-scripts allow-same-origin`だけを指定し、次の操作は許可しない。
-
-- top navigation
-- popups
-- forms
-- downloads
-- presentation
-
-providerごとのpermissionは次のとおり。
-
-| provider | 明示するpermission |
+| サービス | 明示するpermission |
 | --- | --- |
 | SoundCloud | autoplay |
 | Spotify | autoplay/encrypted-media |
 | YouTube | autoplay/encrypted-media/fullscreen/picture-in-picture |
 
-permissionの付与は、自動再生の要求そのものではない。  
-承認したURLには、autoplayを要求するqueryを出力しない。
+permissionの付与は、自動再生の要求そのものではない。
+許可したURLには、自動再生を要求するクエリを出力しない。
+referrerpolicyは`strict-origin-when-cross-origin`とし、オリジンをリファラーとして保つ。
 
-`strict-origin-when-cross-origin`でorigin referrerを保つ。
+sandboxによって、外部プレーヤーのログイン、外部リンク、アプリ起動、共有などが動かない場合がある。
+この埋め込み方針で管理するのはURLとiframeの権限までで、
+第三者iframe内部の実装、サービスの稼働、音声出力、アカウント別の制約は保証しない。
 
-### 第三者playerの制約
+## テストで確認する範囲
 
-sandboxによって、第三者playerの次の機能が動かない場合がある。
+2026-09-12の公開CMS読み取りでは、13件のreleaseと21行のdemoを調べ、20個のiframeと1個のnullを確認した。
+この観測に基づく互換性確認用の固定データを`test/fixtures/observed-media-embeds.ts`に置く。
 
-- login
-- 外部リンク
-- アプリ起動
-- shareなど
+実装に併設した通常テストでは、次の動作を検査する。
 
-次の項目は、このpolicyの証明範囲に含めない。
+- 公開CMSの20個のiframeの受け入れと空欄1件の表示
+- URL/HTML攻撃の拒否とタイトルのエスケープ
+- 許可→拒否→空欄の遷移とサービスの置換
 
-- 第三者iframe内部の実装
-- サービスの稼働
-- 音声出力
-- account別の制約
+ブラウザ試験では、実際のAngular本番ビルド成果物と、明示的に用意したテスト用プレーヤーを使う。
+未知の外部通信は中断し、記録する。
+ここで確認するのはテスト環境での埋め込みとsandboxの動作で、実際のSoundCloud/Spotify/YouTubeの再生成功ではない。
 
-## 検証と限界
+## 修正時の記録
 
-### 自動テストの範囲
+既存の8修正と今回の`unsafe-html-content`は、`test/product-repairs.json`で追跡する。
+既知の不具合の未修正ケースが0件になっても、テストランナーをスキップしない。
+`resolvedCheck`は、判定に使う記録を出力するreporter付きで4個の通常のセキュリティ回帰テストを実行する。
+ケース・ファイル・件数の正確な一致、正常終了、エラーがないことを合格条件とする。
+旧expected-failure validatorと過去のbaseline controlsは変更しない。
 
-通常のcolocated testでは、次の動作を検査する。
-
-- 公開CMSの20個のiframeの受け入れ
-- 空欄1件の表示
-- URL/HTML攻撃の拒否
-- タイトルのescape
-- 許可→拒否→空欄の遷移
-- providerの置換
-
-ブラウザ試験では、実際のAngular production artifactと、明示的に用意したfixture playerを使う。  
-未知の外部通信はabortし、記録する。
-
-fixtureでの埋め込みやsandboxの確認を、実際のSoundCloud/Spotify/YouTubeの再生成功とは呼ばない。
-
-### 修正履歴とrunnerの判定
-
-既存の8修正と今回の`unsafe-html-content`は、`test/product-repairs.json`で追跡する。  
-known-defectの未修正caseが0件になっても、runnerをskipしない。
-
-`resolvedCheck`は、authoritative reporter付きで4個の通常security regressionを実行し、次の条件を要求する。
-
-- case/file/countの正確な一致
-- 正常exit
-- errorがないこと
-
-旧expected-failure validatorと履歴baseline controlsは変更しない。
-
-### 変更しない範囲
-
-次の項目は、この修正の変更対象に含めない。
-
-- 性能閾値
-- Home CTA/notice
-- 本番設定
-- 依存version
-
-先行8修正の固定performance gate FAILを、本修正で解消したとは主張しない。
-
-### 証拠の保存先と未実施項目
+この修正では、性能閾値、Home CTA/notice、本番設定、依存バージョンは変更しない。
+先行8修正の固定性能判定のFAILも、この修正で解消したとは扱わない。
 
 証拠は`.artifacts/embed-policy-2026-09-11T23-57-59.143Z/`に保持する。
-
-- 取得した公式文書とhash
-- CMS rawと全件数
-- 編集前source archive
-- RED/GREEN実行ログ
-
-次の作業は行っていない。
-
-- 公開
-- CMSへのwrite
-- 第三者playerの実再生
-- 人手によるscreen-reader受入
+取得した公式文書とhash、CMSの生データと全件数、編集前ソースのアーカイブ、RED/GREEN実行ログを含む。
+この作業では、公開、CMSへの書き込み、外部プレーヤーの実再生、人手によるスクリーンリーダー受け入れ確認は行っていない。
 
 ## 公式資料
 

@@ -1,495 +1,402 @@
-# 品質gate
+# テストと検証
 
-## 現行CIの性能検証
+このサイトの検証では、コードの問題と、ブラウザーでの表示・操作の不具合を別々のテストで確認する。  
+性能の比較やローカル配信の検査も実行し、変更による影響を調べる。
 
-現行CIの性能checkは[`perf:current`](current-performance.md)。  
-本文/操作可能性を正のendpointとする通常motionの新計測、A/A校正、固定schedule比較、資源予算判定を使う。旧v4の時間値を新計測へ混ぜない。
+テスト用データで確認できる動作と、実際のサービスや人の操作で確認する必要がある動作を区別する。  
+ここでは、各検査の対象と実行方法を説明する。
 
-この文書のhistorical節は、過去の再現手順・制約・結果の記録として読む。  
-現行CIの呼出しや受入を上書きせず、過去の結果を現candidateの実行結果として扱わない。
+## コードとコンポーネント
 
-## ローカルコマンドの契約
+日常の開発では、依存関係をロックファイルどおりにインストールしてから`pnpm run check`を実行する。  
+型の不整合やコード規約への違反に加え、コンポーネントや共通処理が期待どおりに動くかを確認する。
 
-frozen install後に、各コマンドを次の範囲で使う。  
-現行feedbackのreadinessとhosting実装については、後述の検証範囲の制限に従う。
+| 個別に実行するコマンド | 対象 |
+| --- | --- |
+| `pnpm run typecheck` | TypeScriptの型 |
+| `pnpm run lint` | TypeScriptとAngularテンプレートのコード規約 |
+| `pnpm run test` | コンポーネントと共通処理の単体テスト |
 
-- **`pnpm run check`**
+`check`には、次節の既知不具合と性能予算の判定処理を確認するテストも含まれる。
 
-  baseline quality gateとして、次を順に実行する。
+## 修正済みの不具合
 
-  1. typecheck
-  2. lint
-  3. unit
-  4. known-defect contract
-  5. known-defect raw gate
-  6. 性能予算contract fixture
+既知不具合の検査では、登録した不具合が残っている場合と、テスト自体を実行できない場合を区別する。  
+現在は修正済みのケースを通常テストで確認し、不具合の登録状況と実行結果に食い違いがないかも調べる。
 
-- **`pnpm run docs:check`**
+| コマンド | 対象 |
+| --- | --- |
+| `corepack pnpm run test:known-defects:contract` | テスト結果を判定する処理の正常系・異常系 |
+| `corepack pnpm run test:known-defects` | 不具合の登録状況と、実際のテスト結果の整合 |
+| `corepack pnpm run test:budget-contract` | 性能予算の判定処理 |
 
-  TypeDocを生成する。
+これらは判定の仕組みを検査するものでもあり、成功しただけで製品のすべての要求を満たしたことにはならない。  
+当時の未修正要件は[要件とテストの対応記録](requirements-tests.md)に残している。
 
-- **`pnpm run test:e2e`**
+## ブラウザーでの表示と操作
 
-  owned synthetic fixtureを使い、実Chromiumでsemantic/a11y/browser smokeを実行する。
+`pnpm run test:e2e`は、実際のChromiumで画面を開いて操作するテスト。  
+CMSと支援者APIにはテスト用の応答を返し、外部サービスの状態に左右されずに画面の動作を確認する。
 
-- **`pnpm run perf:paired`**
+- **画面遷移と操作**
 
-  同一runnerでhistorical baselineとcandidateをfresh計測する。
+  ホームからブログや作品一覧へ移動し、記事の閲覧や戻る操作を確認する。  
+  テーマ切替、モバイルメニュー、キーボード操作とフォーカスも対象とする。
 
-- **`pnpm run deploy:check`**
+- **表示条件への対応**
 
-  自前のNode fixture serverのHTTP契約だけを検査する。
+  モバイルの画面幅`375x812`や、動きを減らす設定での表示を確認する。  
+  画面幅に応じた折り返しと、読み込み表示の動作もそれぞれのテストで確認する。
 
-## known defectの扱い
+- **自動診断と実行時エラー**
 
-### 修正の追跡と判定
+  axeによるアクセシビリティ検査を行い、コンソール・ページ・通信のエラーを記録する。
 
-ユーザー承認の8件と`unsafe-html-content`の修正は、`test/product-repairs.json`から通常colocated specへ追跡できる。  
-現在の未修正known-defect caseは0件。ただし、空suiteを成功扱いしない。
+要素の特定には、ロールと名前、または画面に表示されたテキストを使う。  
+スクリーンリーダーで実際に使いやすいかは自動検査だけでは判断できないため、人による確認を別に行う。
 
-`resolvedCheck`が、通常security regressionの4件をauthoritative reporter付きで実行する。  
-検証条件は次のとおり。
+## 性能の比較
 
-- 正確なfile/case/count
-- status=0
-- skip/todo/duplicate/runner/setup/unhandled errorの不存在
-- 未登録known-defect specの不存在
+現行CIは`corepack pnpm run perf:current`で、旧版と変更後の版の性能を比較する。  
+記事や作品詳細の初回表示とページ内遷移について、利用できるまでの時間と読み込むファイルの量を測る。
 
-人間向けconsole出力は、判定の権威にしない。
+測定方法と結果の読み方は[現行の性能比較テスト](current-performance.md)を参照。  
+観測処理が実装されていることと、実際の測定結果が判定条件を満たすことは区別する。
 
-### 過去の証拠と残る制約
+## 文書生成
 
-非空known-debt用の既存expected-failure validatorとhistorical paired controlsは変更しない。  
-旧9件および修正作業時の編集前source/rawは、各ignored artifact archiveへ保持する。
+`pnpm run docs:check`は、コードの説明からTypeDocのHTMLを生成する。  
+出力対象と生成先は`typedoc.json`で管理する。
 
-iframe境界・拒否条件・互換性の未検証範囲は、`docs/media-embed.md`に定義する。
+文書生成が成功したことを確認するテストなので、画面の動作や性能を判断するものではない。
 
-CI greenが示すのは、通常suiteとknown-defect contractを満たしたことに限る。  
-全製品要求が解決済みという意味ではない。登録defectは明示レビューなしに増やさない。
+## ローカル配信の応答
 
-## ブラウザーとaccessibility
+`pnpm run deploy:check`は、ビルド済みのサイトを自前のNodeサーバーで配信して応答を確認する。  
+`dist/app/browser`を127.0.0.1だけで公開し、ページ用URLとAPIを区別して扱えるかを検査する。
 
-`test:e2e`はCMS/patronのlive endpointへ接続しない。  
-Chromiumでは、home、theme toggle、mobile menu、blog list/article/back、discographyを通る。
+| リクエスト | 確認する応答 |
+| --- | --- |
+| ページのURLへの直接アクセス | HTML |
+| 既存APIに相当するURL | JSONと所定のステータス |
+| 存在しないアセット | HTTP 404 |
+| 未知のAPI | SPAのHTMLへフォールバックしない応答 |
 
-記録する検証項目は次のとおり。
+このテストではCloudflareランタイムを起動しない。  
+実際のCloudflareハンドラーやアカウント・ブランチの接続設定も、このリポジトリでは管理していない。
 
-- role/nameまたはvisible textのsemantic locator
-- keyboard operationとfocus
-- mobile `375x812`、reduced motion、reflow
-- axe scan
-- console/page/request error inventory
+Cloudflareとの互換性と`/workers/*`の実配信は、既存の配信設定を確認し、  
+対応するローカル環境または権限を得た実環境で検証するまで未確認となる。
 
-axe passだけでは、screen reader usabilityの証明にならない。  
-代表screen readerでの手動確認は、未実施ならpendingとして扱う。
+リモートActions、プレビュー、本番デプロイ、DNS、CMSへの書き込みは、このローカル検査に含めない。
 
-## 現行feedbackの検証範囲
+## 検証環境と詳細資料
 
-### feedbackのライフサイクル
+Nix shellはNode24を使用し、flakeのバージョン検査で設定との一致を確認する。  
+`pnpm`を直接呼ぶ場合もCorepackで固定したバージョンを使う。検証結果は`.artifacts/`へ保存する。
 
-承認済みのicon-only feedbackは、`ページを読み込み中`という名前の`role=status`とempty-alt imageを使う。  
-表示のライフサイクルにはdelayed admissionと、別に所有するdecorative exitを使う。  
-historical v4は、このライフサイクルの完了を待たない。
+以下は判定処理の保守や、過去の測定を再現するときに参照する詳細。  
+過去の合否は当時の結果として保持し、現行の検証結果に読み替えない。
 
-v4の凍結helper/control/source hashesは変更しないため、旧harnessのPASSは現行feedbackのreadiness受入にならない。  
-現行のcolocated loading/clipboard testsと、別途保持するcorner/reduced-motion/browser evidenceは、それぞれ明記した挙動を検証する。
+<details>
+<summary>不具合と読み込み表示の検証詳細</summary>
 
-最終的な時間判定には、別途レビューした現行readinessの計測基盤が必要。  
-historical controlsを黙って置き換えて対応しない。
+ユーザー承認の8件と`unsafe-html-content`の修正は、`test/product-repairs.json`から、実装に併置した通常のテストへ追跡できる。
+現在の未修正の既知不具合は0件だが、空のテスト群を成功扱いするのではなく、修正後のセキュリティ回帰テスト4件を実行して確認する。  
+CIの成功は、通常のテスト群と既知不具合の判定条件を満たしたことを示す。
+すべての製品要求が解決したとは限らず、不具合の登録追加にも明示的なレビューが必要になる。
 
-### 性能予算とcoverage
+### 修正の判定に使う記録
 
-別途承認された[functional budget](functional-performance-budget.md)も、旧raw failuresと不完全なcoverageを保持する。  
-historical comparatorを緑に置き換えるための基準ではない。
+`resolvedCheck`は、判定用レポーターを付けてセキュリティ回帰テストを実行する。
+ファイル・テストケース・件数が正確に一致し、status=0で終わることに加え、skip・todo・重複がなく、
+テストランナー・セットアップ・未処理例外のエラーもないことを確認する。未登録の既知不具合テストも認めない。  
+判定にはこの記録を使い、人間向けのコンソール出力だけでは合否を決めない。
 
-後継collectorはcold article/detailとlist-to-detailの観測を追加するが、コードに観測処理があるだけでは実行合格を示さない。  
-coverageは、そのcollectorの正確な現行runと制限を使って評価する。
+未修正不具合が残る場合の既存の期待失敗検証と、旧性能比較用の条件は変更しない。
+旧9件と、修正作業前のソース・生の実行結果は、それぞれバージョン管理対象外のアーカイブへ保持する。  
+iframeの境界、拒否条件、互換性の未検証範囲は`docs/media-embed.md`に定義する。
 
-自動axe/keyboard checksは、実screen readerのusabilityを証明しない。
+### 読み込み表示の検証
 
-## 配信の検証範囲
+承認済みのアイコンだけの読み込み表示は、`ページを読み込み中`という名前の`role=status`と、代替テキストが空の画像を使う。
+表示開始には待ち時間を設け、退場時の装飾は別に管理する。  
+実装に併置したloading/clipboardのテストと、別途保持する画面隅の表示・reduced-motion・ブラウザーの記録は、それぞれ明記した挙動を検証する。
 
-### ローカルfixtureのHTTP契約
+旧v4は、この表示開始から退場までの完了を待たない。
+旧ヘルパー・比較条件・ソースハッシュは凍結しているため、旧テストのPASSを現在の表示完了や所要時間の合格へ読み替えることはできない。  
+その時間を最終判断するには、現行の表示完了条件を測る、別途レビュー済みの計測基盤が必要になる。
+旧比較条件を差し替えて対応するものではない。
 
-`deploy:check`は`dist/app/browser`を127.0.0.1だけで配信し、次を検査する。
+旧方式とは別に承認された[機能別の性能予算](functional-performance-budget.md)も、旧失敗と観測範囲の不足を残す。  
+旧版の比較を合格に置き換える基準ではない。
 
-- deep-linkのHTML応答
-- 既存API相当のJSON/status応答
-- missing assetのHTTP 404
-- 未知APIでのSPA HTML fallbackの拒否
+</details>
 
-### hosting実装の未確認範囲
+## 過去の性能比較の再現条件
 
-このrepositoryには、actual Cloudflare handler・account/branch bindingの正本が含まれていない。  
-`deploy:check`はCloudflare runtimeを起動せず、fixture responseを返す自前のNode serverを検証する。
+旧v4の時間値は現行の`perf:current`へ混ぜず、旧方式の失敗をそのまま残す。  
+以下のバージョンの「確認済み」や「最新」は、それぞれの記録当時を指す。
 
-この結果を、Cloudflare実互換性や`/workers/*`の実配信の合格として扱わない。  
-正本の既存hosting設定を確認し、supported local provider runtimeでの検証、または権限を得た実環境検証を別途行うまで未確認。
+<details>
+<summary>旧性能方針とNix再検証の履歴</summary>
 
-Cloudflare account、branch binding、remote Actions、preview、本番deploy、DNS、CMS writeは、このローカルgateでは検証しない。
+### 旧比較方式
 
-## Historical：旧性能方針
+比較元には、承認済みSHA `33b4ef4e8d21276130127a61aede6f0a8e1c47cb`のテスト用データとChromiumを使った。
+初期成果物のサイズ、経路ごとのリクエスト数、遅延読み込み分のサイズを比較し、gzip(level9,mtime0)とBrotli(quality11)は同じ方式で計算した。
 
-この節は、旧比較方式と過去のremediation時点の記録を残す。  
-ここにある時間規則や実行失敗を、現行`perf:current`の規則・結果へ読み替えない。
+`browser-smoke`は表示完了までを計時し、axe検査とスクリーンショットは計時の外で実行した。
+時間は3回の反復の中央値を使い、比較元に対して固定の20%のばらつき・再検査規則で判定した。  
+超過は`INCONCLUSIVE_OR_FAIL`として比較を止めた。このローカル測定は実利用環境のUXを保証しない。
 
-### 比較方式
+### Nixでの再検証
 
-比較baselineには、approved SHA `33b4ef4e8d21276130127a61aede6f0a8e1c47cb`のsynthetic fixtureとChromiumを使う。  
-gzip(level9,mtime0)とBrotli(quality11)を同じ方式で計算する。  
-比較対象は、initial artifact sizeとper-route request/lazy-route bytes。
+現在のNix shellは、変更後の版と計測用のNode24、旧版ビルド用のNode22を分離して固定する。
+以前のNix実行ではNode22を橋渡しに使った。当時Node26ではVitestのネイティブ処理にdouble-freeが発生し、採用を見送った。
 
-`browser-smoke`はreadiness完了までを計時し、axe scanとscreenshotはtimer外で実行する。  
-timingは3 repeatのmedianをbaselineの固定20% noise/retest ruleで判定する。
+Nixでの再検証は、`install --frozen-lockfile`、型検査・単体テスト・既知不具合（typecheck/unit/debt）、
+ビルド、開発サーバー・ブラウザー（dev/browser）を別々に対象とした。  
+その修正時の実行では、オフラインの`nix develop`がバージョン出力前にタイムアウトしたため、Nixでの検証はPASS扱いしていない。
+親の実行で得た旧Node26の結果も履歴として残し、新しい報告と混同しない。
 
-超過はPASSにせず、`INCONCLUSIVE_OR_FAIL`としてgateを止める。  
-local lab timingはfield UX保証ではない。
+</details>
 
-### Nix再検証の履歴
+<details>
+<summary>旧v4の表示完了条件とブラウザー記録</summary>
 
-現在のNix shellは、candidate/計測用Node24とhistorical baseline build用Node22を分離して固定する。  
-以下は過去のremediationの記録で、現candidateの実行結果ではない。
+### フォントと画面記録
 
-旧Nix実行はNode22 bridgeを使用した。  
-当時の実行試験では、Node26でVitest native double-freeが発生したため採用しなかった。
+ブラウザーの画面記録には、ハッシュで固定したNoto Sans JPと、代替フォントのNoto Color Emojiを使う。
+プロセス内だけに適用するfontconfigファイルから指定し、フォント本体とOFLライセンスはバージョン管理対象外の`.artifacts/browser-fonts`へキャッシュする。  
+アプリのCSS、Webフォントのリクエスト、システムのフォント設定、アプリのバンドルは変更しない。この記録方式にはLinux/Nixが必要になる。
 
-Nix側では、次を別々の再検証対象とした。
+`test:browser-contract`は、読み込み表示の遅れを伴う遷移、読み込み表示の欠落、表示が消えない場合のタイムアウト、
+実際に使われたプラットフォームフォントを検査する。`test:e2e`では、一連のブラウザー操作より前に実行する。
 
-- `install --frozen-lockfile`
-- typecheck/unit/debt
-- build
-- dev/browser
+### 待機条件と比較可能な記録
 
-そのremediation runでは、offline `nix develop`がversion出力前にtimeoutしたため、Nix実行をPASS扱いしない。  
-親の旧Node26結果は履歴証拠として残し、新しいreportで混同しない。
+旧v4は、意味のある名前で特定した旧読み込み画像のフェードを待ち、その後、有限時間のページアニメーションが落ち着くまで待つ。
+読み込み表示を隠す方式でも、固定時間のsleepへ置き換える方式でもない。  
+デスクトップ・モバイルとも初期テーマとカラースキームはlightとし、スクリーンショットとaxeは操作の計時外に置く。
 
-## Historical：v4のvisible-readinessとブラウザー証拠
+`perf:check`は、v4の利用者に見える時間と旧v3の比較元データとの混在を拒否する。
+同一ホストで新しく測り直す場合は、ブラウザー・フォント・テーマ・表示完了条件が一致するv4の旧版と変更後の版の記録を用意し、
+その記録を指す`PERFORMANCE_BASELINE`と`EVIDENCE_OUTPUT`を渡す。
 
-この節は、v4で使ったcapture/readiness契約と証拠の再現条件を記録する。  
-現行feedbackのライフサイクルや新しい計測の受入とは区別する。
+元の`test/performance-baseline.json`は過去の記録として変更せず、開発環境の比較記録は
+`.artifacts/browser-ready-fix/final/{baseline,candidate,performance}.json`に保持する。
+これはホスト型CI用の比較元ではない。  
+旧CIは`perf:paired`、現行ワークフローは別にバージョン管理する`perf:current`を呼び、どちらも開発環境の時間をホスト型CIの比較元として読み込まない。
+リモートActionsの成功には、pushした正確なリビジョンと実行結果が必要になる。
 
-### fontとcaptureの契約
+</details>
 
-ブラウザーcaptureは、hashで固定したNoto Sans JPとNoto Color Emoji fallbackを、process-local fontconfig file経由で使う。  
-font bytesとOFL licensesは、ignored `.artifacts/browser-fonts`にcacheする。
+<details>
+<summary>旧perf:pairedの実行・判定・記録の詳細</summary>
 
-app CSS、webfont request、system font setting、app bundleは変更しない。  
-このcapture契約にはLinux/Nixが必要。
+### コマンドと実行環境
 
-`test:browser-contract`は、次を検査する。
+`pnpm run perf:paired`は、同一ランナー上で旧版と変更後の版を新しく測定する旧方式のコマンド。
+Linuxと既存のCコンパイラーccを必要とし、通常のNix shellとホスト型Ubuntuランナーがccを提供する。
+プロセス管理処理の初期準備は、パッケージのインストールやシステム設定の変更を行わない。
 
-- delayed loading transition
-- missing loader
-- stuck loader timeout
-- 実際のplatform-font使用
+変更後の版の依存関係をロックファイルどおりにインストールし、Chromiumのインストールを終えてから実行する。
 
-`test:e2e`では、ブラウザーjourneyより前にこの検査を実行する。
+```sh
+corepack pnpm run test:paired-contract
+corepack pnpm run perf:paired
+```
 
-### v4の待機条件
+ローカルでは固定したNix Node24 shellを使う。
+Linuxでは`BROWSER_EXECUTABLE_PATH=/path/to/chrome`を指定すると、  
+インストール済みChromiumを選べる。  
+それ以外の継承されたブラウザー・記録・比較元に関する設定は破棄し、過去の時間ファイルやブラウザー結果は読み込まない。
 
-historical v4 readinessは、semantic nameで特定した旧loading imageのfadeを待ち、その後、有限のpage motionが落ち着くまで待つ。  
-loaderを隠したり、待機を固定sleepへ置き換えたりしない。
+### ビルドの分離
 
-desktop/mobileの初期themeとcolor schemeはlight。screenshots/axeはaction timer外に置く。
+ランナーは、一意のバージョン管理対象外ディレクトリ`.artifacts/paired-ci/run-*/`へ記録を保存する。
+また、不変の基点`33b4ef4e8d21276130127a61aede6f0a8e1c47cb`から、作成・削除を管理するdetached worktreeを隣接ディレクトリに1つ作る。
 
-### 比較できる証拠の組合せ
+- **旧版のビルド**
 
-v4のuser-visible timingをhistorical v3 baselineと比較しない。`perf:check`は、その混在を拒否する。  
-freshなsame-host pairでは、browser/font/theme/readinessが一致するv4 baseline/candidate recordsを用意する。  
-そのrecordsを指す`PERFORMANCE_BASELINE`と`EVIDENCE_OUTPUT`を渡す。
+  専用の固定pnpm9.10.0と、`.baseline-node-version`に記録したNode22.23.2を使い、
+  ロックファイルを変更しないインストールとビルドを実行する。
 
-元の`test/performance-baseline.json`は、historical evidenceとして変更せずに残す。  
-dev pairは`.artifacts/browser-ready-fix/final/{baseline,candidate,performance}.json`に保存している。  
-これはhosted-CI baselineではない。
+- **変更後の版のビルドと両版の計測**
 
-historical CIは`perf:paired`を呼び出していた。現行workflowは、別にversion管理する`perf:current`を使う。  
-どちらのコマンドもdev timingsをhosted baselineとして読み込まない。
+  変更後の版は、整合性情報付きで固定したpackageManagerでビルドする。
+  ビルドと計測のNodeは、`.node-version`に記録したNode24.19.0を使う。
 
-remote Actionsの成功を示すには、pushした正確なrevisionと実run結果が必要。
+ビルドワーカーは最大2つ。
+旧版のAngular18は保守対象外だが、Node22は公表された互換範囲内に入り、Node24は入らない。  
+`BASELINE_NODE_EXECUTABLE`は固定したNix shellが提供するか、CIのsetup-nodeが変更後の版のセットアップ前に保存する。
+選んだNodeから隣接するCorepackエントリーを明示的に呼び、そのbinを旧版用PATHの先頭に置く。
 
-## Historical：同一runnerのpairedコマンド
+インストール前に、実際のexecPath・バージョン・Corepack0.34.6・pnpm9.10.0・不変のロックファイルを検査する。
+`ng version`が非対応ランタイムを報告しないことを確認する一方、両版のブラウザードライバーは変更後の版と同じNode24で動かす。
 
-以下は、旧`perf:paired`の実行契約と証拠の扱いを再現用に残した記録。  
-現在のCI entrypointを置き換えず、この手順があること自体を実行成功の証拠にしない。
+worktreeを隣接配置し、パッケージマネージャーの環境変数を無害化することで、Angularやパッケージの解決が変更後の版のインストール先へ回り込むのを防ぐ。
+既存の旧版用worktreeや、以前からある未コミットの変更ファイルは、リセット・再利用・削除の対象にしない。
 
-### 前提と実行
+### 測定順序と比較規則
 
-Linuxと既存Cコンパイラーのccが必要。native Nix shellとhosted Ubuntu runnerがccを提供する。  
-owner bootstrapはpackageをinstallせず、system settingも変更しない。
+旧版をA、変更後の版をBとして**ABBA/BAAB**の固定順序で測る。
+子プロセスは1回ずつ測定し、合計8回を逐次実行する。各版4回、各実行で全7操作経路を通る。  
+すべての実行で変更後の版にあるv4のテスト用データ、表示完了判定、フォント、テーマ、ブラウザー処理を使い、
+browser-contractの検査を時間計測より前に済ませる。
 
-candidateのfrozen installとChromium installationを終えてから、次のコマンドを実行する。
+ビルドの並行実行、自動再試行、最速結果の選別、閾値の変更は行わない。
+初期ファイルの未圧縮・gzip・Brotliサイズ、リクエスト数、経路ごとの展開後サイズには増加を認めない。  
+時間には元の20%中央値規則を使い、超過を`INCONCLUSIVE_OR_FAIL`として残す。
+これは性能悪化が一切ないことや実利用環境のUXを保証する規則ではなく、超過時は比較全体の再検査を別途検討する必要がある。
 
-- `corepack pnpm run test:paired-contract`
-- `corepack pnpm run perf:paired`
+### 集計に使う生の記録
 
-ローカルでは固定Nix Node24 shellを使う。  
-Linuxでは、明示的な`BROWSER_EXECUTABLE_PATH`でinstall済みChromiumを選べる。
+集計対象は完全なv4の実行記録だけに限る。
+7操作経路が正確に揃い、時間が有限かつ正、リソース量とリクエスト数が非負で、
+画面サイズ・キーボード・折り返し、フォント・テーマ・表示完了条件が期待どおりになり、ブラウザーの識別情報も一致している必要がある。
 
-それ以外の継承されたbrowser/evidence/baseline controlsは破棄する。  
-このコマンドは、historical timing fileや以前のbrowser resultを読み込まない。
+子プロセスの終了コード、シグナル、タイムアウト、起動失敗、標準エラー出力、エラー一覧は別々に検査する。
+JSONの欠落や不完全さ、操作経路の欠落・重複、記録形式・フォント・ブラウザーの不一致、未知のエラーは、合格にせず停止する。
 
-### buildとtoolchainの分離
+### 旧版の既知失敗と比較条件v2
 
-runnerは、一意のignored `.artifacts/paired-ci/run-*/` evidence directoryを作成する。  
-併せて、不変のbase `33b4ef4e8d21276130127a61aede6f0a8e1c47cb`から、所有対象となるdetached sibling worktreeを1つ作る。
+旧版の生の終了コードexit1は、**KNOWN_BASELINE_FAILURE_NOT_PRODUCT_PASS**として残し、一括で無視しない。
+`test/paired-baseline-debt.json`は不変のまま保持する。
 
-baselineとcandidateのbuild条件を分ける。
-
-- **baseline**
-
-  専用の固定pnpm9.10.0でfrozen install/buildする。  
-  build専用Nodeは、`.baseline-node-version`に記録したNode22.23.2を使う。
-
-- **candidateと計測**
-
-  candidateはintegrity付きで固定したpackageManagerでbuildする。  
-  candidate/measurementには、`.node-version`に記録したNode24.19.0を使う。
-
-build workersは最大2つ。Angular18は保守対象外のhistorical frameworkで、Node22は公表された互換範囲内に入るが、Node24は入らない。
-
-`BASELINE_NODE_EXECUTABLE`は、locked Nix shellが提供するか、CI setup-nodeがcandidate setup前に保存する。  
-選択したNodeから隣接するCorepack entryを明示的に呼び、そのbinをbaseline PATHの先頭に置く。
-
-install前に、実execPath/version/Corepack0.34.6/pnpm9.10.0/immutable lockを検査する。  
-`ng version`がunsupported runtimeを報告してはならない。両browser driversはcandidate Node24のまま使う。
-
-worktreeをsiblingに配置し、package-manager environmentを無害化する。  
-これにより、Angular/package resolutionがcandidate installationをたどるのを防ぐ。  
-既存baseline worktreesと以前からあるdirty filesは、reset・再利用・削除しない。
-
-### 固定scheduleと比較規則
-
-scheduleは**ABBA/BAAB**に固定する。A=baselineとし、1 repeatのchild runを8回、逐次実行する。  
-各側4回、各runで完全な7 journeysを実行する。
-
-すべてのrunで、candidate側のv4 fixture/readiness/font/theme/browser codeを使う。  
-browser-contract checksを時間計測より先に実行する。
-
-buildの並行実行、自動retry、最速runの選別、閾値の変更はしない。  
-initial raw/gzip/Brotli sizes、request counts、route decoded bytesは増加を認めない。
-
-timingには元の20% median flag ruleを使う。ゼロ回帰やfield UXを保証する規則ではない。  
-flagが付いた結果は`INCONCLUSIVE_OR_FAIL`のまま残し、完全なpaired retestを別途検討する必要がある。
-
-### 集計に使えるrawと失敗条件
-
-集計に入れるのは、次の条件を満たす完全なraw v4 runsだけに限る。
-
-- 正確な7 journey identities
-- 有限で正のtiming
-- 非負のresource/request counts
-- 期待するviewport/keyboard/reflow
-- 期待するfont/theme/readiness
-- 同一のbrowser identity
-
-child exit、signal、timeout、spawn failure、stderr、error inventoriesは、それぞれ独立に検査する。  
-JSONの欠落・不完全なJSON、journeyの欠落・重複、schema/font/browser不一致、未知errorはfail-closedで停止する。
-
-### baselineの既知失敗とcontrol v2
-
-baseline raw exit1は、**KNOWN_BASELINE_FAILURE_NOT_PRODUCT_PASS**として残す。一括で無視しない。  
-`test/paired-baseline-debt.json`は不変のまま保つ。
-
-`test/paired-baseline-control-v2.json`を明示選択し、SHA256で固定する。  
-このcontrolは元のidentitiesに加え、独立レビュー済みのserious color-contrast nodesを正確に2つ保持する。  
+追加の比較条件には`test/paired-baseline-control-v2.json`を明示的に選び、SHA256で固定する。
+このcontrol v2は、元の識別情報に加え、独立レビュー済みのserious color-contrastノードを正確に2つ含む。
 対象は`a[href$="fixture"]`のdesktop.blog-listとmobile.menu-blog。
 
-同一DOM・現browserで、engineを順方向/逆方向に入れ替えるprobeを実行した。  
-旧axe4.10.2のincomplete/bgOverlapが、axe4.13.0では測定可能な3.32:1になった。  
-これは4.5:1未満のcontrastで、以前にPASSしていたことを意味しない。
+同一DOMとその時点のブラウザーで、検査エンジンを順方向・逆方向に入れ替える試験を実施した。
+旧axe4.10.2でincomplete/bgOverlapだった箇所は、axe4.13.0では3.32:1と測定できた。  
+これは4.5:1未満のコントラストで、以前にPASSしていたことを意味しない。
 
-control v2は、次のidentityを束縛する。
+control v2は、親のハッシュ、旧版のSHAとロックファイル、ビルドランタイム、Chromium153.0.8010.12、Playwright1.63.0、axe4.13.0、
+テスト用データ・フォント・表示完了判定のソースハッシュを記録し、同じ条件か確認する。
+用途はhistorical-performance-control-onlyに限り、製品の未修正不具合へ新しく登録するものではない。
 
-- parent hash
-- baseline SHA/lock
-- build runtime
-- Chromium153.0.8010.12
-- Playwright1.63.0
-- axe4.13.0
-- fixture/font/readiness source hashes
+パッケージの`perf:paired`は、条件ファイルのパスと内容ハッシュを明示的に渡す。
+条件ファイルや計測基盤の欠落・誤り・編集、axeの検出結果のシグネチャーの欠落・変更があれば停止する。  
+追加で許容するページエラーは、ホームページでの正確なNG0953だけで、0–2件に限る。
+この条件は旧版との比較のためだけに使い、旧版のcritical/seriousのアクセシビリティ不具合を受け入れるものではない。
+変更後の版はexit0で終わり、axe・コンソール・ページ・リクエストのエラーがないことを要求する。予期しない不具合は自動登録せず、明示的なレビューを必要とする。
 
-scopeはhistorical-performance-control-onlyに限定し、新しいproduct debtにはしない。
+### プロセス管理と実行上限
 
-packageの`perf:paired`がpath/content hashを明示的に渡す。  
-controlや計測基盤の欠落・誤り・編集はfail-closedで停止し、追加で許すpageerrorsは、homepageの正確なNG0953だけを0–2件に限る。
-
-axe signaturesが欠落・変更された場合もrunを止める。  
-このcontrolは比較にだけ使用を許すもので、baselineのcritical/serious accessibility defectsを受け入れるものではない。
-
-candidateにはexit0と、axe/console/page/request errorsがないことを要求する。  
-予期しないdebtは自動登録せず、明示レビューを必要とする。
-
-### 実行時間の上限
+小さなLinux C subreaperを、各実行用のバージョン管理対象外ディレクトリ内へ1回コンパイルする。
+command()の各工程、すなわちworktree作成、インストール、ツールチェーンの確認、ビルド、表示完了検査、ブラウザー、比較に、
+それぞれ非特権の管理プロセス（owner）を付ける。
 
 | 処理 | 上限 |
 | --- | --- |
-| compiler bootstrap | 30s |
-| git discovery | 30s |
-| frozen baseline install | 480s |
-| 各build | 300s |
-| readiness contract | 90s |
-| 各browser | 120s |
-| comparison | 300s |
-| worktree cleanup | 60s |
+| コンパイラーの初期準備（compiler bootstrap） | 30s |
+| Git情報の取得（git discovery） | 30s |
+| 旧版の固定依存インストール（frozen baseline install） | 480s |
+| 各ビルド | 300s |
+| 表示完了条件の検査（readiness contract） | 90s |
+| 各ブラウザー | 120s |
+| 比較 | 300s |
+| worktreeの削除 | 60s |
 
-### process所有とcleanup
+通常終了、クラッシュ、タイムアウト、SIGTERM/SIGINT時には、管理プロセスが直接の子プロセスだけを終了させて回収する。
+その後、新たに引き取った子孫プロセスを回収し、waitpidがECHILDを報告するまで続ける。  
+切り離された子孫やメインスレッド以外から起動した子孫も、元の親が消えた後まで管理対象に残る。
+後片付けの期限は5s。Nodeアダプターはコマンドのタイムアウト・キャンセルからさらに7s待ち、完了しなければ後片付け未検証として失敗する。
 
-小さなLinux C subreaperを、各ignored run directory内へ1回compileする。  
-次のcommand() stageに、それぞれ非特権ownerを付ける。
+子プロセスの生の終了コード・シグナルと、管理プロセスの実行記録（receipt）は別に保持する。
+記録の欠落・不正や後片付けの不成功を合格扱いしない。
+各コマンドにはmode0700の使い捨て/tmp/thinatic-paired-* TMPDIRを用意し、管理プロセスの終了後に削除する。  
+短い絶対パスを使うことで、Chromium singleton socketsをLinux AF_UNIXの長さ制限内に収める。
 
-- worktree creation
-- install
-- toolchain probe
-- build
-- readiness
-- browser
-- comparison
+コンパイラーの初期準備に失敗した場合は後片付け未検証と報告し、その子孫を回収できたとは主張しない。
+既存の同期メタデータ操作（git discovery/diff/list、compiler version）とworktree削除には別の実行上限があり、subreaperによる回収保証は適用しない。
 
-通常exit、crash、timeout、SIGTERM/SIGINT時は、ownerがdirect childrenだけをkillしてreapする。  
-その後、新たにadoptしたdescendantsをdrainし、waitpidがECHILDを報告するまで続ける。
+通常の後片付けで削除するworktreeは、新たに作ったものだけに限る。
+捕捉できない管理側のSIGKILLやホスト喪失では後片付けを保証できず、一時的なホスト型ランナーを外側の実行境界とする。  
+実行記録が欠けたり不完全だったりする場合はPASSにせず、通常の失敗時はログ、receipt、スクリーンショット、部分的な失敗JSONを残す。
 
-detached descendantsとnon-main-thread descendantsも、元のparentが消えた後まで所有下に残る。  
-cleanupのdeadlineは5s。Node adapterはcommand timeout/cancellationからさらに7s待ち、それでも完了しなければcleanup未検証として失敗する。
+### ソース・ビルド・実行記録の対応
 
-raw child exit/signalはownerのreceiptと別に保持する。  
-receiptの欠落・不正やcleanupの不成功は、合格にしない。
+`identity.json`には、変更後の版のHEADと未コミットの変更の有無、Gitが把握しているソースとignore対象外の未追跡ソース全体の決定的な一覧を記録する。
+一覧にはパス、内容のバイトハッシュ、モード、ファイル種別を含める。生成物を除外し、秘密情報を含む可能性があるファイル名は拒否する。  
+同じファイルへNode・パッケージマネージャー・Playwright・ホスト・GitHubのメタデータ、正確に選んだ比較条件、固定の測定順序、判定方針も保存する。
+`candidate.patch`には追跡対象ファイルの作業ツリー差分を残す。
 
-各commandには、mode0700の使い捨て/tmp/thinatic-paired-* TMPDIRを用意し、owner exit後に削除する。  
-短い絶対pathを使い、Chromium singleton socketsをLinux AF_UNIXの長さ制限内に収める。
+`source-before.json`/`source-after.json`は、失敗・キャンセル時もfinallyで比較する。
+両版ともロックファイルどおりに依存をインストールして新たにビルドし、ビルドの識別情報と全出力一覧から、実際に使ったロックファイルと生成ファイルを確認できるようにする。  
+作成したworktreeを削除する前には、出力の識別情報を再検査する。
+未コミットの変更を含む版はHEADとファイルハッシュで識別し、コミットそのものと同一とは表現しない。
 
-compiler bootstrapが失敗した場合はcleanup未検証と報告し、compiler descendantsを回収できたと主張しない。  
-既存の同期metadata操作（git discovery/diff/list、compiler version）とworktree removalには、別の実行上限を設ける。  
-これらには、このsubreaper保証を適用しない。
+同じ保存先に、`baseline-build-identity.json`とビルドログ、各ブラウザーの生のJSONとプロセスのreceipt、
+集計済みの両版の結果、性能判定結果、最終的な後片付けの結果を残す。
+axeの全検査でも、ハッシュと対応付けた完全な生の診断を計時外に保存し、testEngine、incomplete、passes、any/all/noneの検査データを含める。  
+incompleteは補助記録に限り、変更後の版へ新たな手動レビュー必須条件を追加するものではない。
+このコマンドは、リモートへの書き込み、デプロイ、アプリのソース変更を行わない。
 
-### cleanupの限界とworkflow
+### 当時のCI設定
 
-通常cleanupで削除するのは、新しく作成したworktreeだけ。  
-捕捉できないsupervisor SIGKILLやhost lossではcleanupを保証できない。
+当時のワークフローは比較ステップを30分、ジョブを45分に制限し、Actionsを固定していた。
+contents-read権限、checkout時の認証情報保存の無効化、固定した基点を取得するための全履歴も設定していた。  
+成果物のアップロードはalways()で実行し、隠しファイルの記録も含めて14日間保持した。
+ローカルでの実行結果だけでは、ホスト型CIやアップロードの成功を示さない。
 
-receiptの欠落・不完全はPASSにせず、ephemeral hosted runnerを外側の境界とする。  
-通常の失敗時は、logs、receipts、screenshots、partial failure JSONを残す。
+</details>
 
-当時のworkflowはpaired stepを30分、jobを45分に制限し、actionsをpinしていた。  
-contents-read permission、checkout credentials無効化、固定base用のfull historyも設定していた。
+<details>
+<summary>依存更新時点の互換性、試行結果、採用判断</summary>
 
-artifact uploadはalways()で動かし、hidden evidenceを含め、14日間保持する。  
-ローカルrunからhosting/uploadの成功は主張しない。
+### ランタイムとパッケージマネージャー
 
-### sourceとbuildの証拠
+Nodeは、固定したnixpkgsが提供する24.19.0に、`.node-version`、パッケージのengines、CI、Nix assertを揃えた。
+当時の公式最新LTS24.21.0は確認済みだったが、そのロックには未収録だった。  
+開発環境のディスク容量が限られていたため、Nix input全体の更新やNodeのソースビルドは行わず、Node26も前述のネイティブクラッシュ履歴から採用しなかった。
 
-`identity.json`には、candidate HEADとdirty statusを記録する。  
-併せて、Git-known/nonignored-untracked source全体の決定的manifestを記録する。  
-manifestはpaths、byte hashes、modes、file kindsを含み、generated artifactsを除外し、秘密情報を含む可能性があるfilenamesを拒否する。
+pnpm12.3.4は整合性情報付きで固定し、peer依存とengineの厳格な検査を有効にした。
+Angularのネイティブビルドに必要な4パッケージだけをallowBuildsへ明示した。  
+最新Angularなど、公開からの日数制限に対する特定バージョンの例外は、pnpmが生成した値をレビューして固定した。
+将来の自動追加はminimumReleaseAgeStrictで止める。
 
-同じ`identity.json`に、次の情報も記録する。
+### コンパイラー・テスト・数式表示
 
-- Node/package manager/Playwright/host/GitHub metadata
-- 正確なcontrol selection
-- 固定schedule
-- policy
+各ツールは、利用する側の互換範囲が重なるバージョンを保持した。
 
-`candidate.patch`には、tracked working-tree differencesを残す。
+| ツール | 保持したバージョン | 互換条件 |
+| --- | --- | --- |
+| TypeScript | 6.0.3 | Angular compiler/buildの>=6.0 <6.1とTypeDoc対応範囲の交差 |
+| Vitest | 4.1.11 | Angular buildの^4.0.8 |
+| KaTeX | 0.16.47 | ngx-markdownの^0.16.0 |
 
-`source-before.json`/`source-after.json`は、失敗・cancellation時もfinallyで比較する。  
-両側でfrozen installsとfresh buildsを実行する。  
-baseline/candidate build identityと完全なoutput manifestsで、実際のlocksと生成assetsを束縛する。
+TS7、Vitest5、KaTeX0.18への強制overrideは行わず、Angularのテンプレートlintを維持した。
+Oxcとの重複lintも追加しなかった。
 
-所有するworktreeを削除する前に、output identityを再検査する。
+### Tailwind移行の見送り
 
-同じ場所に保存する証拠は次のとおり。
+Tailwind4.3.3は、公式アップグレードツール、SCSS→CSS/@reference/PostCSSへの移行、実ビルドとChromium153での基本動作確認まで試した。
+その結果、新しいdynamic z-2 utilityによるホームの重なり順の差と、記事の余白の差を確認した。
+ブログ経路の展開後サイズも20803→28685に増えた。  
+変更前の表示・性能条件を優先し、3.4.19を保持する判断とした。
+試行ソースのアーカイブ、ログ、画像はバージョン管理対象外のdependency-modernization成果物に残し、閾値を緩めたり旧未修正不具合へ登録したりはしなかった。
 
-- `baseline-build-identity.json`とbuild logs
-- 各raw browser JSONとprocess receipt
-- 集計済みbaseline/candidate
-- performance result
-- 最終cleanup result
+### ブラウザー記録と旧比較条件の更新
 
-### axe診断と証拠の解釈
+この更新時点では、Playwright1.63.0/Chromium153.0.8010.12/axe4.13.0で、新しいテスト用データによるブラウザー結果を作成する方針とした。
+開発環境では既存Nixライブラリを使うプロセス内限定のブラウザーラッパーだけを使い、global nix-ldやフォント設定は変更しなかった。
 
-すべてのaxe scanで、hashを束縛した完全なraw diagnosticもtimer外に保存する。  
-testEngine、incomplete、passes、any/all/none check dataを含む。
+旧比較実行は、axeのシグネチャー差を検出して停止した履歴として残した。
+独立した原因レビューに基づいて、旧性能比較専用の別バージョンの条件を明示選択し、旧版ビルドを固定Node22.23.2へ分離した。  
+旧未修正不具合と生の記録は不変のまま保ち、変更後の版の旧ロックと現ロックの差も保持した。
+条件の新規登録そのものは、製品や性能の合格を意味しない。
 
-incompleteは補助証拠に限り、candidateに新たなmanual-review hard gateを加えるものではない。  
-dirty candidateはHEAD**とfile hashes**で識別し、commitそのものと偽って表現しない。
+新しい比較の根拠にできるのは、その時点の完全なソース一覧、ロックファイルどおりの新規インストール・ビルドに基づく全8回の実行結果だけとした。
+Angular18自体の保守や、本番・ホスト型CIの成功は主張していない。
 
-このコマンドはremote writes、deployment、app-source changesを行わない。
+### 公開対象の記録と未実行範囲
 
-## Historical：依存更新時点の互換性と判断
+CIアップロードは、必要な記録だけを許可リストに載せた。
+対象はpaired-ci、performance-v2、recorder canary、browser/axe、known-defects、runner probes、typedoc。  
+.artifacts全体を公開する方式にはせず、ローカルバックアップ、ブラウザーのバイナリ、既存Pagesのスナップショットは公開対象から外した。
+この記録時点では、リモートActionsと本番（Production）は未実行だった。
 
-この節は、依存更新を検討・検証した時点のversion選定、試行結果、制約の記録。  
-「確認済み」のversionやブラウザー結果は当時の情報を指し、現在のlatest照会や現candidateの再実行結果ではない。
-
-### Nodeとpackage manager
-
-- **Nodeの固定**
-
-  locked nixpkgs提供の24.19.0、`.node-version`、package engines、CI、Nix assertを一致させる。  
-  当時のofficial latest LTS24.21.0は確認済みだったが、このlockには未収録だった。
-
-  限られたdev diskでは、Nix input全体更新やNode source buildを行わない。  
-  Node26は旧native crash履歴を保持して採用しない。
-
-- **pnpmの固定と自動追加の制限**
-
-  pnpm12.3.4をintegrity付きでpinし、strict peer/engine checksを有効にする。  
-  Angular native buildの4packageだけをallowBuildsへ明示する。
-
-  最新Angular等のexact-version release-age exceptionsは、pnpmが生成した値をレビューして固定する。  
-  将来の自動追加はminimumReleaseAgeStrictで止める。
-
-### compiler・test・数式表示の互換性
-
-保持するversionと、その制約を分けて記録する。
-
-- **TypeScript6.0.3**
-
-  Angular compiler/buildの>=6.0 <6.1と、TypeDoc対応範囲の交差に合わせる。
-
-- **Vitest4.1.11**
-
-  Angular buildの^4.0.8に合わせる。
-
-- **KaTeX0.16.47**
-
-  ngx-markdownの^0.16.0に合わせる。
-
-TS7、Vitest5、KaTeX0.18への強制overrideは行わない。  
-Angular template lintを維持し、Oxcとの重複lintを追加しない。
-
-### Tailwind移行の試行と見送り
-
-Tailwind4.3.3は、official upgrade tool、SCSS→CSS/@reference/PostCSS移行、実buildとChromium153 smokeまで試行した。  
-表示では、新しいdynamic z-2 utilityによるhomeのstacking差と、articleのspacing差を確認した。  
-転送量では、blog route decoded bytesの増加20803→28685を確認した。
-
-変更前のrender/performance契約を優先し、3.4.19を保持する判断とした。  
-試行source archive、ログ、画像はignored dependency-modernization artifactに保持し、閾値の緩和や旧debtへの登録はしない。
-
-### ブラウザー証拠とhistorical control
-
-Playwright1.63.0/Chromium153.0.8010.12/axe4.13.0で、新たなfixture browser結果を作成する。  
-devでは既存Nixライブラリを使うprocess-local browser wrapperのみを用い、global nix-ldやfont設定は変更しない。
-
-旧paired runは、axe signature差をfail-closedで拒否した履歴として保持する。  
-独立因果reviewを根拠に、別versionのhistorical-only controlを明示選択し、baseline buildをlocked Node22.23.2へ分離する。
-
-旧debtと旧rawは不変のまま保ち、旧candidate lockと現lockの差も保持する。  
-新control登録は製品・性能受入ではない。
-
-その時点のfull source manifestとfresh frozen install/buildに基づく全8attemptの結果だけを、新しい比較証拠とする。  
-Angular18自体の保守やProduction/hosted CI成功は主張しない。
-
-### CI uploadと未実行範囲
-
-CI uploadは、次の必要証跡をallowlistとする。
-
-- paired-ci
-- performance-v2
-- recorder canary
-- browser/axe
-- known-defects
-- runner probes
-- typedoc
-
-local backup、ブラウザーbinary、既存Pages snapshotを、.artifacts全体から公開しない。  
-この記録時点では、remote ActionsとProductionは未実行だった。
+</details>
