@@ -1,19 +1,11 @@
 const sha = /^[a-f0-9]{40}$/;
 const text = value => typeof value === 'string' && value.trim() !== '';
-// Pages latest_stage is successful only when the documented Success name is paired with an allowlisted success status.
-const successfulStageStatuses = new Set(['success', 'successfully_deployed']);
-
-function commitOf(deployment) {
-  return deployment?.deployment_trigger?.metadata?.commit_hash ?? deployment?.deployment_trigger?.metadata?.commitSha ?? deployment?.commit_hash ?? null;
-}
-function stageSucceeded(deployment) {
-  const stage = deployment?.latest_stage;
-  return stage?.name === 'Success' && successfulStageStatuses.has(stage?.status);
-}
-function aliasesOf(deployment) {
-  return [deployment?.url, ...(Array.isArray(deployment?.aliases) ? deployment.aliases : [])].filter(text);
-}
-
+// Official schema: https://developers.cloudflare.com/api/resources/pages/subresources/projects/subresources/deployments/methods/list/
+// Retrieved 2026-09-22. The documented deployment stage uses name "deploy" and terminal status "success".
+export const CLOUDFLARE_PAGES_DEPLOYMENTS_SOURCE = 'https://developers.cloudflare.com/api/resources/pages/subresources/projects/subresources/deployments/methods/list/';
+function commitOf(deployment) { return deployment?.deployment_trigger?.metadata?.commit_hash ?? deployment?.deployment_trigger?.metadata?.commitSha ?? deployment?.commit_hash ?? null; }
+function stageSucceeded(deployment) { const stage = deployment?.latest_stage; return stage?.name === 'deploy' && stage?.status === 'success'; }
+function aliasesOf(deployment) { return [deployment?.url, ...(Array.isArray(deployment?.aliases) ? deployment.aliases : [])].filter(text); }
 /** Pure, fail-closed selection of exactly one Pages preview deployment. */
 export function selectPreviewDeployment(payload, expected) {
   const deployments = payload?.result;
@@ -25,7 +17,4 @@ export function selectPreviewDeployment(payload, expected) {
   if (!text(deployment.id) || !text(deployment.url) || deployment.environment !== 'preview' || deployment.branch !== expected.branch || commitOf(deployment) !== expected.commitSha) throw new Error('selected deployment identity is malformed');
   return {id: deployment.id, url: deployment.url, aliases: aliasesOf(deployment), branch: deployment.branch, environment: deployment.environment, commitSha: commitOf(deployment), latestStage: deployment.latest_stage.name};
 }
-
-export function parseDeploymentsResponse(textBody) {
-  try { return JSON.parse(textBody); } catch { throw new Error('Pages deployments response is not JSON'); }
-}
+export function parseDeploymentsResponse(textBody) { try { return JSON.parse(textBody); } catch { throw new Error('Pages deployments response is not JSON'); } }
