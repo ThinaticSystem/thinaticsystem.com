@@ -10,5 +10,7 @@
   {"name":"changed helper assertion","mutation":"changed-helper-assertion"},
   {"name":"changed helper mutation operand","mutation":"changed-helper-operand"},
   {"name":"changed helper table value","mutation":"changed-helper-table-value"},
-  {"name":"changed helper expected outcome","mutation":"changed-helper-expected-outcome"}
+  {"name":"changed helper expected outcome","mutation":"changed-helper-expected-outcome"},
+  {"name":"cross-file broad template capture","mutation":"cross-file-broad-template-capture"},
+  {"name":"intra-file GWT template capture","mutation":"intra-file-gwt-template-capture"}
 ]

@@ -47,6 +47,8 @@ for (const fixture of fixtures) {
     mutatedAfter[index].assertionSemantics = 'SUPPORTED_HELPER_CONTRACT_EQUAL';
     mutatedAfter[index].finalHelperEvidence.expectedOutcome[0].operands[1] = "'PASS'";
   }
+  if (fixture.mutation === 'cross-file-broad-template-capture') mutatedAfter[0].finalFile = mutatedAfter[200].finalFile;
+  if (fixture.mutation === 'intra-file-gwt-template-capture') mutatedAfter[0].finalSourceRange = {...mutatedAfter[0].finalSourceRange, startLine: mutatedAfter[0].finalSourceRange.startLine + 1};
   try { verifyEvidence({before, after: mutatedAfter, events: mutatedEvents, commands: mutatedCommands}); }
   catch { rejected.push(fixture.name); }
 }
