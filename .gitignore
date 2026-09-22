@@ -41,3 +41,10 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Local implementation and verification reports
+/*-report.md
+/docs/*-report.md
+/docs/requirements-tests.md
+/verification.json
+/test-boundary-remediation-results.json

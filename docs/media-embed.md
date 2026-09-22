@@ -1,108 +1,75 @@
 # メディアの埋め込み
 
-メディア埋め込みは、CMSに登録された音楽・動画プレーヤーを、許可したURLから表示する処理。
-SoundCloud、Spotify、YouTubeのURLを検証して組み直し、サイト側で定義したiframeに渡す。
-CMSの`demo.iframe`はURLを取り出すための入力としてだけ使い、実行可能なHTMLとして画面に挿入しない。
+CMSに登録された音楽・動画プレーヤーを、作品ページに表示する  
+SoundCloud、Spotify、YouTubeに対応し、検証したURLをサイト側のiframeで読み込む
 
-## CMS入力から表示まで
+## 対応するサービス
 
-`readEmbedHtml`は、長さを制限した文字列を、内容を実行しないtemplate内で解析する。
-単独のHTML iframe以外を拒否し、`srcdoc`やイベント属性が付いたiframeも拒否する。
-CMSのDOMノードは表示中のDOMへ挿入せず、URL以外の属性も転送しない。
-style、class、sandbox、permissionsもCMSからは引き継がない。
+| サービス | 受け付けるURL | URLの扱い |
+| --- | --- | --- |
+| SoundCloud | `https://w.soundcloud.com/player/` | 内部の`url`は`https://api.soundcloud.com/tracks/<digits>`のみ。booleanの表示設定と6桁のcolorを再構築し、`auto_play=false`にする |
+| Spotify | `https://open.spotify.com/embed/track/<22-character-id>` | `utm_source`は受け付けるが、出力URLには含めない |
+| YouTube | `https://www.youtube.com/embed/<11-character-id>`または同じ形式の`www.youtube-nocookie.com` | 入力で指定されたホストを維持し、クエリは付けない |
 
-抽出したURLは`admitPlayerUrl`へ渡し、サービスごとに定義した許可範囲に従って再構築する。
-`MediaEmbedComponent`内でAngularのResourceURLを信頼済みにする箇所は一つだけで、この出力だけを受け付ける。
-空欄は何も表示せず、拒否した値には固定文言を表示する。
+対応するのは上記のプレーヤーURLで、albumやplaylistは対象外  
+サービスやURLの許可範囲を広げるときは、実データ、公式仕様、攻撃を模したテストデータで妥当性を確認する
 
-この処理とは別に、汎用の`SanitizeHtmlPipe`はAngularのHTML sanitizerを使う。
-汎用HTMLの安全性確認を省略する処理は行わない。
+## プレーヤーの表示
 
-## 許可するURLと表示仕様
+SoundCloudは通常166px、visualでは300px、Spotifyは80pxの高さで表示する
 
-### SoundCloud
+YouTubeは幅が足りる場合に16:9で表示し、高さは公式最小値の200px以上を確保する  
+コンテナー幅が200px未満の場合や初回計測前は、iframeの代わりに
+検証済みの動画IDから組み立てた「YouTubeで開く」リンクを表示する
 
-`https://w.soundcloud.com/player/`を許可し、内部の`url`は
-`https://api.soundcloud.com/tracks/<digits>`だけを受け付ける。
-booleanの表示設定と6桁のcolorだけを再構築し、`auto_play=false`にする。
-高さは通常166px、visualでは300pxとする。
+表示中に幅が縮んだ場合もiframeを取り外し、操作できない音声だけが残ることを防ぐ  
+幅を監視するResizeObserverは、コンポーネントの破棄時に解除する
 
-### Spotify
+CMSの入力が空欄なら何も表示せず、検証で拒否した値には固定文言を表示する
 
-`https://open.spotify.com/embed/track/<22-character-id>`だけを許可する。
-`utm_source`は受け付けるが出力しない。高さは80pxとする。
+## 入力HTMLとURLの検証
 
-### YouTube
+CMSの`demo.iframe`は、プレーヤーのURLを取り出すための入力として使う  
+`readEmbedHtml`が長さを制限した文字列を、内容を実行しないtemplate内で解析する
 
-`https://www.youtube.com/embed/<11-character-id>`と、同じ形式でホストが
-`www.youtube-nocookie.com`のURLを許可する。クエリは付けず、入力URLが指定したプライバシーモードのホストを維持する。
+受け付けるのは単独のHTML iframeだけで、`srcdoc`やイベント属性がある場合は拒否する  
+取り出すのはURLのみで、CMSのDOMノードやstyle、class、sandbox、permissionsなどの属性は表示側へ引き継がない
 
-幅が足りる場合は16:9とし、高さは公式最小値の200px以上にする。
-コンテナー幅が200px未満の場合や初回計測前はiframeを生成せず、
-同じ検証済み動画IDから組み立てた「YouTubeで開く」リンクを表示する。
-幅が縮んだ際はiframeを取り外し、操作できない音声だけを残さない。
-ResizeObserverはコンポーネント破棄時にdisconnectする。
-
-### 共通の拒否条件
+抽出したURLは`admitPlayerUrl`でサービスごとの許可範囲と照合し、組み直す  
+次の条件に当てはまるURLは拒否する
 
 | 検査対象 | 拒否する条件 |
 | --- | --- |
 | 通信方式 | HTTPS以外 |
 | 接続先 | userinfo付き、非標準ポート付き、未登録のホストまたはパス |
-| URLの付加情報 | フラグメント付き、クエリの重複、未登録のクエリ |
+| 付加情報 | フラグメント付き、クエリの重複、未登録のクエリ |
 
-未知のサービスやalbum、playlist、クエリなどを暗黙に許可しない。
-許可範囲を追加する際は、実データ、公式仕様、攻撃を模したテストデータで妥当性を確認する。
+`MediaEmbedComponent`は、この検証済みURLだけをAngularの信頼済みResourceURLに変換する  
+変換箇所はコンポーネント内の一か所にまとめている
 
-## iframeの権限と外部サービスの制約
+通常のHTML表示は別の処理で、`SanitizeHtmlPipe`がAngularのHTML sanitizerを使って安全性を確認する
 
-iframeのsandbox/allow/referrerpolicyなどは、Angular template内の静的属性として定義する。
-sandboxには`allow-scripts allow-same-origin`だけを指定し、
-最上位ページへの移動、ポップアップ、フォーム送信、ダウンロード、プレゼンテーションを許可しない。
+## iframeの設定
 
-| サービス | 明示するpermission |
+iframeのsandbox、allow、referrerpolicyは、Angular templateの静的属性としてサイト側で管理する  
+CMSの設定では変更できない
+
+sandboxで許可するのは`allow-scripts allow-same-origin`のみ  
+最上位ページへの移動、ポップアップ、フォーム送信、ダウンロード、プレゼンテーションは許可しない
+
+| サービス | allowで明示する権限 |
 | --- | --- |
 | SoundCloud | autoplay |
 | Spotify | autoplay/encrypted-media |
 | YouTube | autoplay/encrypted-media/fullscreen/picture-in-picture |
 
-permissionの付与は、自動再生の要求そのものではない。
-許可したURLには、自動再生を要求するクエリを出力しない。
-referrerpolicyは`strict-origin-when-cross-origin`とし、オリジンをリファラーとして保つ。
+自動再生の権限は付与するが、プレーヤーURLには自動再生を要求するクエリを出力しない  
+referrerpolicyは`strict-origin-when-cross-origin`とし、オリジンをリファラーとして保つ
 
-sandboxによって、外部プレーヤーのログイン、外部リンク、アプリ起動、共有などが動かない場合がある。
-この埋め込み方針で管理するのはURLとiframeの権限までで、
-第三者iframe内部の実装、サービスの稼働、音声出力、アカウント別の制約は保証しない。
+このsandboxでは、外部プレーヤーのログイン、外部リンク、アプリ起動、共有などが動かない場合がある  
+サイト側で管理するのはURLとiframeの権限までで、プレーヤー内部の実装、サービスの稼働、音声出力、アカウント別の制約は外部サービスに依存する
 
-## テストで確認する範囲
-
-2026-09-12の公開CMS読み取りでは、13件のreleaseと21行のdemoを調べ、20個のiframeと1個のnullを確認した。
-この観測に基づく互換性確認用の固定データを`test/fixtures/observed-media-embeds.ts`に置く。
-
-実装に併設した通常テストでは、次の動作を検査する。
-
-- 公開CMSの20個のiframeの受け入れと空欄1件の表示
-- URL/HTML攻撃の拒否とタイトルのエスケープ
-- 許可→拒否→空欄の遷移とサービスの置換
-
-ブラウザ試験では、実際のAngular本番ビルド成果物と、明示的に用意したテスト用プレーヤーを使う。
-未知の外部通信は中断し、記録する。
-ここで確認するのはテスト環境での埋め込みとsandboxの動作で、実際のSoundCloud/Spotify/YouTubeの再生成功ではない。
-
-## 修正時の記録
-
-既存の8修正と今回の`unsafe-html-content`は、`test/product-repairs.json`で追跡する。
-既知の不具合の未修正ケースが0件になっても、テストランナーをスキップしない。
-`resolvedCheck`は、判定に使う記録を出力するreporter付きで4個の通常のセキュリティ回帰テストを実行する。
-ケース・ファイル・件数の正確な一致、正常終了、エラーがないことを合格条件とする。
-旧expected-failure validatorと過去のbaseline controlsは変更しない。
-
-この修正では、性能閾値、Home CTA/notice、本番設定、依存バージョンは変更しない。
-先行8修正の固定性能判定のFAILも、この修正で解消したとは扱わない。
-
-証拠は`.artifacts/embed-policy-2026-09-11T23-57-59.143Z/`に保持する。
-取得した公式文書とhash、CMSの生データと全件数、編集前ソースのアーカイブ、RED/GREEN実行ログを含む。
-この作業では、公開、CMSへの書き込み、外部プレーヤーの実再生、人手によるスクリーンリーダー受け入れ確認は行っていない。
+自動テストは入力の検証や表示の切り替え、テスト用プレーヤーでのsandboxの動作を対象とし、実サービスでの再生確認は含まない
 
 ## 公式資料
 
