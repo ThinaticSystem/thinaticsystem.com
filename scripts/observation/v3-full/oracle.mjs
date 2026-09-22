@@ -122,14 +122,18 @@ function importTarget(item, sf, name) {
   let target = null;
   const visit = node => {
     if (target || !ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier)) return;
-    const bindings = node.importClause?.namedBindings;
-    if (!ts.isNamedImports(bindings) || !bindings.elements.some(element => (element.propertyName?.text ?? element.name.text) === name)) return;
+    const clause = node.importClause;
+    if (!clause) return;
+    const bindings = clause.namedBindings;
+    const namedElement = bindings && ts.isNamedImports(bindings) ? bindings.elements.find(element => (element.propertyName?.text ?? element.name.text) === name) : null;
+    const importedName = clause.name?.text === name ? "default" : namedElement?.propertyName?.text ?? namedElement?.name.text;
+    if (!importedName) return;
     const modulePath = node.moduleSpecifier.text;
     const directory = item.file.slice(0, item.file.lastIndexOf('/'));
     const moduleCandidates = /\.(?:ts|tsx|js|mjs|cjs)$/.test(modulePath) ? [modulePath] : [`${modulePath}.ts`, `${modulePath}.mjs`, `${modulePath}/index.ts`];
     const candidates = moduleCandidates.map(candidate => candidate.startsWith('.') ? resolve('/', directory, candidate) : candidate).map(candidate => candidate.replace(/^\/+/, ''));
     for (const candidate of candidates) {
-      try { target = {file: candidate, text: sourceContextText(item, candidate)}; break; } catch { /* unsupported import resolution */ }
+      try { target = {file: candidate, text: sourceContextText(item, candidate), importName: importedName}; break; } catch { /* unsupported import resolution */ }
     }
   };
   visit(sf);
@@ -161,7 +165,7 @@ function finiteValue(item, sf, node, seen = new Set()) {
     if (imported) {
       const importedSf = sourceFile(imported.text, imported.file);
       const initializer = variableInitializer(importedSf, node.text);
-      if (!initializer) throw new Error(`imported finite value is unsupported: ${node.text}`);
+      if (!initializer) return {type: "imported-value", file: imported.file, name: imported.importName};
       return finiteValue({...item, file: imported.file, sourceText: imported.text, sourceCommit: item.sourceCommit}, importedSf, initializer, new Set([...seen, node.text]));
     }
     const initializer = variableInitializer(sf, node.text);
@@ -504,12 +508,108 @@ export function buildMapping(before, events) {
       // source edit makes that finite input an explicit it.each table, so retain the
       // smallest honest old-index/owner/row binding rather than using runner order.
       const explicitAngularRows = {
-        3: {file: 'src/app/clipboard-toast.spec.ts', value: '{Enter}'},
-        4: {file: 'src/app/clipboard-toast.spec.ts', value: ' '},
+        3: {file: 'src/app/clipboard-toast.spec.ts', values: ['{Enter}']},
+        4: {file: 'src/app/clipboard-toast.spec.ts', values: [' ']},
+        18: {file: 'src/app/index/loading-completion.spec.ts', values: ['glossary index', 'synchronous content']},
+        19: {file: 'src/app/index/loading-completion.spec.ts', values: ['glossary Honi', 'synchronous content']},
+        20: {file: 'src/app/index/loading-completion.spec.ts', values: ['glossary Gomamayo', 'synchronous content']},
+        21: {file: 'src/app/index/loading-completion.spec.ts', values: ['home', 'settled response']},
+        22: {file: 'src/app/index/loading-completion.spec.ts', values: ['about', 'settled response']},
+        23: {file: 'src/app/index/loading-completion.spec.ts', values: ['home', 'release error']},
+        24: {file: 'src/app/index/loading-completion.spec.ts', values: ['home', 'release cancel']},
+        25: {file: 'src/app/index/loading-completion.spec.ts', values: ['home', 'release superseded']},
+        26: {file: 'src/app/index/loading-completion.spec.ts', values: ['about', 'release error']},
+        27: {file: 'src/app/index/loading-completion.spec.ts', values: ['about', 'release cancel']},
+        28: {file: 'src/app/index/loading-completion.spec.ts', values: ['about', 'release superseded']},
+        111: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [1, 13]},
+        112: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [1, 14]},
+        113: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [2, 15]},
+        114: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [2, 16]},
+        115: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [2, 17]},
+        116: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [3, 20]},
+        117: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [3, 21]},
+        118: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [4, 22]},
+        119: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [5, 23]},
+        120: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [6, 18]},
+        121: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [6, 19]},
+        122: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [7, 24]},
+        123: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [7, 25]},
+        124: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [9, 27]},
+        125: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [10, 28]},
+        126: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [10, 29]},
+        127: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [11, 31]},
+        128: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [12, 32]},
+        129: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [13, 33]},
+        130: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [13, 34]},
+        132: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['HTTP YouTube URL']},
+        133: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['JavaScript URL']},
+        134: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['data URL']},
+        135: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['relative embed path']},
+        136: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['evil YouTube hostname']},
+        137: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['evil URL userinfo']},
+        138: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['YouTube userinfo']},
+        139: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['nonstandard YouTube port']},
+        140: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['duplicate evil userinfo URL']},
+        141: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['YouTube fragment']},
+        142: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['YouTube autoplay query']},
+        143: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['YouTube redirect query']},
+        144: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['YouTube watch route']},
+        145: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['short YouTube video ID']},
+        146: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['extra YouTube path']},
+        147: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['short Spotify track ID']},
+        148: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['Spotify album route']},
+        149: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['duplicate Spotify query']},
+        150: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['evil SoundCloud track URL']},
+        151: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['evil SoundCloud hostname']},
+        152: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['SoundCloud playlist route']},
+        153: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['duplicate SoundCloud URL parameter']},
+        154: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['SoundCloud autoplay option']},
+        155: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['SoundCloud color option']},
+        156: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['SoundCloud visual option']},
+        157: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['encoded newline']},
+        158: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['encoded color newline']},
+        159: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['unknown SoundCloud option']},
+        160: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['trailing newline']},
+        161: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['NUL character']},
+        162: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['4,097-character URL']},
+        165: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['script-wrapped iframe HTML']},
+        166: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['image plus iframe HTML']},
+        167: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['iframe with onload HTML']},
+        168: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['iframe with srcdoc HTML']},
+        169: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['SVG-wrapped iframe HTML']},
+        170: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['template-wrapped iframe HTML']},
+        171: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['arbitrary paragraph wrapper HTML']},
+        172: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['two iframe HTML']},
+        173: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['iframe without src HTML']},
+        174: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['unsupported player iframe HTML']},
+        175: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['javascript iframe HTML']},
+        176: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['iframe comment HTML']},
+        177: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['object HTML']},
+        178: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['16,385-character HTML']},
+        179: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['numeric HTML input']},
+        180: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['object HTML input']},
+        181: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['null record']},
+        182: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['undefined record']},
+        183: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['empty string record']},
+        184: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['whitespace-only record']},
+        79: {file: 'src/app/blog/index/page.spec.ts', values: [null]},
+        80: {file: 'src/app/blog/index/page.spec.ts', values: ['1']},
+        81: {file: 'src/app/blog/index/page.spec.ts', values: ['2']},
+        82: {file: 'src/app/blog/index/page.spec.ts', values: ['100']},
+        83: {file: 'src/app/blog/index/page.spec.ts', values: ['']},
+        84: {file: 'src/app/blog/index/page.spec.ts', values: ['0']},
+        85: {file: 'src/app/blog/index/page.spec.ts', values: ['-1']},
+        86: {file: 'src/app/blog/index/page.spec.ts', values: ['2.5']},
+        87: {file: 'src/app/blog/index/page.spec.ts', values: ['NaN']},
+        88: {file: 'src/app/blog/index/page.spec.ts', values: ['Infinity']},
+        89: {file: 'src/app/blog/index/page.spec.ts', values: ['02']},
+        90: {file: 'src/app/blog/index/page.spec.ts', values: ['2e1']},
+        91: {file: 'src/app/blog/index/page.spec.ts', values: [' 2 ']},
+        92: {file: 'src/app/blog/index/page.spec.ts', values: ['9007199254740991']},
       };
       const explicitRow = entry.runner === 'angular' ? explicitAngularRows[entry.oldEntryIndex] : null;
       if (explicitRow) {
-        candidates = sourceCandidates.filter(event => event.file === explicitRow.file && event.rowBinding?.rowInput?.operands?.some(operand => operand.value === explicitRow.value));
+        candidates = events.filter(event => event.runner === 'angular' && event.file === explicitRow.file && explicitRow.values.every(value => event.rowBinding?.rowInput?.operands?.some(operand => operand.value === value || (operand.value && typeof operand.value === 'object' && !Array.isArray(operand.value) && Object.values(operand.value).some(entry => entry === value)))));
         if (candidates.length !== 1) throw new Error(`final Angular explicit source/row binding is ${candidates.length === 0 ? 'missing' : 'ambiguous'} for old index ${entry.oldEntryIndex}: ${entry.oldFullId}`);
       } else {
         const sourceRowCandidates = sourceCandidates.filter(event => {

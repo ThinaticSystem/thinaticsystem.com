@@ -1,10 +1,26 @@
 import {readBlogPage} from './page';
 
 describe('Given the blog page receives URL state', () => {
-  it.each([null, '1', '2', '100'])('[social-page-valid] accepts positive decimal page %s', value => {
-    expect(readBlogPage(value)).toEqual({page: value === null ? 1 : Number(value), invalid: false});
+  it.each([
+    {input: null, expectedPage: 1, expectedInvalid: false},
+    {input: '1', expectedPage: 1, expectedInvalid: false},
+    {input: '2', expectedPage: 2, expectedInvalid: false},
+    {input: '100', expectedPage: 100, expectedInvalid: false},
+  ])('When the URL query contains $input Then it yields page $expectedPage with invalid $expectedInvalid', ({input, expectedPage, expectedInvalid}) => {
+    expect(readBlogPage(input)).toEqual({page: expectedPage, invalid: expectedInvalid});
   });
-  it.each(['', '0', '-1', '2.5', 'NaN', 'Infinity', '02', '2e1', ' 2 ', '9007199254740991'])('[social-page-invalid] rejects noncanonical or unsafe page %s', value => {
-    expect(readBlogPage(value)).toEqual({page: 1, invalid: true});
+  it.each([
+    {input: '', expectedPage: 1, expectedInvalid: true},
+    {input: '0', expectedPage: 1, expectedInvalid: true},
+    {input: '-1', expectedPage: 1, expectedInvalid: true},
+    {input: '2.5', expectedPage: 1, expectedInvalid: true},
+    {input: 'NaN', expectedPage: 1, expectedInvalid: true},
+    {input: 'Infinity', expectedPage: 1, expectedInvalid: true},
+    {input: '02', expectedPage: 1, expectedInvalid: true},
+    {input: '2e1', expectedPage: 1, expectedInvalid: true},
+    {input: ' 2 ', expectedPage: 1, expectedInvalid: true},
+    {input: '9007199254740991', expectedPage: 1, expectedInvalid: true},
+  ])('When the URL query is invalid and contains $input Then it yields page $expectedPage with invalid $expectedInvalid', ({input, expectedPage, expectedInvalid}) => {
+    expect(readBlogPage(input)).toEqual({page: expectedPage, invalid: expectedInvalid});
   });
 });

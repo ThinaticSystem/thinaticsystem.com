@@ -8,7 +8,6 @@ import GlossaryComponent from '../glossary/index/index.component';
 import HoniComponent from '../glossary/honi/honi.component';
 import GomamayoComponent from '../glossary/gomamayo/gomamayo.component';
 import {LoadingService} from '../services/loading.service';
-import {environment} from '../../environments/environment';
 
 describe('Given route content completion has no artificial delay or stale callbacks', () => {
   beforeEach(() => {
@@ -17,68 +16,161 @@ describe('Given route content completion has no artificial delay or stale callba
   });
   afterEach(() => {TestBed.resetTestingModule(); vi.useRealTimers();});
   it.each([
-    {componentName: '_IndexComponent'},
-    {componentName: '_HoniComponent'},
-    {componentName: '_GomamayoComponent'},
-  ])('When $componentName receives synchronous content Then it completes immediately', ({componentName}) => {
-    const component = componentName === '_IndexComponent' ? GlossaryComponent : componentName === '_HoniComponent' ? HoniComponent : GomamayoComponent;
+    {scenario: 'synchronous content', route: 'glossary index', componentName: 'GlossaryComponent', component: GlossaryComponent, expectedInitialLoading: false, expectedLoadingAfterDestroy: true},
+    {scenario: 'synchronous content', route: 'glossary Honi', componentName: 'HoniComponent', component: HoniComponent, expectedInitialLoading: false, expectedLoadingAfterDestroy: true},
+    {scenario: 'synchronous content', route: 'glossary Gomamayo', componentName: 'GomamayoComponent', component: GomamayoComponent, expectedInitialLoading: false, expectedLoadingAfterDestroy: true},
+  ])('When the $route route renders $componentName with synchronous content Then loading is $expectedInitialLoading and remains $expectedLoadingAfterDestroy after destroy', ({component, expectedInitialLoading, expectedLoadingAfterDestroy}) => {
     const fixture = TestBed.createComponent<unknown>(component);
     fixture.detectChanges();
-    expect(TestBed.inject(LoadingService).loading).toBe(false);
+    expect(TestBed.inject(LoadingService).loading).toBe(expectedInitialLoading);
     fixture.destroy();
     const loading = TestBed.inject(LoadingService);
     loading.loading = true;
     vi.advanceTimersByTime(600);
-    expect(loading.loading).toBe(true);
+    expect(loading.loading).toBe(expectedLoadingAfterDestroy);
   });
   it.each([
-    {componentName: '_IndexComponent'},
-    {componentName: '_AboutComponent'},
-  ])('When $componentName settles a response Then it cannot hide a later route', ({componentName}) => {
-    const component = componentName === '_IndexComponent' ? HomeComponent : AboutComponent;
+    {
+      scenario: 'settled response',
+      route: 'home',
+      componentName: 'HomeComponent',
+      component: HomeComponent,
+      requests: [
+        {endpoint: 'https://cms.thinaticsystem.com/notifications', response: []},
+        {endpoint: 'https://thinaticsystem.com/workers/patrons', response: []},
+      ],
+      expectedInitialLoading: false,
+      expectedLoadingAfterDestroy: true,
+    },
+    {
+      scenario: 'settled response',
+      route: 'about',
+      componentName: 'AboutComponent',
+      component: AboutComponent,
+      requests: [{endpoint: 'https://cms.thinaticsystem.com/about', response: {title: 'Synthetic about', body: ''}}],
+      expectedInitialLoading: false,
+      expectedLoadingAfterDestroy: true,
+    },
+  ])('When the $route route renders $componentName and its requests settle Then loading is $expectedInitialLoading and remains $expectedLoadingAfterDestroy after destroy', ({component, requests, expectedInitialLoading, expectedLoadingAfterDestroy}) => {
     const fixture = TestBed.createComponent<unknown>(component);
     fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
-    if (component === HomeComponent) {
-      http.expectOne(`${environment.cmsUrl}/notifications`).flush([]);
-      http.expectOne(`${environment.publicUrl}/workers/patrons`).flush([]);
-    } else {
-      http.expectOne(`${environment.cmsUrl}/about`).flush({title: 'Synthetic about', body: ''});
-    }
+    for (const request of requests) http.expectOne(request.endpoint).flush(request.response);
     const loading = TestBed.inject(LoadingService);
-    expect(loading.loading).toBe(false);
+    expect(loading.loading).toBe(expectedInitialLoading);
     fixture.destroy();
     loading.loading = true;
     vi.advanceTimersByTime(600);
-    expect(loading.loading).toBe(true);
+    expect(loading.loading).toBe(expectedLoadingAfterDestroy);
     http.verify();
   });
   it.each([
-    {componentName: '_IndexComponent', outcome: 'error'},
-    {componentName: '_IndexComponent', outcome: 'cancel'},
-    {componentName: '_IndexComponent', outcome: 'superseded'},
-    {componentName: '_AboutComponent', outcome: 'error'},
-    {componentName: '_AboutComponent', outcome: 'cancel'},
-    {componentName: '_AboutComponent', outcome: 'superseded'},
-  ])('When $componentName releases $outcome Then it does not release a newer owner', ({componentName, outcome}) => {
-    const component = componentName === '_IndexComponent' ? HomeComponent : AboutComponent;
+    {
+      route: 'home',
+      componentName: 'HomeComponent',
+      component: HomeComponent,
+      endpoint: 'https://cms.thinaticsystem.com/notifications',
+      secondaryRequests: [{endpoint: 'https://thinaticsystem.com/workers/patrons', response: []}],
+      scenario: 'release error',
+      outcome: 'error',
+      errorResponse: {status: 503, statusText: 'Unavailable'},
+      expectedLoadingAfterError: false,
+      expectedErrorMessage: '読み込めませんでした',
+      expectedRequestCancelled: null,
+      expectedFinalLoading: false,
+    },
+    {
+      route: 'home',
+      componentName: 'HomeComponent',
+      component: HomeComponent,
+      endpoint: 'https://cms.thinaticsystem.com/notifications',
+      secondaryRequests: [{endpoint: 'https://thinaticsystem.com/workers/patrons', response: []}],
+      scenario: 'release cancel',
+      outcome: 'cancel',
+      errorResponse: null,
+      expectedLoadingAfterError: null,
+      expectedErrorMessage: null,
+      expectedRequestCancelled: true,
+      expectedFinalLoading: false,
+    },
+    {
+      route: 'home',
+      componentName: 'HomeComponent',
+      component: HomeComponent,
+      endpoint: 'https://cms.thinaticsystem.com/notifications',
+      secondaryRequests: [{endpoint: 'https://thinaticsystem.com/workers/patrons', response: []}],
+      scenario: 'release superseded',
+      outcome: 'superseded',
+      errorResponse: null,
+      expectedLoadingAfterError: null,
+      expectedErrorMessage: null,
+      expectedRequestCancelled: true,
+      expectedFinalLoading: true,
+    },
+    {
+      route: 'about',
+      componentName: 'AboutComponent',
+      component: AboutComponent,
+      endpoint: 'https://cms.thinaticsystem.com/about',
+      secondaryRequests: [],
+      scenario: 'release error',
+      outcome: 'error',
+      errorResponse: {status: 503, statusText: 'Unavailable'},
+      expectedLoadingAfterError: false,
+      expectedErrorMessage: '読み込めませんでした',
+      expectedRequestCancelled: null,
+      expectedFinalLoading: false,
+    },
+    {
+      route: 'about',
+      componentName: 'AboutComponent',
+      component: AboutComponent,
+      endpoint: 'https://cms.thinaticsystem.com/about',
+      secondaryRequests: [],
+      scenario: 'release cancel',
+      outcome: 'cancel',
+      errorResponse: null,
+      expectedLoadingAfterError: null,
+      expectedErrorMessage: null,
+      expectedRequestCancelled: true,
+      expectedFinalLoading: false,
+    },
+    {
+      route: 'about',
+      componentName: 'AboutComponent',
+      component: AboutComponent,
+      endpoint: 'https://cms.thinaticsystem.com/about',
+      secondaryRequests: [],
+      scenario: 'release superseded',
+      outcome: 'superseded',
+      errorResponse: null,
+      expectedLoadingAfterError: null,
+      expectedErrorMessage: null,
+      expectedRequestCancelled: true,
+      expectedFinalLoading: true,
+    },
+  ])('When the $route route renders $componentName and the request $outcome Then it preserves newer owner loading state', ({component, endpoint, secondaryRequests, outcome, errorResponse, expectedLoadingAfterError, expectedErrorMessage, expectedRequestCancelled, expectedFinalLoading}) => {
     const fixture = TestBed.createComponent<unknown>(component);
     fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
     const loading = TestBed.inject(LoadingService);
-    const request = http.expectOne(`${environment.cmsUrl}/${component === HomeComponent ? 'notifications' : 'about'}`);
-    if (component === HomeComponent) http.expectOne(`${environment.publicUrl}/workers/patrons`).flush([]);
+    const request = http.expectOne(endpoint);
+    for (const secondaryRequest of secondaryRequests) http.expectOne(secondaryRequest.endpoint).flush(secondaryRequest.response);
     if (outcome === 'error') {
-      request.flush({}, {status: 503, statusText: 'Unavailable'});
+      if (errorResponse === null || expectedLoadingAfterError === null || expectedErrorMessage === null) throw new Error('Error row is missing its expected failure result');
+      request.flush({}, errorResponse);
       fixture.detectChanges();
-      expect(loading.loading).toBe(false);
-      expect(fixture.nativeElement.textContent).toContain('読み込めませんでした');
-    } else {
-      if (outcome === 'superseded') loading.loading = true;
-      fixture.destroy();
-      expect(request.cancelled).toBe(true);
-      expect(loading.loading).toBe(outcome === 'superseded');
+      expect(loading.loading).toBe(expectedLoadingAfterError);
+      expect(fixture.nativeElement.textContent).toContain(expectedErrorMessage);
+      if (expectedRequestCancelled !== null) expect(request.cancelled).toBe(expectedRequestCancelled);
+      expect(loading.loading).toBe(expectedFinalLoading);
+      http.verify();
+      return;
     }
+    if (outcome === 'superseded') loading.loading = true;
+    fixture.destroy();
+    expect(request.cancelled).toBe(expectedRequestCancelled);
+    expect(loading.loading).toBe(expectedFinalLoading);
     http.verify();
   });
 });
