@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import TagComponent from './tag.component';
 
-describe('IndexComponent Given the owner is initialized', () => {
+describe('IndexComponent', () => {
   let component: TagComponent;
   let fixture: ComponentFixture<TagComponent>;
 

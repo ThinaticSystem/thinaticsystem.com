@@ -10,7 +10,7 @@ import GomamayoComponent from '../glossary/gomamayo/gomamayo.component';
 import {LoadingService} from '../services/loading.service';
 import {environment} from '../../environments/environment';
 
-describe('Route completion has no artificial delay or stale callbacks Given the owner is initialized', () => {
+describe('Route completion has no artificial delay or stale callbacks', () => {
   beforeEach(() => {
     vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout']});
     TestBed.configureTestingModule({providers: [provideHttpClient(), provideHttpClientTesting()]});

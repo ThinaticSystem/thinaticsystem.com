@@ -2,7 +2,7 @@ import {TestBed} from '@angular/core/testing';
 
 import {LoadingService} from './loading.service';
 
-describe('LoadingService Given the owner is initialized', () => {
+describe('LoadingService', () => {
   let service: LoadingService;
 
   beforeEach(() => {
@@ -10,11 +10,11 @@ describe('LoadingService Given the owner is initialized', () => {
     service = TestBed.inject(LoadingService);
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that should be created', () => {
+  it('Given the loading service publishes router and content state When the owner is created Then it is available', () => {
     expect(service).toBeTruthy();
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that publishes changes through a signal-backed property for zoneless templates', () => {
+  it('Given the loading service publishes router and content state when router or content state changes Then publishes changes through a signal-backed property for zoneless templates', () => {
     // NOTE: Startup has no fictitious content owner; route/page work explicitly starts pending.
     expect(service.loading).toBe(false);
     service.loading = true;

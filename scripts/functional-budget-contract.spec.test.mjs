@@ -43,7 +43,7 @@ function assertInvalid(result) {
   assert.deepEqual(JSON.parse(JSON.stringify(result)), result);
 }
 
-test('When the recorded scenario is exercised Then the contract demonstrates that equal approved limits remain coverage BLOCKED, never production PASS', () => {
+test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then equal approved limits remain coverage BLOCKED, never production PASS', () => {
   const result = evaluate();
   assert.equal(result.schema, 'thinaticsystem/functional-budget-result/v1');
   assert.equal(result.valid, true);
@@ -154,7 +154,7 @@ for (const [label, times, expected] of [
   });
 }
 
-test('When the recorded scenario is exercised Then the contract demonstrates that fresh baseline uses the middle two of four unsorted times', () => {
+test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then fresh baseline uses the middle two of four unsorted times', () => {
   const result = evaluate(({measurement}) => {
     measurement.journeys[0].baseline.timesInMs = [1000, 80, 100, 1];
     measurement.journeys[0].baseline.medianInMs = 1000;
@@ -163,7 +163,7 @@ test('When the recorded scenario is exercised Then the contract demonstrates tha
   assert.equal(result.timing.status, 'INCONCLUSIVE_OR_FAIL');
 });
 
-test('When the recorded scenario is exercised Then the contract demonstrates that timing retains the prescribed (middle two sum)/2 rounding at equality', () => {
+test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then timing retains the prescribed (middle two sum)/2 rounding at equality', () => {
   const result = evaluate(({measurement}) => {
     measurement.journeys[0].baseline.timesInMs = [0.04, 0.01, 0.001, 0.03];
     measurement.journeys[0].candidate.timesInMs = [0.024, 0.024, 0.024, 0.024];
@@ -172,7 +172,7 @@ test('When the recorded scenario is exercised Then the contract demonstrates tha
   assert.equal(result.overall, 'BLOCKED');
 });
 
-test('When the recorded scenario is exercised Then the contract demonstrates that supplied PASS aggregates cannot conceal failing raw observations', () => {
+test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then supplied PASS aggregates cannot conceal failing raw observations', () => {
   const result = evaluate(({measurement}) => {
     measurement.aggregate = {status: 'PASS'};
     const journey = measurement.journeys[0];
@@ -188,7 +188,7 @@ test('When the recorded scenario is exercised Then the contract demonstrates tha
   assert.equal(result.timing.status, 'INCONCLUSIVE_OR_FAIL');
 });
 
-test('When the recorded scenario is exercised Then the contract demonstrates that all caps are conjunctive; independently report size, request and timing failures', () => {
+test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then all caps are conjunctive; independently report size, request and timing failures', () => {
   const result = evaluate(inputs => {
     for (const cap of assetCaps) cap.set(inputs, cap.limit(inputs) + 1);
     for (const cap of routeCaps) cap.set(inputs, cap.limit(inputs) + 1);
@@ -202,7 +202,7 @@ test('When the recorded scenario is exercised Then the contract demonstrates tha
   assert.equal(result.overall, 'FAIL');
 });
 
-test('When the recorded scenario is exercised Then the contract demonstrates that fresh baseline maxima, not first observation or supplied aggregates, set ceilings', () => {
+test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then fresh baseline maxima, not first observation or supplied aggregates, set ceilings', () => {
   const result = evaluate(({measurement}) => {
     const journey = measurement.journeys[0];
     journey.baseline.requestCounts = [1, 2, 12, 3];
@@ -214,7 +214,7 @@ test('When the recorded scenario is exercised Then the contract demonstrates tha
   assert.equal(result.overall, 'BLOCKED');
 });
 
-test('When the recorded scenario is exercised Then the contract demonstrates that policy caps still bind when fresh baseline maxima are higher', () => {
+test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then policy caps still bind when fresh baseline maxima are higher', () => {
   const result = evaluate(({measurement}) => {
     const journey = measurement.journeys[0];
     journey.baseline.requestCounts[2] = 100;
@@ -288,14 +288,14 @@ for (const field of integerFields) {
   }
 }
 
-test('When the recorded scenario is exercised Then the contract demonstrates that no argument throws; malformed access is a validation result', () => {
+test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then no argument throws; malformed access is a validation result', () => {
   assertInvalid(evaluateFunctionalBudget());
   const {policy, measurement} = fixture();
   Object.defineProperty(measurement, 'initial', {get() { throw new Error('bad input accessor'); }});
   assertInvalid(evaluateFunctionalBudget(policy, measurement));
 });
 
-test('When the recorded scenario is exercised Then the contract demonstrates that does not mutate inputs, sort caller arrays, or alias returned coverage', () => {
+test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then does not mutate inputs, sort caller arrays, or alias returned coverage', () => {
   const {policy, measurement} = fixture();
   const before = structuredClone({policy, measurement});
   function freeze(value) {
@@ -309,12 +309,12 @@ test('When the recorded scenario is exercised Then the contract demonstrates tha
   assert.deepEqual(evaluateFunctionalBudget(policy, measurement).coverage.missing, missing);
 });
 
-test('When the recorded scenario is exercised Then the contract demonstrates that extra policy metadata does not alter the approved numeric contract', () => {
+test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then extra policy metadata does not alter the approved numeric contract', () => {
   const result = evaluate(({policy}) => { policy.approval = {approved: true}; policy.measurementBindings = {}; policy.applicationBoundary = {}; });
   assert.equal(result.overall, 'BLOCKED');
 });
 
-test('When the recorded scenario is exercised Then the contract demonstrates that very large finite positive timings produce finite JSON-safe results', () => {
+test('Given the budget evaluator receives raw observations when the evaluator processes the fixture Then very large finite positive timings produce finite JSON-safe results', () => {
   const result = evaluate(({measurement}) => {
     measurement.journeys[0].baseline.timesInMs = Array(4).fill(Number.MAX_VALUE);
     measurement.journeys[0].candidate.timesInMs = Array(4).fill(Number.MAX_VALUE);

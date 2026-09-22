@@ -5,7 +5,7 @@ import {observedEmbeds} from '../../../../test/fixtures/observed-media-embeds';
 const youtube = 'https://www.youtube.com/embed/EDfYEwWGhlg';
 const soundcloud = 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F911614594';
 
-describe('Media embed policy Given the owner is initialized', () => {
+describe('Media embed policy', () => {
   it.each(observedEmbeds.filter(item => item.html !== null))('preserves observed release $releaseId demo $demoId as a canonical provider player', ({html}) => {
     const admitted = readEmbedHtml(html, document);
     expect(admitted.type).toBe('media');
@@ -22,7 +22,7 @@ describe('Media embed policy Given the owner is initialized', () => {
       expect(admitted.media.height).toBe(expected.searchParams.get('visual') === 'true' ? 300 : 166);
     }
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that admits the observed complete corpus without inventing a player for null', () => {
+  it('Given the embed policy receives CMS media metadata when media metadata is evaluated Then admits the observed complete corpus without inventing a player for null', () => {
     expect(observedEmbeds).toHaveLength(21);
     const admitted = observedEmbeds.map(item => readEmbedHtml(item.html, document));
     expect(admitted.filter(item => item.type === 'media')).toHaveLength(20);
@@ -53,7 +53,7 @@ describe('Media embed policy Given the owner is initialized', () => {
   ])('rejects unsupported player URL %s', value => {
     expect(admitPlayerUrl(value)).toBeNull();
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that retains safe SoundCloud appearance but fixes autoplay off', () => {
+  it('Given the embed policy receives CMS media metadata when media metadata is evaluated Then retains safe SoundCloud appearance but fixes autoplay off', () => {
     const admitted = admitPlayerUrl(soundcloud + '&visual=true&color=%23ABCDEF&show_comments=false');
     expect(admitted?.height).toBe(300);
     const url = new URL(admitted!.src);
@@ -63,7 +63,7 @@ describe('Media embed policy Given the owner is initialized', () => {
     expect(url.searchParams.get('show_comments')).toBe('false');
     expect(admitPlayerUrl(soundcloud)?.height).toBe(166);
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that preserves nocookie choice and removes Spotify tracking parameters', () => {
+  it('Given the embed policy receives CMS media metadata when media metadata is evaluated Then preserves nocookie choice and removes Spotify tracking parameters', () => {
     const nocookie = youtube.replace('www.youtube.com', 'www.youtube-nocookie.com');
     expect(admitPlayerUrl(nocookie)?.src).toBe(nocookie);
     expect(admitPlayerUrl('https://open.spotify.com/embed/track/5OkcBpFUdMIVYpjc88RMC6?utm_source=generator')).toEqual({provider: 'spotify', height: 80, src: 'https://open.spotify.com/embed/track/5OkcBpFUdMIVYpjc88RMC6'});
@@ -86,7 +86,7 @@ describe('Media embed policy Given the owner is initialized', () => {
   it.each([null, undefined, '', ' \n '])('does not invent content from an empty record %s', value => {
     expect(readEmbedHtml(value, document)).toEqual({type: 'empty'});
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that does not forward CMS attributes or styles in the admitted model', () => {
+  it('Given the embed policy receives CMS media metadata when media metadata is evaluated Then does not forward CMS attributes or styles in the admitted model', () => {
     expect(readEmbedHtml(`<iframe src="${youtube}" style="position:fixed;inset:0" allow="camera;microphone" sandbox="allow-top-navigation" title="untrusted" class="fixed"></iframe>`, document)).toEqual({type: 'media', media: {provider: 'youtube', src: youtube, height: null, watchUrl: 'https://www.youtube.com/watch?v=EDfYEwWGhlg'}});
   });
 });

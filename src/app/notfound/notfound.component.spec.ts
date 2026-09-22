@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import NotfoundComponent from './notfound.component';
 
-describe('NotfoundComponent Given the owner is initialized', () => {
+describe('NotfoundComponent', () => {
   let component: NotfoundComponent;
   let fixture: ComponentFixture<NotfoundComponent>;
 

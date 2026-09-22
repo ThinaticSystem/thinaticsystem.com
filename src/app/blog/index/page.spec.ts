@@ -1,6 +1,6 @@
 import {readBlogPage} from './page';
 
-describe('Blog page URL contract Given the owner is initialized', () => {
+describe('Blog page URL contract', () => {
   it.each([null, '1', '2', '100'])('[social-page-valid] accepts positive decimal page %s', value => {
     expect(readBlogPage(value)).toEqual({page: value === null ? 1 : Number(value), invalid: false});
   });

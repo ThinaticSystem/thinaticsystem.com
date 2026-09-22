@@ -8,7 +8,7 @@ import ArticleComponent from './article/article.component';
 import TagComponent from './tag/tag.component';
 import {environment} from '../../environments/environment';
 
-describe('Page pending wording is screen-reader-only Given the owner is initialized', () => {
+describe('Page pending wording is screen-reader-only', () => {
   afterEach(() => TestBed.resetTestingModule());
   for (const component of [ArticleComponent, TagComponent]) {
     it(component.name + ' keeps pending accessible without visible wording and preserves failure/retry', async () => {

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import HoniComponent from './honi.component';
 
-describe('HoniComponent Given the owner is initialized', () => {
+describe('HoniComponent', () => {
   let component: HoniComponent;
   let fixture: ComponentFixture<HoniComponent>;
 

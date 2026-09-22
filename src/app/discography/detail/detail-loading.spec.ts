@@ -8,7 +8,7 @@ import DetailComponent from './detail.component';
 import {LoadingService} from '../../services/loading.service';
 import {environment} from '../../../environments/environment';
 
-describe('Detail content pending owns HTTP, not artwork events Given the owner is initialized', () => {
+describe('Detail content pending owns HTTP, not artwork events', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({providers: [provideHttpClient(), provideHttpClientTesting(),
       {provide: ActivatedRoute, useValue: {snapshot: {paramMap: convertToParamMap({id: '1'})}}}]});
@@ -32,7 +32,7 @@ describe('Detail content pending owns HTTP, not artwork events Given the owner i
       http.verify();
     });
   }
-  it('When the recorded scenario is exercised Then the contract demonstrates that settles failed HTTP before its fallback navigation completes', async () => {
+  it('Given discography detail loading owns an HTTP request when the request settles or is superseded Then settles failed HTTP before its fallback navigation completes', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(DetailComponent);fixture.detectChanges();
@@ -44,7 +44,7 @@ describe('Detail content pending owns HTTP, not artwork events Given the owner i
     expect(console.error).toHaveBeenCalledOnce();
     http.verify();
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that cancels outgoing HTTP without clearing a newer load', () => {
+  it('Given discography detail loading owns an HTTP request when the request settles or is superseded Then cancels outgoing HTTP without clearing a newer load', () => {
     const fixture = TestBed.createComponent(DetailComponent);fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
     const request = http.expectOne(`${environment.cmsUrl}/discographies/1`);

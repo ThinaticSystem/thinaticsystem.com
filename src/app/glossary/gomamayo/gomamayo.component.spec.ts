@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import GomamayoComponent from './gomamayo.component';
 
-describe('GomamayoComponent Given the owner is initialized', () => {
+describe('GomamayoComponent', () => {
   let component: GomamayoComponent;
   let fixture: ComponentFixture<GomamayoComponent>;
 

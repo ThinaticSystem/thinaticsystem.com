@@ -2,7 +2,7 @@ import {TestBed} from '@angular/core/testing';
 
 import {NavigateService} from './navigate.service';
 
-describe('NavigateService Given the owner is initialized', () => {
+describe('NavigateService', () => {
   let service: NavigateService;
 
   beforeEach(() => {
@@ -10,7 +10,7 @@ describe('NavigateService Given the owner is initialized', () => {
     service = TestBed.inject(NavigateService);
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that should be created', () => {
+  it('Given the navigation service is injected When the owner is created Then it is available', () => {
     expect(service).toBeTruthy();
   });
 });

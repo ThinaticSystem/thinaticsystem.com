@@ -10,10 +10,10 @@ import HomeComponent from './index/index.component';
 import {NotificationService} from './services/notification.service';
 import {environment} from '../environments/environment';
 
-describe('Clipboard toast admission Given the owner is initialized', () => {
+describe('Clipboard toast admission', () => {
   afterEach(() => {TestBed.resetTestingModule(); vi.restoreAllMocks(); vi.useRealTimers();});
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that does not mount a toast or dismiss control at cold startup, even during loading', async () => {
+  it('Given clipboard feedback starts with no prior success when the component starts or copy feedback changes Then does not mount a toast or dismiss control at cold startup, even during loading', async () => {
     const {fixture} = await render(AppComponent);
     expect(fixture.componentInstance.notification.showNotification).toBe(false);
     expect(screen.queryByRole('button', {name: '通知を閉じる'})).toBeNull();
@@ -60,7 +60,7 @@ describe('Clipboard toast admission Given the owner is initialized', () => {
     });
   }
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that expires success feedback without manual change detection and refreshes its owned timer', async () => {
+  it('Given clipboard feedback starts with no prior success when the component starts or copy feedback changes Then expires success feedback without manual change detection and refreshes its owned timer', async () => {
     const {fixture} = await render(AppComponent);
     vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout']});
     const notification = TestBed.inject(NotificationService);

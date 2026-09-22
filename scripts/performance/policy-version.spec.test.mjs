@@ -9,7 +9,7 @@ const v3 = JSON.parse(readFileSync(new URL('./fixtures/performance-policy-v3.jso
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/performance-baseline-v3.json', import.meta.url), 'utf8'));
 const anchor = '7a8352242951516a2380e8fc69c5fb902b0c0e5d';
 
-test('When the recorded scenario is exercised Then the contract demonstrates that v3 freezes the reviewed anchor and preserves v2 history', () => {
+test('Given the v3 policy is compared with its reviewed baseline when the policy receipt is checked Then v3 freezes the reviewed anchor and preserves v2 history', () => {
   assert.equal(v2.schema, 'thinaticsystem/performance-policy/v2');
   assert.equal(v3.schema, 'thinaticsystem/performance-policy/v3');
   assert.equal(v3.version, 'comparative-engineering-v3.0');
@@ -18,7 +18,7 @@ test('When the recorded scenario is exercised Then the contract demonstrates tha
   assert.equal(baseline.meaning, 'Fixed comparative reference only; current-source adoption does not establish field UX acceptance.');
 });
 
-test('When the recorded scenario is exercised Then the contract demonstrates that real v3 evaluator passes healthy same-version evidence', () => {
+test('Given the v3 policy is compared with its reviewed baseline when the policy receipt is checked Then real v3 evaluator passes healthy same-version evidence', () => {
   const result = evaluatePerformance(evidence());
   assert.equal(result.verdict, 'PASS_WITH_NOTES');
   assert.equal(result.absoluteUxAcceptance, 'NOT_ESTABLISHED');

@@ -5,7 +5,7 @@ import {vi} from 'vitest';
 
 import {ShareComponent} from './share.component';
 
-describe('ShareComponent Given the owner is initialized', () => {
+describe('ShareComponent', () => {
   let component: ShareComponent;
   let fixture: ComponentFixture<ShareComponent>;
 
@@ -26,7 +26,7 @@ describe('ShareComponent Given the owner is initialized', () => {
     fixture.detectChanges();
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that [social-share-reserved] preserves each query value through one URL decoding', () => {
+  it('Given a share control receives a URL and clipboard result when the control receives a URL or copy result Then [social-share-reserved] preserves each query value through one URL decoding', () => {
     const share = {text: 'A&B #C++ ?日本% /', url: 'https://example.test/a%2Fb?q=A+B&next=%23x#section'};
     fixture.componentRef.setInput('share', share);
     fixture.detectChanges();
@@ -41,7 +41,7 @@ describe('ShareComponent Given the owner is initialized', () => {
     expect(component).toBeTruthy();
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that keeps named native share controls and the external destination', () => {
+  it('Given a share control receives a URL and clipboard result when the control receives a URL or copy result Then keeps named native share controls and the external destination', () => {
     expect(screen.getByRole('heading', {name: 'Share', level: 2})).toBeTruthy();
     expect(screen.getByRole('button', {name: 'このページのURLをコピーします'})).toBeInstanceOf(HTMLButtonElement);
     const link = screen.getByRole('link', {name: 'Twitterでこのページを共有します'});
@@ -54,7 +54,7 @@ describe('ShareComponent Given the owner is initialized', () => {
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that copies the current input through the directive and only announces success', () => {
+  it('Given a share control receives a URL and clipboard result when the control receives a URL or copy result Then copies the current input through the directive and only announces success', () => {
     const clipboard = TestBed.inject(ClipboardService);
     vi.spyOn(clipboard, 'isSupported', 'get').mockReturnValue(true);
     const copy = vi.spyOn(clipboard, 'copyFromContent').mockReturnValue(false);
@@ -75,7 +75,7 @@ describe('ShareComponent Given the owner is initialized', () => {
     }
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that does not report a rejected copy as a successful copy', () => {
+  it('Given a share control receives a URL and clipboard result when the control receives a URL or copy result Then does not report a rejected copy as a successful copy', () => {
     fixture.nativeElement.querySelector('button').dispatchEvent(new Event('cbOnError'));
 
     expect(component.Notification.showNotification).toBe(false);

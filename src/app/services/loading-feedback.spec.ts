@@ -6,7 +6,7 @@ import {vi} from 'vitest';
 import {LoadingService} from './loading.service';
 import {NavigateService} from './navigate.service';
 
-describe('Delayed loading feedback Given the owner is initialized', () => {
+describe('Delayed loading feedback', () => {
   let loading: LoadingService;
   let events: Subject<Event>;
   const navigate = vi.fn<Router['navigate']>();
@@ -20,7 +20,7 @@ describe('Delayed loading feedback Given the owner is initialized', () => {
   });
   afterEach(() => {TestBed.resetTestingModule(); vi.useRealTimers();});
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that keeps explicit short content work invisible without changing pending truth', () => {
+  it('Given the loading feedback service receives content and router transitions when content or router work changes Then keeps explicit short content work invisible without changing pending truth', () => {
     expect(loading.loading).toBe(true);
     expect(loading).toHaveProperty('feedbackVisible', false);
     vi.advanceTimersByTime(199);
@@ -28,7 +28,7 @@ describe('Delayed loading feedback Given the owner is initialized', () => {
     vi.advanceTimersByTime(1_000);
     expect(loading).toHaveProperty('feedbackVisible', false);
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that settles pending immediately but retains a just-shown interstitial for a gentle exit', () => {
+  it('Given the loading feedback service receives content and router transitions when content or router work changes Then settles pending immediately but retains a just-shown interstitial for a gentle exit', () => {
     vi.advanceTimersByTime(201);
     expect(loading).toHaveProperty('feedbackVisible', true);
     loading.loading = false;
@@ -42,7 +42,7 @@ describe('Delayed loading feedback Given the owner is initialized', () => {
     vi.advanceTimersByTime(1);
     expect(loading).toHaveProperty('feedbackVisible', false);
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that keeps long work visibly pending and cancels an old exit when new work begins', () => {
+  it('Given the loading feedback service receives content and router transitions when content or router work changes Then keeps long work visibly pending and cancels an old exit when new work begins', () => {
     vi.advanceTimersByTime(5_000);
     expect(loading).toHaveProperty('feedbackVisible', true);
     loading.loading = false;
@@ -58,7 +58,7 @@ describe('Delayed loading feedback Given the owner is initialized', () => {
     expect(loading).toHaveProperty('feedbackVisible', false);
     expect(vi.getTimerCount()).toBe(0);
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that does not postpone feedback on repeated true and cancels a completed generation', () => {
+  it('Given the loading feedback service receives content and router transitions when content or router work changes Then does not postpone feedback on repeated true and cancels a completed generation', () => {
     vi.advanceTimersByTime(100);
     loading.loading = true;
     vi.advanceTimersByTime(100);
@@ -71,7 +71,7 @@ describe('Delayed loading feedback Given the owner is initialized', () => {
     vi.advanceTimersByTime(1_000);
     expect(loading).toHaveProperty('feedbackVisible', false);
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that starts feedback for native router navigation and releases cancellation/error', () => {
+  it('Given the loading feedback service receives content and router transitions when content or router work changes Then starts feedback for native router navigation and releases cancellation/error', () => {
     loading.loading = false;
     events.next(new NavigationStart(1, '/about'));
     expect(loading.loading).toBe(true);
@@ -85,7 +85,7 @@ describe('Delayed loading feedback Given the owner is initialized', () => {
     vi.advanceTimersByTime(420);
     expect(loading).toHaveProperty('feedbackVisible', false);
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that ignores a superseded navigation cancellation after the newer start', () => {
+  it('Given the loading feedback service receives content and router transitions when content or router work changes Then ignores a superseded navigation cancellation after the newer start', () => {
     events.next(new NavigationStart(1, '/about'));
     events.next(new NavigationStart(2, '/blog'));
     events.next(new NavigationCancel(1, '/about', 'superseded', NavigationCancellationCode.SupersededByNewNavigation));
@@ -93,7 +93,7 @@ describe('Delayed loading feedback Given the owner is initialized', () => {
     vi.advanceTimersByTime(200);
     expect(loading).toHaveProperty('feedbackVisible', true);
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that settles route-only work without clearing independently pending page content', () => {
+  it('Given the loading feedback service receives content and router transitions when content or router work changes Then settles route-only work without clearing independently pending page content', () => {
     loading.loading = false;
     events.next(new NavigationStart(4, '/blog?page=2'));
     events.next(new NavigationEnd(4, '/blog?page=2', '/blog?page=2'));
@@ -110,7 +110,7 @@ describe('Delayed loading feedback Given the owner is initialized', () => {
     vi.advanceTimersByTime(420);
     expect(loading).toHaveProperty('feedbackVisible', false);
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that contains a rejected navigation promise after the Router emits its error', async () => {
+  it('Given the loading feedback service receives content and router transitions when content or router work changes Then contains a rejected navigation promise after the Router emits its error', async () => {
     loading.loading = false;
     navigate.mockRejectedValueOnce(new Error('synthetic route failure'));
     const result = TestBed.inject(NavigateService).go('/about');
@@ -121,7 +121,7 @@ describe('Delayed loading feedback Given the owner is initialized', () => {
     expect(loading.loading).toBe(false);
     expect(loading).toHaveProperty('feedbackVisible', false);
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that releases timers and event subscription when the service owner is destroyed', () => {
+  it('Given the loading feedback service receives content and router transitions when content or router work changes Then releases timers and event subscription when the service owner is destroyed', () => {
     TestBed.resetTestingModule();
     expect(vi.getTimerCount()).toBe(0);
     events.next(new NavigationStart(3, '/blog'));
@@ -140,7 +140,7 @@ describe('Delayed loading feedback Given the owner is initialized', () => {
       expect(loading.feedbackExiting).toBe(false);
     });
   }
-  it('When the recorded scenario is exercised Then the contract demonstrates that does not let a stale content release terminate a newer owner or its presentation', () => {
+  it('Given the loading feedback service receives content and router transitions when content or router work changes Then does not let a stale content release terminate a newer owner or its presentation', () => {
     const staleRelease = loading.beginContentLoad();
     vi.advanceTimersByTime(200);
     const release = loading.beginContentLoad();
@@ -153,7 +153,7 @@ describe('Delayed loading feedback Given the owner is initialized', () => {
     vi.advanceTimersByTime(180);
     expect(loading.feedbackVisible).toBe(false);
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that navigates immediately, rather than enqueueing a 300ms transition', async () => {
+  it('Given the loading feedback service receives content and router transitions when content or router work changes Then navigates immediately, rather than enqueueing a 300ms transition', async () => {
     const service = TestBed.inject(NavigateService);
     service.go('/about');
     expect(navigate).toHaveBeenCalledExactlyOnceWith(['/about']);

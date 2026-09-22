@@ -5,7 +5,7 @@ import {Subject} from 'rxjs';
 import {vi} from 'vitest';
 import {LoadingService} from './loading.service';
 
-describe('Initial navigation without a content owner Given the owner is initialized', () => {
+describe('Initial navigation without a content owner', () => {
   beforeEach(() => vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout']}));
   afterEach(() => {TestBed.resetTestingModule(); vi.useRealTimers();});
   for (const terminal of [new NavigationError(1, '/about', new Error('synthetic bootstrap failure')),

@@ -5,7 +5,7 @@ import test from 'node:test';
 const source = () => readFile('.github/workflows/ci.yml', 'utf8');
 const requireLine = (text, pattern, description) => assert.match(text, pattern, description);
 
-test('When the recorded scenario is exercised Then the contract demonstrates that preview deploy is gated by exact candidate artifact and readback smoke', async () => {
+test('Given a preview deployment is gated by an exact candidate artifact when the artifact and readback are checked Then preview deploy is gated by exact candidate artifact and readback smoke', async () => {
   const text = await source();
   const preview = text.slice(text.indexOf('  preview:'));
   requireLine(text, /preview:\n    name: deploy verified artifact to Pages preview\n    needs: verify/m, 'preview needs verification');

@@ -13,7 +13,7 @@ import ArticleComponent from './article.component';
 import {environment} from '../../../environments/environment';
 
 const blog = (id: number) => ({id, title: `Fixture ${id}`, body: '', blogTags: [], created_at: ''});
-describe('ArticleComponent Given the owner is initialized', () => {
+describe('ArticleComponent', () => {
   let http: HttpTestingController;
   let params: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
   let fixture: ComponentFixture<ArticleComponent>;
@@ -32,7 +32,7 @@ describe('ArticleComponent Given the owner is initialized', () => {
   });
   afterEach(() => { try {http.verify();} finally {TestBed.resetTestingModule();} });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that [social-article-local-exit] offers an explicit list destination while pending and after failure', () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then [social-article-local-exit] offers an explicit list destination while pending and after failure', () => {
     expect(screen.getByRole('link', {name: '記事一覧へ'}).getAttribute('href')).toBe('/blog');
     expect(screen.getByRole('status').textContent).toContain('読み込み中');
     http.expectOne(`${environment.cmsUrl}/blogs/1`).flush({}, {status: 503, statusText: 'Unavailable'});
@@ -40,7 +40,7 @@ describe('ArticleComponent Given the owner is initialized', () => {
     expect(screen.getByRole('link', {name: '記事一覧へ'}).getAttribute('href')).toBe('/blog');
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that [social-article-literal-tag] keeps reserved characters in a single tag path segment', () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then [social-article-literal-tag] keeps reserved characters in a single tag path segment', () => {
     const tag = 'C++ / A&B?#日本';
     http.expectOne(`${environment.cmsUrl}/blogs/1`).flush({...blog(1), blogTags: [{tag}]});
     fixture.detectChanges();
@@ -51,13 +51,13 @@ describe('ArticleComponent Given the owner is initialized', () => {
     expect(url.hash).toBe('');
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that creates the page after its initial request settles', () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then creates the page after its initial request settles', () => {
     http.expectOne(`${environment.cmsUrl}/blogs/1`).flush(blog(1));
     fixture.detectChanges();
     expect(screen.getByRole('heading', {name: 'Fixture 1'})).toBeTruthy();
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that renders nonempty markdown, the formatted date and native tag links', async () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then renders nonempty markdown, the formatted date and native tag links', async () => {
     http.expectOne(`${environment.cmsUrl}/blogs/1`).flush({...blog(1),
       created_at: '2024-01-02T12:00:00Z',
       body: '[Article source](https://example.test/source)',
@@ -69,20 +69,20 @@ describe('ArticleComponent Given the owner is initialized', () => {
     expect((await screen.findByRole('link', {name: 'Article source'})).getAttribute('href')).toBe('https://example.test/source');
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that [article-title-level-one] provides the page heading without relying on headings in the article body', () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then [article-title-level-one] provides the page heading without relying on headings in the article body', () => {
     http.expectOne(`${environment.cmsUrl}/blogs/1`).flush(blog(1));
     fixture.detectChanges();
     expect(screen.queryAllByRole('heading', {level: 1, name: 'Fixture 1'})).toHaveLength(1);
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that [article-sharing-heading-order] introduces sharing as a section below the page heading', () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then [article-sharing-heading-order] introduces sharing as a section below the page heading', () => {
     http.expectOne(`${environment.cmsUrl}/blogs/1`).flush(blog(1));
     fixture.detectChanges();
     expect(screen.getByRole('heading', {level: 1, name: 'Fixture 1'})).toBeTruthy();
     expect(screen.queryAllByRole('heading', {level: 2, name: 'Share'})).toHaveLength(1);
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that [article-route-parameter-transition] resets old content and reloads title and share URL on reused routes', () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then [article-route-parameter-transition] resets old content and reloads title and share URL on reused routes', () => {
     http.expectOne(`${environment.cmsUrl}/blogs/1`).flush(blog(1));
     params.next(convertToParamMap({id: '2'}));
     expect(fixture.componentInstance.blog()).toBeNull();
@@ -94,7 +94,7 @@ describe('ArticleComponent Given the owner is initialized', () => {
     expect(loading.loading).toBe(false);
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that cancels late article effects, ignores repeated IDs and cancels on destroy', () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then cancels late article effects, ignores repeated IDs and cancels on destroy', () => {
     const first = http.expectOne(`${environment.cmsUrl}/blogs/1`);
     params.next(convertToParamMap({id: '2'}));
     const second = http.expectOne(`${environment.cmsUrl}/blogs/2`);
@@ -109,7 +109,7 @@ describe('ArticleComponent Given the owner is initialized', () => {
     expect(go).not.toHaveBeenCalled();
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that [article-404-loading-cleanup] handles 404 without unhandled errors and releases loading after redirect', async () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then [article-404-loading-cleanup] handles 404 without unhandled errors and releases loading after redirect', async () => {
     http.expectOne(`${environment.cmsUrl}/blogs/1`).flush({message: 'missing'}, {status: 404, statusText: 'Not found'});
     await new Promise(resolve => setTimeout(resolve, 0));
     expect(go).toHaveBeenCalledExactlyOnceWith('/404');
@@ -117,7 +117,7 @@ describe('ArticleComponent Given the owner is initialized', () => {
     expect(fixture.componentInstance.blog()).toBeNull();
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that distinguishes server failure from missing content and retries the current ID', async () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then distinguishes server failure from missing content and retries the current ID', async () => {
     http.expectOne(`${environment.cmsUrl}/blogs/1`).flush({}, {status: 500, statusText: 'Error'});
     await new Promise(resolve => setTimeout(resolve, 0));
     expect(go).not.toHaveBeenCalled();
@@ -131,7 +131,7 @@ describe('ArticleComponent Given the owner is initialized', () => {
     expect(screen.getByRole('heading', {name: 'Fixture 1'})).toBeTruthy();
   });
 
-  it('When the recorded scenario is exercised Then the contract demonstrates that handles a missing route ID without requesting a null article', () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then handles a missing route ID without requesting a null article', () => {
     const pending = http.expectOne(`${environment.cmsUrl}/blogs/1`);
     params.next(convertToParamMap({}));
     expect(pending.cancelled).toBe(true);
@@ -139,7 +139,7 @@ describe('ArticleComponent Given the owner is initialized', () => {
     expect(go).toHaveBeenCalledExactlyOnceWith('/404');
     expect(loading.loading).toBe(false);
   });
-  it('When the recorded scenario is exercised Then the contract demonstrates that omits null entries and null, absent, empty, whitespace labels from CMS chips', () => {
+  it('Given an article route receives CMS content and navigation state when route, content, or share state changes Then omits null entries and null, absent, empty, whitespace labels from CMS chips', () => {
     http.expectOne(`${environment.cmsUrl}/blogs/1`).flush({...blog(1), blogTags:
       [null, {tag: null}, {}, {tag: ''}, {tag: '  \t\n'}, {tag: 'LXC'}]});
     fixture.detectChanges();
