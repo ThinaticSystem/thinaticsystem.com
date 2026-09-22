@@ -5,17 +5,17 @@ import {requireSingleProbeAssertion} from './known-defect-probe-selection.mjs';
 const probeRoot = '.artifacts/known-defect-runner-probes';
 mkdirSync(probeRoot, {recursive: true});
 const probes = [
-  ['assertion-failure', 'test/runner-probes/assertion-failure.test.mjs', {testName: 'actual assertion failure', origin: 'test', name: 'AssertionError'}],
-  ['test-typeerror', 'test/runner-probes/test-typeerror.test.mjs', {testName: 'actual TypeError in test body', origin: 'test', name: 'TypeError'}],
-  ['before-each-typeerror', 'test/runner-probes/before-each-typeerror.test.mjs', {testName: 'actual beforeEach failure', origin: 'beforeEach', name: 'TypeError'}],
-  ['after-each-typeerror', 'test/runner-probes/after-each-typeerror.test.mjs', {testName: 'actual afterEach failure', origin: 'afterEach', name: 'TypeError'}],
-  ['unhandled-typeerror', 'test/runner-probes/unhandled-typeerror.test.mjs', {testName: 'actual unhandled asynchronous error', unhandled: true}],
+  ['assertion-failure', 'scripts/known-defects/fixtures/assertion-failure.fixture.mjs', {testName: 'actual assertion failure', origin: 'test', name: 'AssertionError'}],
+  ['test-typeerror', 'scripts/known-defects/fixtures/test-typeerror.fixture.mjs', {testName: 'actual TypeError in test body', origin: 'test', name: 'TypeError'}],
+  ['before-each-typeerror', 'scripts/known-defects/fixtures/before-each-typeerror.fixture.mjs', {testName: 'actual beforeEach failure', origin: 'beforeEach', name: 'TypeError'}],
+  ['after-each-typeerror', 'scripts/known-defects/fixtures/after-each-typeerror.fixture.mjs', {testName: 'actual afterEach failure', origin: 'afterEach', name: 'TypeError'}],
+  ['unhandled-typeerror', 'scripts/known-defects/fixtures/unhandled-typeerror.fixture.mjs', {testName: 'actual unhandled asynchronous error', unhandled: true}],
 ];
 const evidence = [];
 for (const [id, spec, expected] of probes) {
   const outputPath = `${probeRoot}/${id}.json`;
   rmSync(outputPath, {force: true});
-  const result = spawnSync('corepack', ['pnpm', 'exec', 'vitest', 'run', spec, '--dir', 'test/runner-probes', '--reporter=./scripts/known-defect-reporter.mjs'], {
+  const result = spawnSync('corepack', ['pnpm', 'exec', 'vitest', 'run', spec, '--config', 'vitest.known-defects.config.mjs', '--reporter=./scripts/known-defect-reporter.mjs'], {
     encoding: 'utf8',
     env: {...process.env, KNOWN_DEFECT_REPORT_PATH: outputPath},
   });

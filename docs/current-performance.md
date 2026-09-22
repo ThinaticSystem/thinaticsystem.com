@@ -106,4 +106,4 @@ node scripts/performance/verify-menu-motion.mjs --dist dist/app/browser --output
 旧方式の`perf:paired`と、その結果を読む`perf:budget`は再現用に残している  
 `perf:budget`の使い方は[旧方式の性能予算](functional-performance-budget.md)を参照
 
-[性能判定の設定]: ../test/performance-policy-v2.json
+[性能判定の設定]: ../scripts/performance/fixtures/performance-policy-v2.json

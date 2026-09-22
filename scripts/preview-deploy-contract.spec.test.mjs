@@ -16,9 +16,10 @@ test('preview deploy is gated by exact candidate artifact and readback smoke', a
   requireLine(text, /p\.sha !== process\.env\.EXPECTED_SHA/, 'provenance SHA check');
   requireLine(text, /p\.repository !== process\.env\.EXPECTED_REPOSITORY/, 'provenance repository check');
   requireLine(text, /statSync\('dist\/app\/browser\/index\.html'\)/, 'built output witness');
-  requireLine(text, /command: pages deploy dist\/app\/browser --project-name=thinaticsystem-com --branch=chore-modernization-renovate/, 'explicit non-production Pages target');
+  requireLine(text, /command: pages deploy dist\/app\/browser --project-name=thinaticsystem-com --branch=chore-modernization-renovate --commit-hash=\$\{\{ github\.sha \}\} --commit-message=/, 'explicit non-production Pages target and commit metadata');
   requireLine(text, /id: deploy[\s\S]*deployment-url/, 'deployment URL readback');
-  requireLine(text, /run: node scripts\/preview-smoke\.mjs/, 'post-deploy smoke');
+  requireLine(text, /run: node scripts\/pages-readback\.mjs/, 'Pages API readback');
+  requireLine(text, /run: node scripts\/preview-smoke\.mjs/, 'post-deploy browser smoke');
   requireLine(text, /wranglerVersion: 4\.136\.1/, 'verified Wrangler version');
   requireLine(text, /actions\/checkout@d23441a48e516b6c34aea4fa41551a30e30af803/, 'immutable checkout action');
   requireLine(text, /actions\/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38/, 'immutable setup-node action');

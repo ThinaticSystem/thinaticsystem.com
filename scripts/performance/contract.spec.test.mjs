@@ -4,7 +4,7 @@ import test from 'node:test';
 import {evaluatePerformance, requiredJourneyIds, validateObservation} from './contract.mjs';
 
 // NOTE: Synthetic DTO fixtures only; no browser, app, network or child processes.
-const policy = JSON.parse(readFileSync(new URL('../../test/performance-policy-v2.json', import.meta.url), 'utf8'));
+const policy = JSON.parse(readFileSync(new URL('../../scripts/performance/fixtures/performance-policy-v2.json', import.meta.url), 'utf8'));
 const baselineHash = 'a'.repeat(64);
 const candidateHash = 'b'.repeat(64);
 const fixtureHash = 'c'.repeat(64);

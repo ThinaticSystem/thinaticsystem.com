@@ -61,9 +61,9 @@ try {
   sourceBefore = captureSourceIdentity(cwd); headBefore = git(['rev-parse','HEAD']);
   json('source-before.json', sourceBefore);
   if (process.version !== 'v' + readFileSync('.node-version','utf8').trim()) throw new Error('Candidate Node pin mismatch');
-  const policy = JSON.parse(readFileSync('test/performance-policy-v3.json','utf8'));
+  const policy = JSON.parse(readFileSync('scripts/performance/fixtures/performance-policy-v3.json','utf8'));
   json('policy.json', policy);
-  json('identity.json', {head:headBefore,sourceSha256:sourceBefore.sha256,policySha256:hash('test/performance-policy-v3.json'),node:process.version,execPath:process.execPath,host:hostname(),schedule,calibrationSchedule,github:{sha:process.env.GITHUB_SHA??null,runId:process.env.GITHUB_RUN_ID??null}});
+  json('identity.json', {head:headBefore,sourceSha256:sourceBefore.sha256,policySha256:hash('scripts/performance/fixtures/performance-policy-v3.json'),node:process.version,execPath:process.execPath,host:hostname(),schedule,calibrationSchedule,github:{sha:process.env.GITHUB_SHA??null,runId:process.env.GITHUB_RUN_ID??null}});
   supervisor = compileSupervisor(directory);
   const baselineNode = process.env.BASELINE_NODE_EXECUTABLE;
   if (!baselineNode || !isAbsolute(baselineNode)) throw new Error('Absolute BASELINE_NODE_EXECUTABLE required');

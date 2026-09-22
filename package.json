@@ -10,7 +10,7 @@
     "test": "ng test",
     "typecheck": "corepack pnpm exec tsc -p tsconfig.spec.json --noEmit",
     "test:known-defects": "node scripts/verify-known-defects.mjs",
-    "test:known-defects:contract": "node --test scripts/known-defect-probe-selection.test.mjs && node scripts/verify-known-defects-fixtures.mjs && node scripts/verify-known-defect-runner-probes.mjs && node --test scripts/resolved-debt-contract.test.mjs",
+    "test:known-defects:contract": "node --test scripts/known-defect-probe-selection.spec.test.mjs && node scripts/verify-known-defects-fixtures.mjs && node scripts/verify-known-defect-runner-probes.mjs && node --test scripts/resolved-debt-contract.spec.test.mjs",
     "docs:check": "typedoc --options typedoc.json",
     "test:e2e": "corepack pnpm run test:browser-contract && EVIDENCE_OUTPUT=.artifacts/browser-smoke.json EVIDENCE_DIR=.artifacts/screenshots node scripts/browser-smoke.mjs",
     "perf:check": "node scripts/performance-check.mjs",
@@ -19,14 +19,14 @@
     "lint": "ng lint",
     "test:browser-contract": "node scripts/verify-browser-readiness.mjs",
     "perf:paired": "node scripts/paired-performance.mjs --baseline-control test/paired-baseline-control-v2.json --baseline-control-sha256 60320084564717481d1c20db4c413fe79f6ad751adb452ebc81ce7c2a83a0e28",
-    "test:paired-contract": "node --test scripts/paired-performance-contract.test.mjs scripts/paired-process.test.mjs scripts/paired-continuation.test.mjs",
-    "test:budget-contract": "node --test scripts/functional-budget-contract.test.mjs scripts/functional-budget-assets.test.mjs scripts/functional-budget-evidence.test.mjs",
+    "test:paired-contract": "node --test scripts/paired-performance-contract.spec.test.mjs scripts/paired-process.spec.test.mjs scripts/paired-continuation.spec.test.mjs",
+    "test:budget-contract": "node --test scripts/functional-budget-contract.spec.test.mjs scripts/functional-budget-assets.spec.test.mjs scripts/functional-budget-evidence.spec.test.mjs",
     "perf:budget": "node scripts/functional-budget.mjs",
     "perf:current": "node scripts/performance/run.mjs",
-    "test:performance-contract": "node --test --test-reporter=tap scripts/performance/contract.test.mjs scripts/performance/recorder.test.mjs",
+    "test:performance-contract": "node --test --test-reporter=tap scripts/performance/contract.spec.test.mjs scripts/performance/recorder.spec.test.mjs",
     "test:performance-recorder": "node scripts/performance/verify-recorder.mjs",
-    "test:preview-contract": "node --test scripts/preview-deploy-contract.test.mjs",
-    "test:performance-policy": "node --test scripts/performance/policy-version.test.mjs"
+    "test:preview-contract": "node --test scripts/preview-deploy-contract.spec.test.mjs",
+    "test:performance-policy": "node --test scripts/performance/policy-version.spec.test.mjs scripts/performance/policy-v3.regression.test.mjs"
   },
   "private": true,
   "dependencies": {

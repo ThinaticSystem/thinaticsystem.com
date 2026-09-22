@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {gzipSync, brotliCompressSync, constants} from 'node:zlib';
 
 const distRoot = process.env.DIST_ROOT ?? 'dist/app/browser';
-const baselinePath = process.env.PERFORMANCE_BASELINE ?? 'test/performance-baseline.json';
+const baselinePath = process.env.PERFORMANCE_BASELINE ?? 'scripts/performance/fixtures/performance-baseline.json';
 const browserEvidencePath = process.env.EVIDENCE_OUTPUT ?? '.artifacts/browser-smoke.json';
 const outputPath = process.env.PERFORMANCE_OUTPUT ?? '.artifacts/performance.json';
 

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {requireSingleProbeAssertion} from './known-defect-probe-selection.mjs';
 
-const spec = 'test/runner-probes/unhandled-typeerror.test.mjs';
+const spec = 'scripts/known-defects/fixtures/unhandled-typeerror.fixture.mjs';
 const testName = 'actual unhandled asynchronous error';
 const valid = () => ({numTotalTests: 1, testResults: [{name: spec, assertionResults: [{fullName: testName}]}]});
 

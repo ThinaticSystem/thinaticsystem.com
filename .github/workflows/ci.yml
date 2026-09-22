@@ -158,9 +158,16 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: 4.136.1
           packageManager: pnpm
-          command: pages deploy dist/app/browser --project-name=thinaticsystem-com --branch=chore-modernization-renovate
+          command: pages deploy dist/app/browser --project-name=thinaticsystem-com --branch=chore-modernization-renovate --commit-hash=${{ github.sha }} --commit-message="verified-${{ github.sha }}"
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-      - name: Read back preview and CMS paths
+      - name: Read back exact Pages preview deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GITHUB_SHA: ${{ github.sha }}
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: node scripts/pages-readback.mjs "$DEPLOYMENT_URL"
+      - name: Read back preview and browser journeys
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
         run: node scripts/preview-smoke.mjs "$DEPLOYMENT_URL"
