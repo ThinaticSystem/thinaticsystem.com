@@ -4,7 +4,18 @@ import {stripVTControlCharacters} from 'node:util';
 export function validateResolvedDebtRun({manifest, status, signal, error, report, stderr = '', openSpecs}) {
   const errors = [];
   const check = manifest?.resolvedCheck;
-  if (manifest?.schema !== 'thinaticsystem-com/known-defects/v1' || !Array.isArray(manifest.cases) || manifest.cases.length !== 0 || check?.id !== 'unsafe-html-content' || check?.spec !== 'src/app/pipes/sanitize-html.pipe.spec.ts' || check?.suiteName !== 'SanitizeHtmlPipe' || !Array.isArray(check?.testNames) || check.testNames.length !== 4 || new Set(check.testNames).size !== 4 || !check.testNames.every(name => typeof name === 'string' && name.trim()) || !check.testNames.some(name => name.startsWith('[unsafe-html-content]'))) {
+  const expectedResolvedCheck = {
+    id: 'unsafe-html-content',
+    spec: 'src/app/pipes/sanitize-html.pipe.spec.ts',
+    suiteName: 'Given the sanitizer receives HTML from content input',
+    testNames: [
+      'When preserves ordinary non-executable HTML without marking it trusted',
+      'When [unsafe-html-content] removes executable scripts rather than trusting HTML',
+      'When does not retain event handlers or srcdoc HTML',
+      'When cannot bypass the dedicated player allowlist through generic HTML',
+    ],
+  };
+  if (manifest?.schema !== 'thinaticsystem-com/known-defects/v1' || !Array.isArray(manifest.cases) || manifest.cases.length !== 0 || check?.id !== expectedResolvedCheck.id || check?.spec !== expectedResolvedCheck.spec || check?.suiteName !== expectedResolvedCheck.suiteName || !Array.isArray(check?.testNames) || check.testNames.length !== expectedResolvedCheck.testNames.length || new Set(check.testNames).size !== expectedResolvedCheck.testNames.length || !check.testNames.every(name => typeof name === 'string' && name.trim()) || JSON.stringify([...check.testNames].sort()) !== JSON.stringify([...expectedResolvedCheck.testNames].sort())) {
     errors.push('Invalid explicit security-debt resolution contract.');
     return errors;
   }

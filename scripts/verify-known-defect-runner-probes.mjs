@@ -5,11 +5,11 @@ import {requireSingleProbeAssertion} from './known-defect-probe-selection.mjs';
 const probeRoot = '.artifacts/known-defect-runner-probes';
 mkdirSync(probeRoot, {recursive: true});
 const probes = [
-  ['assertion-failure', 'scripts/known-defects/fixtures/assertion-failure.fixture.mjs', {testName: 'actual assertion failure', origin: 'test', name: 'AssertionError'}],
-  ['test-typeerror', 'scripts/known-defects/fixtures/test-typeerror.fixture.mjs', {testName: 'actual TypeError in test body', origin: 'test', name: 'TypeError'}],
-  ['before-each-typeerror', 'scripts/known-defects/fixtures/before-each-typeerror.fixture.mjs', {testName: 'actual beforeEach failure', origin: 'beforeEach', name: 'TypeError'}],
-  ['after-each-typeerror', 'scripts/known-defects/fixtures/after-each-typeerror.fixture.mjs', {testName: 'actual afterEach failure', origin: 'afterEach', name: 'TypeError'}],
-  ['unhandled-typeerror', 'scripts/known-defects/fixtures/unhandled-typeerror.fixture.mjs', {testName: 'actual unhandled asynchronous error', unhandled: true}],
+  ['assertion-failure', 'scripts/known-defects/fixtures/assertion-failure.spec.mjs', {testName: 'actual assertion failure', origin: 'test', name: 'AssertionError'}],
+  ['test-typeerror', 'scripts/known-defects/fixtures/test-typeerror.spec.mjs', {testName: 'actual TypeError in test body', origin: 'test', name: 'TypeError'}],
+  ['before-each-typeerror', 'scripts/known-defects/fixtures/before-each-typeerror.spec.mjs', {testName: 'actual beforeEach failure', origin: 'beforeEach', name: 'TypeError'}],
+  ['after-each-typeerror', 'scripts/known-defects/fixtures/after-each-typeerror.spec.mjs', {testName: 'actual afterEach failure', origin: 'afterEach', name: 'TypeError'}],
+  ['unhandled-typeerror', 'scripts/known-defects/fixtures/unhandled-typeerror.spec.mjs', {testName: 'actual unhandled asynchronous error', unhandled: true}],
 ];
 const evidence = [];
 for (const [id, spec, expected] of probes) {

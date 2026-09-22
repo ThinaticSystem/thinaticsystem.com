@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {validateResolvedDebtRun} from './resolved-debt-contract.mjs';
-const check={id:'unsafe-html-content',spec:'src/app/pipes/sanitize-html.pipe.spec.ts',suiteName:'SanitizeHtmlPipe',testNames:['[unsafe-html-content] blocks scripts','ordinary HTML','events','unapproved iframe']};
+const check={id:'unsafe-html-content',spec:'src/app/pipes/sanitize-html.pipe.spec.ts',suiteName:'Given the sanitizer receives HTML from content input',testNames:['When preserves ordinary non-executable HTML without marking it trusted','When [unsafe-html-content] removes executable scripts rather than trusting HTML','When does not retain event handlers or srcdoc HTML','When cannot bypass the dedicated player allowlist through generic HTML']};
 const make=()=>({manifest:{schema:'thinaticsystem-com/known-defects/v1',cases:[],resolvedCheck:structuredClone(check)},status:0,signal:null,error:null,stderr:'',openSpecs:[],report:{schema:'thinaticsystem-com/vitest-authoritative/v1',success:true,numTotalTests:4,numPassedTests:4,numFailedTests:0,numPendingTests:0,numTodoTests:0,numTotalTestSuites:2,numPassedTestSuites:2,numFailedTestSuites:0,numPendingTestSuites:0,unhandledErrors:[],runnerErrors:[],testResults:[{name:check.spec,status:'passed',message:'',runnerErrors:[],assertionResults:check.testNames.map(name=>({fullName:check.suiteName+' '+name,ancestorTitles:[check.suiteName],status:'passed',mode:'run',failureMessages:[],failureDetails:[]}))}]}});
 test('Given a resolved-debt receipt claims a known regression When the receipt is validated Then accepts only the declared real passing regression projection',()=>assert.deepEqual(validateResolvedDebtRun(make()),[]));
 for(const [name,poison] of [
@@ -10,6 +10,8 @@ for(const [name,poison] of [
  ['open debt',r=>r.manifest.cases.push({id:'unknown'})],
  ['wrong resolution ID',r=>r.manifest.resolvedCheck.id='unknown'],
  ['wrong source file',r=>r.manifest.resolvedCheck.spec='../../secret'],
+ ['wrong suite identity',r=>r.manifest.resolvedCheck.suiteName='SanitizeHtmlPipe'],
+ ['wrong runner case identity',r=>r.manifest.resolvedCheck.testNames[0]='ordinary HTML'],
  ['undisclosed spec',r=>r.openSpecs.push('src/known-defects/hidden.spec.ts')],
  ['failed discovery',r=>r.openSpecs=null],
  ['nonzero exit',r=>r.status=1],
