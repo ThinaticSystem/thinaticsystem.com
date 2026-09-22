@@ -2,14 +2,14 @@ import {render, screen} from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import {AppComponent} from './app.component';
 
-describe('AppComponent', () => {
-  it('should create the app', async () => {
+describe('AppComponent Given the application shell is rendered', () => {
+  it('When the component is created Then it exposes an application instance', async () => {
     const {fixture} = await render(AppComponent);
 
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should expose semantic shell controls', async () => {
+  it('When a user toggles theme and menu controls Then semantic state and navigation are exposed', async () => {
     await render(AppComponent);
     const user = userEvent.setup();
     const themeButton = screen.getByRole('button', {

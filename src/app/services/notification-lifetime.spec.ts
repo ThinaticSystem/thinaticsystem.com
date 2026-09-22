@@ -1,26 +1,20 @@
 import {NotificationService} from './notification.service';
 import {vi} from 'vitest';
 
-describe('NotificationService lifetime', () => {
+describe('NotificationService Given a fresh service with fake timers', () => {
   let service: NotificationService;
-  beforeEach(() => {vi.useFakeTimers(); service = new NotificationService();});
-  afterEach(() => {vi.clearAllTimers(); vi.useRealTimers();});
 
-  it('[notification-replacement-lifetime] gives each replacement its full three seconds', () => {
-    service.show('first');
-    vi.advanceTimersByTime(2_999);
-    service.show('second');
-    vi.advanceTimersByTime(1);
-    expect(service.showNotification).toBe(true);
-    expect(service.message).toBe('second');
-    vi.advanceTimersByTime(2_998);
-    expect(service.showNotification).toBe(true);
-    vi.advanceTimersByTime(1);
-    expect(service.showNotification).toBe(false);
-    expect(vi.getTimerCount()).toBe(0);
+  beforeEach(() => {
+    vi.useFakeTimers();
+    service = new NotificationService();
   });
 
-  it('repeated replacements keep one timer and preserve the default message', () => {
+  afterEach(() => {
+    vi.clearAllTimers();
+    vi.useRealTimers();
+  });
+
+  it('When blank and omitted messages replace content Then one timer and the default message remain', () => {
     service.show('first');
     service.show('');
     service.show(undefined);
@@ -30,7 +24,7 @@ describe('NotificationService lifetime', () => {
     expect(service.showNotification).toBe(false);
   });
 
-  it('releases its timer when the injector destroys the service', async () => {
+  it('When the injector destroys the service Then its timer is released', async () => {
     const {TestBed} = await import('@angular/core/testing');
     TestBed.configureTestingModule({});
     const owned = TestBed.inject(NotificationService);

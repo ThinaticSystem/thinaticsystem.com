@@ -16,8 +16,11 @@ for (const [name, result] of [
   ['production environment', [{...deployment, environment: 'production'}]],
   ['mismatched branch', [{...deployment, branch: 'master'}]],
   ['failed stage', [{...deployment, latest_stage: {name: 'Failed', status: 'failure'}}]],
+  ['contradictory success name and failure status', [{...deployment, latest_stage: {name: 'Success', status: 'failure'}}]],
+  ['missing stage status', [{...deployment, latest_stage: {name: 'Success'} }]],
   ['mismatched commit', [{...deployment, deployment_trigger: {metadata: {commit_hash: 'b'.repeat(40)}}}]],
   ['missing URL', [{...deployment, url: ''}]],
+  ['malformed payload', [{...deployment, latest_stage: null}]],
 ]) test(`selector fails closed for ${name}`, () => {
   assert.throws(() => selectPreviewDeployment({result}, expected));
 });

@@ -1,0 +1,7 @@
+[
+  {"name": "missing runner ID", "mutation": "missing-id"},
+  {"name": "duplicate runner ID", "mutation": "duplicate-id"},
+  {"name": "fake source range", "mutation": "fake-source-range"},
+  {"name": "dropped matcher", "mutation": "dropped-matcher"},
+  {"name": "failing event forged as PASS", "mutation": "forged-pass"}
+]
