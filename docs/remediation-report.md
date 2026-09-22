@@ -1,23 +1,84 @@
-# Modernization remediation report
+# モダナイゼーションの是正報告
 
-## Scope
+この報告書は当時の実施記録を残したもの。現在の受入状態を示すものではない。  
+成功・失敗の判定や検証の制約は、以下の是正作業時点の記録として読む。
 
-This report records the remediation run for the independent modernization review. The run preserves the existing product defects as explicit debt unless they were already part of the approved migration contract; it does not turn unrelated bug fixes into migration success.
+## 作業範囲
 
-## Implemented and verified
+モダナイゼーションの独立レビューを受けて行った、是正作業の記録をまとめた。  
+既存の製品不具合は、承認済みの移行契約にすでに含まれていたものを除き、明示的な負債として残した。  
+無関係な不具合修正を、移行の成功として扱うことはしていない。
 
-- The known-defect contract now fails closed on missing/invalid manifest schema, duplicate case/spec identities, unsupported outcomes, runner start/signal/status failures, unexpected diagnostics, missing or malformed structured reports, runner-level errors, count mismatches, unexpected suites, duplicate suites, unexpected assertions, and unexpected passes
-- Negative fixtures exercise those rejection paths, including a fatal signal after plausible test output and a valid-looking report with an unrelated stderr error
-- The nested-anchor known-defect test asserts both destination identity and keyboard focus stops using semantic locators. The registered defect remains an intentional assertion failure
-- Known-defect execution now writes `.artifacts/known-defects-result.json` alongside the raw log and Vitest report, preserving child status, signal, runner error, and validation errors
-- Browser smoke uses the same semantic action sequence for baseline and candidate runs, with owned API fixtures, reduced motion, visual-readiness timing, and accessibility scanning after the timer stops
-- Performance baseline data records the same browser-smoke v3 substrate used by the paired baseline run. Initial artifact, request-count, lazy-route byte, and three-repeat median timing checks remain fail-closed
-- CI uses the pinned setup-node action and an explicit Node 22 bridge matching `.node-version`; delivery smoke is explicitly local-only and does not claim Cloudflare deployment
-- Requirements inventory now distinguishes PASS, registered known failure, retained debt failure, manual pending work, and external validation that was not run
+## 実装と検証
 
-## Verification evidence
+- **既知不具合の契約検査**
 
-All commands below were run from the repository root on 2026-09-05.
+  次の異常を合格にしない、fail-closedの判定にした。
+
+  - manifestのスキーマ欠落・不正
+  - case/spec識別情報の重複
+  - 未対応の結果
+  - runnerの起動・signal・statusの異常
+  - 想定外の診断出力
+  - 構造化レポートの欠落・形式不正
+  - runnerレベルのエラー
+  - 件数の不一致
+  - 想定外のsuite
+  - suiteの重複
+  - 想定外のアサーション
+  - 想定外の成功
+
+- **異常系フィクスチャ**
+
+  上記の拒否経路を検査した。  
+  もっともらしいテスト出力の後に致命的なsignalが発生するケースと、  
+  正常に見えるレポートに無関係なstderrエラーが伴うケースも含めた。
+
+- **入れ子のanchorの既知不具合テスト**
+
+  セマンティックなロケータを使い、遷移先の一致とキーボードフォーカスの停止位置を検証した。  
+  登録済みの不具合は、意図したアサーション失敗として残した。
+
+- **既知不具合の実行記録**
+
+  rawログとVitestレポートに加え、`.artifacts/known-defects-result.json` を出力するようにした。  
+  子プロセスのstatus、signal、runnerエラー、検証エラーを保持する。
+
+- **ブラウザスモーク検査**
+
+  基準版と候補版に同じセマンティックな操作順序を使った。  
+  管理下のAPIフィクスチャとreduced motionを使い、表示準備が整うまでの時間を測定した。  
+  アクセシビリティ検査は、時間測定を止めてから実行した。
+
+- **性能の基準データ**
+
+  対になる基準版の実行と同じ、browser-smoke v3の実行基盤を記録した。  
+  次の検査は、引き続きfail-closedとした。
+
+  - 初期アーティファクト
+  - リクエスト数
+  - 遅延読込ルートのバイト数
+  - 3回反復の中央値による時間
+
+- **CIとローカル配信検査**
+
+  CIには固定したsetup-node actionを使い、`.node-version` と一致するNode 22の移行用ランタイムを明示した。  
+  配信スモーク検査はローカル限定とし、Cloudflareへのデプロイを示すものとは扱っていない。
+
+- **要件一覧の状態区分**
+
+  次の状態を区別するようにした。
+
+  - PASS
+  - 登録済みの既知の失敗
+  - 負債として残した失敗
+  - 未完了の手動作業
+  - 未実施の外部検証
+
+## 検証の証拠
+
+以下のコマンドは、2026-09-05にリポジトリのルートから実行した。  
+結果と証拠の表は、当時の記録を原文のまま残している。
 
 | Command | Result | Evidence |
 |---|---|---|
@@ -30,16 +91,82 @@ All commands below were run from the repository root on 2026-09-05.
 | `corepack pnpm run docs:check` | PASS | `.artifacts/typedoc/` |
 | `git diff --check` | PASS | command output |
 
-The paired baseline evidence used the same browser-smoke v3 harness, Chromium executable/version, synthetic fixture set, reduced-motion setting, loopback static server, readiness wait, semantic action sequence, and three-repeat aggregation. It is retained outside the repository at `/home/hermes/.hermes/work/thinaticsystem-modernization/paired-baseline-browser.json`; the candidate run is `.artifacts/browser-smoke.json`.
+対になる基準版の証拠は、候補版と次の条件をそろえて取得した。
 
-Candidate median timings in the final recorded run were: home 286.42 ms, theme toggle 696.53 ms, blog list 116.91 ms, article 94.09 ms, back 30.80 ms, discography 88.16 ms, and mobile menu/blog 1388.47 ms. These are local lab observations, not field UX guarantees.
+- browser-smoke v3ハーネス
+- Chromiumの実行ファイルとバージョン
+- 合成フィクスチャの組
+- reduced-motion設定
+- loopbackの静的サーバー
+- 準備完了の待機
+- セマンティックな操作順序
+- 3回反復の集計
 
-## Nix and external boundaries
+基準版の記録は、リポジトリ外の次のファイルに保存した。
 
-An actual bounded attempt to run `nix develop --offline --no-write-lock-file -c bash -lc 'node --version && corepack pnpm --version'` timed out after 300 seconds before version output. Therefore Nix install, typecheck, unit/debt, build, dev-server, and browser execution are **UNVERIFIED**, not PASS. Host-side checks above must not be conflated with Nix evidence.
+`/home/hermes/.hermes/work/thinaticsystem-modernization/paired-baseline-browser.json`
 
-Cloudflare account access, branch bindings, remote Actions, preview, production deployment, DNS, CMS writes, live patron data, and live CMS access were not run. Human visual inspection and representative screen-reader operation remain pending; axe output does not establish those guarantees.
+候補版の記録は `.artifacts/browser-smoke.json` に保存した。
 
-## Residual debt
+最終記録での候補版の時間中央値は次のとおり。
 
-The following baseline product defects remain explicit `DEBT FAIL` or security-review items in `docs/requirements-tests.md`: blog HTTP failure handling, blog concurrent page response ordering, article route-parameter lifecycle, article 404/500 distinction, clipboard rejection handling, notification timer replacement, discography image-error and empty-result loading settlement, and the sanitizer bypass/iframe allowlist policy. They were not silently converted into green requirements or classified as migration success.
+| 操作経路 | 中央値（ms） |
+|---|---:|
+| home | 286.42 |
+| theme toggle | 696.53 |
+| blog list | 116.91 |
+| article | 94.09 |
+| back | 30.80 |
+| discography | 88.16 |
+| mobile menu/blog | 1388.47 |
+
+これらはローカルの実験環境での観測値に限られる。実環境のUXを保証しない。
+
+## Nixと外部検証の制約
+
+次のコマンドを、時間制限付きで実際に試した。
+
+`nix develop --offline --no-write-lock-file -c bash -lc 'node --version && corepack pnpm --version'`
+
+バージョンが出力される前に、300秒でタイムアウトした。  
+そのため、Nix環境での次の実行は **UNVERIFIED** のままで、PASSではない。
+
+- install
+- typecheck
+- unit/debt
+- build
+- dev-server
+- browser
+
+上記のホスト側の検査結果を、Nixの証拠と混同してはいけない。
+
+次の外部確認・操作は実施していない。
+
+- Cloudflareアカウントへのアクセス
+- ブランチの紐付け
+- リモートActions
+- preview
+- 本番デプロイ
+- DNS操作
+- CMSへの書込み
+- 本番のpatronデータへのアクセス
+- 本番CMSへのアクセス
+
+人による見た目の確認と、代表的なスクリーンリーダー操作は未完了として残った。  
+axeの出力だけでは、これらを保証できない。
+
+## 残った負債
+
+基準版にあった次の製品不具合は、`docs/requirements-tests.md` に  
+明示的な `DEBT FAIL` またはセキュリティレビュー項目として残した。
+
+- blogのHTTP失敗時の処理
+- blogの並行ページ取得での応答順序
+- 記事のルートパラメータ変更時のライフサイクル
+- 記事の404/500の区別
+- clipboardの拒否時の処理
+- 通知タイマーの置き換え
+- discographyの画像エラー・空結果でのローディング終了処理
+- sanitizerのバイパスとiframeのallowlist方針
+
+これらを黙って成功した要件に変えたり、移行の成功として分類したりはしていない。

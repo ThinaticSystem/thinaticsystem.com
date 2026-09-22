@@ -1,18 +1,43 @@
-# Verification report: CI・TypeDoc・配信検査・性能比較
+# 検証報告：CI・TypeDoc・配信検査・性能比較
 
-Date: 2026-09-05
-Repository: `/home/hermes/projects/thinaticsystem.com`
-Branch: `chore/modernization-local`
-Candidate verified commit: `da9b15c48190d5759e605aebcba649f37258a3f5`
-Approved comparison base: `33b4ef4e8d21276130127a61aede6f0a8e1c47cb`
+この報告書は当時の実施記録を残したもの。現在の受入状態を示すものではない。  
+成功・失敗の判定や未実施事項は、以下の検証時点の記録として読む。
 
-## Scope and authority
+- 日付：2026-09-05
+- リポジトリ：`/home/hermes/projects/thinaticsystem.com`
+- ブランチ：`chore/modernization-local`
+- 検証した候補コミット：`da9b15c48190d5759e605aebcba649f37258a3f5`
+- 承認済みの比較基準：`33b4ef4e8d21276130127a61aede6f0a8e1c47cb`
 
-Mission Dのapproved scopeとしてCI workflow、TypeDoc、synthetic browser/a11y/keyboard/mobile evidence、size/request/per-route comparison、Cloudflare-compatible local HTTP smoke、README/quality/architecture docsを追加した。push、PR、merge、remote CI、Cloudflare account確認、preview/deploy、DNS、CMS writeは実施していない
+## 作業範囲と権限
 
-`AGENTS.md`は追加を試みたが、agent-instruction protected fileへの書込み承認がheadless実行中にtimeoutしたため作成していない。保護を迂回せず、このreportでgapとして明記する
+Mission Dの承認済み範囲として、次の項目を追加した。
 
-## Commands and exits
+- CIワークフロー
+- TypeDoc
+- 合成フィクスチャによるブラウザ・アクセシビリティ・キーボード・モバイル検証の証拠
+- サイズ・リクエスト数・ルート別の比較
+- Cloudflare互換のローカルHTTPスモーク検査
+- README・品質・アーキテクチャのドキュメント
+
+次の操作は実施していない。
+
+- push
+- PR作成
+- merge
+- リモートCI
+- Cloudflareアカウントの確認
+- preview・deploy
+- DNS操作
+- CMSへの書込み
+
+`AGENTS.md` の追加は試みたが、作成できなかった。  
+エージェント指示用の保護ファイルへの書込み承認が、headless実行中にタイムアウトしたため。  
+保護は迂回せず、未完了事項としてこの報告書に残した。
+
+## コマンドと終了コード
+
+当時の実行記録を原文のまま示す。
 
 | Command | Exit | Evidence |
 |---|---:|---|
@@ -25,44 +50,109 @@ Mission Dのapproved scopeとしてCI workflow、TypeDoc、synthetic browser/a11
 | `corepack pnpm run deploy:check` | 0 | `.artifacts/deploy.log` |
 | `git diff --check` | 0 | terminal verification |
 
-`check`の通常suiteは17 test files / 19 tests PASS、known-defect contract fixture PASSである。known-defect raw runnerは登録済みnested interactive-anchor assertion 1件だけを実際にFAILし、gate自身はexit 0になった。runner/setup/import failureやunexpected passはない
+`check` の結果は、通常テストと既知不具合の検査を分けて読む必要がある。
 
-## Browser/a11y evidence
+- **通常テスト**
 
-`test:e2e`はChromium `140.0.7339.16`（`/home/hermes/.cache/ms-playwright/chromium-1187/chrome-linux/chrome`）、desktop `1280x900`、mobile `375x812`、`reducedMotion=reduce`、synthetic CMS/API fixtureで3 repeat実行した。home、theme toggle、blog list、article、back、discography、mobile menu/blogの全journeyを完了し、各repeatでaxe violations、console error、page error、failed request、blocked external requestは0件だった。keyboard操作・focus・mobile reflow（scrollWidth=clientWidth=375）も記録した
+  17 test files / 19 testsがPASSだった。
 
-手動visual inspectionと代表screen-reader操作は自動実行していないためpendingである。axe PASSをscreen-reader usabilityの証明とは扱わない
+- **既知不具合の契約フィクスチャ**
 
-## Performance
+  known-defect contract fixtureはPASSだった。
 
-`perf:check`はapproved baseの同じ圧縮条件（gzip level9/mtime0、Brotli quality11）でartifactを比較した
+- **既知不具合のraw runner**
 
-- initial raw: `531195 -> 433060` bytes（`-98135`）
-- initial gzip: `155551 -> 127352` bytes（`-28199`）
-- initial Brotli: `136693 -> 112405` bytes（`-24288`）
-- all representative journey request countsはbase以下（home 12 vs 13、mobile menu 18 vs 19など）
-- timingは3-repeat medianとして`.artifacts/performance.json`へ保存した。local lab timingはfield UX保証ではなく、noiseだけで性能優位を主張しない
+  登録済みのnested interactive-anchor assertion 1件だけが実際にFAILした。  
+  ゲート自身の終了コードは0だった。runner/setup/importの失敗や想定外の成功はなかった。
 
-## Local delivery smoke
+## ブラウザとアクセシビリティの証拠
 
-`dist/app/browser`を127.0.0.1限定serverで配信し、`/blog`と`/blog/article/1`のdeep-link、未知SPA route、`/workers/patrons` GET JSON 200、同API POST JSON 405、unknown API JSON 404、missing asset 404を検査した。APIをSPA HTML fallbackへ混ぜず、deployは行っていない
+`test:e2e` は、次の条件で3回反復した。
 
-## Required checks and remaining gaps
+- Chromium：`140.0.7339.16`
+- 実行ファイル：`/home/hermes/.cache/ms-playwright/chromium-1187/chrome-linux/chrome`
+- デスクトップ：`1280x900`
+- モバイル：`375x812`
+- モーション設定：`reducedMotion=reduce`
+- データ：合成CMS/APIフィクスチャ
+
+検証した操作経路は、すべて完了した。
+
+- home
+- theme toggle
+- blog list
+- article
+- back
+- discography
+- mobile menu/blog
+
+各反復で、次の件数はいずれも0件だった。
+
+- axe violations
+- console error
+- page error
+- failed request
+- blocked external request
+
+キーボード操作、フォーカス、モバイルのreflowも記録した。  
+reflowの値はscrollWidth=clientWidth=375だった。
+
+手動の見た目確認と代表的なスクリーンリーダー操作は、自動実行していないため未完了として残った。  
+axeのPASSを、スクリーンリーダーの使いやすさの証明とは扱わない。
+
+## 性能比較
+
+`perf:check` は、承認済みの基準版と同じ圧縮条件でアーティファクトを比較した。
+
+- gzip：level9/mtime0
+- Brotli：quality11
+
+| 初期アセット | 基準版から候補版への変化（bytes） | 差分（bytes） |
+|---|---|---:|
+| raw | `531195 -> 433060` | `-98135` |
+| gzip | `155551 -> 127352` | `-28199` |
+| Brotli | `136693 -> 112405` | `-24288` |
+
+代表的な操作経路のリクエスト数は、すべて基準版以下だった。例を示す。
+
+- home：12 vs 13
+- mobile menu：18 vs 19
+
+時間は3回反復の中央値として `.artifacts/performance.json` に保存した。  
+ローカルの実験環境で得た時間は、実環境のUXを保証しない。測定のばらつきだけで性能優位を主張しない。
+
+## ローカル配信のスモーク検査
+
+`dist/app/browser` を127.0.0.1限定のサーバーで配信し、次の項目を検査した。
+
+- `/blog` と `/blog/article/1` のdeep-link
+- 未知のSPA route
+- `/workers/patrons` のGET：JSON 200
+- 同APIのPOST：JSON 405
+- 未知のAPI：JSON 404
+- 存在しないアセット：404
+
+APIをSPAのHTML fallbackへ混ぜずに検査した。デプロイは行っていない。
+
+## 必須検査と残った未完了事項
+
+以下のチェック状態は、当時の記録を示す。
 
 - [x] frozen install
-- [x] TypeScript typecheck
+- [x] TypeScriptの型検査
 - [x] Angular lint
-- [x] unit/component tests
-- [x] strict known-defect contract + negative fixtures
-- [x] production build
-- [x] TypeDoc generation without warnings
-- [x] Playwright semantic/browser/a11y/keyboard/mobile evidence
-- [x] comparable size/request/per-route timing evidence
-- [x] Cloudflare-compatible local artifact/deep-link/API/asset smoke
-- [x] least-privilege SHA-pinned GitHub Actions workflow at `.github/workflows/ci.yml`
-- [ ] remote GitHub Actions execution (not run; no fake PASS claim)
-- [ ] human visual and screen-reader inspection
-- [ ] Cloudflare account/project/branch binding/preview/live deploy verification
-- [ ] minimal `AGENTS.md` (protected-file approval unavailable)
+- [x] 単体・コンポーネントテスト
+- [x] 厳格な既知不具合の契約検査と異常系フィクスチャ
+- [x] 本番ビルド
+- [x] 警告なしのTypeDoc生成
+- [x] Playwrightによるセマンティックな操作・ブラウザ・アクセシビリティ・キーボード・モバイルの証拠
+- [x] 比較可能なサイズ・リクエスト数・ルート別時間の証拠
+- [x] Cloudflare互換のローカルアーティファクト・deep-link・API・アセットのスモーク検査
+- [x] `.github/workflows/ci.yml` の最小権限・SHA固定のGitHub Actionsワークフロー
+- [ ] リモートGitHub Actionsの実行（未実施、PASSとは報告しない）
+- [ ] 人による見た目とスクリーンリーダーの確認
+- [ ] Cloudflareのアカウント・プロジェクト・ブランチ紐付け・preview・本番デプロイの検証
+- [ ] 最小構成の `AGENTS.md`（保護ファイルの書込み承認を取得できず）
 
-No PR, push, merge, publish, deploy, DNS mutation, CMS write, or infrastructure mutation was performed
+PR作成、push、mergeに加え、publishも行っていない。  
+デプロイやDNS・CMS・インフラの変更も行っていない。

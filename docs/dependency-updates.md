@@ -1,53 +1,177 @@
-# Dependency updates with Renovate
+# Renovateによる依存関係の更新
 
-`renovate.json` configures the hosted Renovate GitHub App. It does not install an App, run a self-hosted bot, merge a PR, or deploy the site.
+`renovate.json`は、ホスト型のRenovate GitHub Appを設定する。次の操作は行わない。
 
-## Policy
+- Appのインストール
+- セルフホストbotの実行
+- PRのマージ
+- サイトのデプロイ
 
-- Updates target **develop**, not production `master`. Keep `baseBranchPatterns` explicit.
-- Ordinary PR creation: Monday 00:00–05:59 Asia/Tokyo, at most 3 open PRs and 2 new PRs/hour. The hosted service's own schedule determines the actual run time; this is an allowed window, not a promised start time.
-- No automerge. Existing application CI and review remain mandatory. Major updates require Dependency Dashboard approval before PR creation.
-- npm dependencies and the integrity-pinned pnpm `packageManager` use Renovate's npm manager. Ordinary npm releases wait 7 days; pnpm's existing peer, engine, build-script and release-age checks remain intact. Do not append release-age exemptions automatically to force a lock update through.
-- Angular framework/build/template-lint packages are grouped, with major updates separated by Renovate's default major/minor split. TypeScript ESLint packages are grouped separately. Grouping is not proof of compatible peer dependencies: frozen installation and tests decide.
-- GitHub Actions retain SHA digest pins. A narrowly scoped regex also keeps this repository's validator version in `.github/workflows/renovate-config.yml` discoverable; the validator is not an application dependency.
-- Monthly lockfile maintenance (first day, 00:00–05:59 JST) requires Dashboard approval. Nix input/lock updates also require approval. These checks do not authorize merging.
-- Dependency security alerts, when available to the App, use Renovate's vulnerability handling and may bypass ordinary scheduling/PR limits. Do not assume scheduled updates are a vulnerability response SLA.
+## 更新方針
 
-## Compatibility holds
+### PRの作成とレビュー
 
-These are deliberate holds from the migration evidence, not a substitute for future maintenance:
+- **更新先は`develop`**
 
-| Dependency | Current allowed line | Removal condition |
+  本番用の`master`は対象にしない。`baseBranchPatterns`を明示したままにする。
+
+- **通常PRの作成枠**
+
+  月曜00:00–05:59 Asia/Tokyoに限定し、未完了PRは最大3件、新規PRは1時間に2件までとする。  
+  実際の実行時刻はホストサービス側のスケジュールで決まる。この枠は作成を許可する時間帯で、開始時刻の保証ではない。
+
+- **自動マージなし**
+
+  既存のアプリケーションCIとレビューを必須とする。  
+  major更新は、PR作成前にDependency Dashboardでの承認を必要とする。
+
+- **脆弱性対応の例外**
+
+  Appが依存関係のセキュリティアラートを取得できる場合は、Renovateの脆弱性処理を使う。  
+  通常のスケジュールやPR数の制限を迂回する場合があるため、定期更新を脆弱性対応のSLAと見なさない。
+
+### 更新対象ごとの扱い
+
+- **npmとpnpm**
+
+  npm依存関係と、integrityで固定したpnpmの`packageManager`には、Renovateのnpm managerを使う。  
+  通常のnpmリリースは7日待つ。pnpmの次の既存チェックは維持する。
+
+  - peer
+  - engine
+  - build-script
+  - release-age
+
+  lock更新を通すために、release-ageの除外設定を自動追加しない。
+
+- **パッケージのグループ化**
+
+  Angularのframework・build・template-lintパッケージをまとめる。  
+  major更新はRenovate標準のmajor/minor分離に従い、TypeScript ESLintパッケージは別グループにする。
+
+  グループ化だけではpeer依存関係の互換性を証明できない。frozen installとテストで判断する。
+
+- **GitHub Actionsとvalidator**
+
+  GitHub ActionsのSHA digest固定を維持する。  
+  `.github/workflows/renovate-config.yml`内のvalidatorバージョンも、対象を絞った正規表現で検出できるようにする。
+
+  このvalidatorはアプリケーションの依存関係ではない。
+
+- **lockfileとNix**
+
+  月次のlockfile maintenanceは毎月1日00:00–05:59 JSTに行い、Dashboardでの承認を必要とする。  
+  Nixのinput/lock更新も承認を必要とする。これらの承認はマージの許可を兼ねない。
+
+## 互換性のための更新制限
+
+次の制限は、移行時の検証結果に基づいて意図的に設けている。今後の保守を不要にするものではない。
+
+| 依存関係 | 現在許可する範囲 | 制限を外す条件 |
 | --- | --- | --- |
-| TypeScript | `>=6.0.0 <6.1.0` | Review Angular compiler/build and TypeDoc peer ranges together. |
-| Vitest | `>=4.0.8 <5.0.0` | Review Angular build peer range and rerun test-runner contracts. |
-| KaTeX | `>=0.16.0 <0.17.0` | Review ngx-markdown peer range and rendered math. |
-| Tailwind | `>=3.0.0 <4.0.0` | Complete separate visual and performance migration; prior v4 regression evidence stays intact. |
-| `@types/node` | `>=24.0.0 <25.0.0` | Move with the actual candidate runtime. |
+| TypeScript | `>=6.0.0 <6.1.0` | Angularのcompiler/buildとTypeDocのpeer範囲を合わせて確認する |
+| Vitest | `>=4.0.8 <5.0.0` | Angular buildのpeer範囲を確認し、test-runnerの契約テストを再実行する |
+| KaTeX | `>=0.16.0 <0.17.0` | ngx-markdownのpeer範囲と数式の描画を確認する |
+| Tailwind | `>=3.0.0 <4.0.0` | 表示と性能の移行を別途完了する。過去のv4回帰の証拠は保持する |
+| `@types/node` | `>=24.0.0 <25.0.0` | 実際のcandidate runtimeと合わせて更新する |
 
-The npm `engines.node` update is disabled deliberately. The locked flake asserts candidate Node against `.node-version` and historical baseline Node against `.baseline-node-version`. A standalone engine bump or blindly refreshed Nix lock is not a valid runtime upgrade. On a Nix PR, inspect both provided Node versions, coordinate version files/engines as appropriate, and run `nix develop -c node --version` plus the existing install/check/build/paired tests. A failed assertion is a blocker, not grounds to remove the check. Historical baseline changes need their own review; do not rewrite old evidence or control hashes to manufacture PASS.
+Renovateは、これらの互換性制約をすべてpeer依存関係から推定するわけではない。  
+frameworkの変更時と定期的な依存関係の保守時に制限を見直す。
 
-Renovate does not infer all these compatibility constraints from peer dependencies. Review the holds whenever the framework changes and during regular dependency maintenance. Held security fixes require explicit coordinated remediation rather than silent suppression.
+制限によってセキュリティ修正が保留になる場合は、関係する更新を明示的に調整して対処する。黙って抑制しない。
 
-## Installation and activation boundary
+### NodeとNixの更新
 
-1. Inspect the existing App installation first. If needed, install [Mend Renovate](https://github.com/apps/renovate) for **ThinaticSystem/thinaticsystem.com only**; do not grant all repositories or add a PAT to this repository.
-2. The modernization PR targets `develop` and is not automatically merged by this work. The GitHub default branch is currently `master`. Renovate normally reads configuration from the default branch, even when updates target a different branch.
-3. Therefore merging a config only to `develop` does **not** establish activation. In a separately reviewed configuration-only change, place the same `renovate.json` filename on `master`, retaining `baseBranchPatterns: ["develop"]` and `useBaseBranchConfig: "merge"`. The framework-specific policy must only become active once the corresponding modernization has landed on `develop`. Check whether a `master` configuration change triggers the existing site's deployment before authorizing that change.
-4. Check the App's onboarding PR, Dependency Dashboard and first actual update PR: base is `develop`, automerge is off, lockfiles are produced successfully, and application CI executes. Record unavailable App/CI evidence honestly. Do not enable broad writes as a shortcut.
+npmの`engines.node`更新は意図的に無効化している。  
+lock済みのflakeは、candidate Nodeを`.node-version`と照合し、過去のbaseline Nodeを`.baseline-node-version`と照合する。
 
-An App installation alone or a locally valid config is not proof the bot is active. Repository/organization administrators may need to authorize App access. No App secret belongs in the browser bundle or repository.
+engineだけの更新や、内容を確認しないNix lockの再生成は、有効なruntime更新とは扱わない。  
+NixのPRでは、次の順で確認する。
 
-## Validation
+1. **両方のNodeバージョンを確認**
 
-The separate `Renovate configuration` workflow uses a version-pinned official validator, read-only repository permission, disabled checkout credentials, and no npm install scripts. It does not run the bot. Its dependencies are fetched outside application `node_modules`; it does not alter the application lockfile.
+   提供されるcandidateとbaselineのNodeを確認し、必要に応じてバージョンファイルとenginesを合わせて更新する。
 
-To reproduce using the version pinned in that workflow:
+2. **既存の検証を実行**
+
+   `nix develop -c node --version`に加え、既存のinstall/check/build/paired testsを実行する。
+
+assertionの失敗は更新を止める理由で、チェックを削除する理由にはならない。
+
+過去のbaselineを変更する場合は、別途レビューを必要とする。  
+PASSを作るために、過去の証拠やcontrol hashを書き換えない。
+
+## インストールと有効化の境界
+
+GitHubのデフォルトブランチは現在`master`。  
+Renovateは、更新先が別ブランチでも、通常はデフォルトブランチから設定を読む。
+
+モダナイゼーションPRの対象は`develop`で、この作業では自動マージしない。  
+設定を`develop`だけにマージしても、Renovateが有効になったとは確認できない。
+
+1. **既存のAppインストールを確認**
+
+   必要な場合のみ、[Mend Renovate][renovate-app]を**ThinaticSystem/thinaticsystem.comだけ**にインストールする。  
+   全リポジトリへのアクセス権を付与せず、このリポジトリにPATを追加しない。
+
+2. **設定のみの変更を別途レビュー**
+
+   `master`にも同名の`renovate.json`を配置する。  
+   `baseBranchPatterns: ["develop"]`と`useBaseBranchConfig: "merge"`を維持する。  
+   framework固有の方針は、対応するモダナイゼーションが`develop`に入った後にのみ有効化する。
+
+   `master`の設定変更が既存サイトのデプロイを起動するかを確認してから、その変更を承認する。
+
+3. **Appの実際の動作を確認**
+
+   Appのonboarding PR、Dependency Dashboard、最初の実更新PRを確認し、次の条件を確かめる。
+
+   - baseは`develop`
+   - automergeは無効
+   - lockfileの生成は成功
+   - アプリケーションCIが実行される
+
+   取得できないApp/CIの証拠は、そのまま未確認として記録する。近道として広範な書き込み権限を有効にしない。
+
+Appのインストールだけでも、ローカルで設定が妥当と判定されただけでも、botの稼働を証明できない。  
+リポジトリまたは組織の管理者によるAppアクセスの承認が必要な場合がある。
+
+Appのsecretは、ブラウザbundleにもリポジトリにも置かない。
+
+## 設定の検証
+
+独立した`Renovate configuration` workflowで、バージョンを固定した公式validatorを使う。  
+このworkflowはbotを実行せず、次の条件で設定だけを検証する。
+
+- リポジトリ権限は読み取り専用
+- checkout credentialsは無効
+- npm install scriptsは不使用
+- 依存関係はアプリケーションの`node_modules`の外に取得
+- アプリケーションのlockfileは変更なし
+
+workflowで固定したバージョンを使い、次のコマンドで再現できる。
 
 ```sh
 npm_config_ignore_scripts=true npm exec --yes --package=renovate@44.103.7 -- renovate-config-validator --strict --no-global renovate.json
 ```
 
-For extraction-only inspection, use that same Renovate version with `--platform=local --dry-run=extract` in an isolated copy. This does not create branches/PRs or test App permissions, hosted scheduling, branch selection, or actual lockfile regeneration. Keep logs out of committed source.
+### 抽出だけを確認する場合
 
-Official references: [configuration](https://docs.renovatebot.com/configuration-options/), [Nix manager](https://docs.renovatebot.com/modules/manager/nix/), [onboarding](https://docs.renovatebot.com/getting-started/installing-onboarding/), [validation](https://docs.renovatebot.com/config-validation/).
+隔離したコピーで同じRenovateバージョンを使い、`--platform=local --dry-run=extract`を指定する。  
+この実行はブランチやPRを作成せず、次の項目も検証しない。
+
+- Appの権限
+- ホストサービスのスケジュール
+- ブランチの選択
+- 実際のlockfile再生成
+
+ログはコミット対象のソースに含めない。
+
+## 公式資料
+
+- [設定](https://docs.renovatebot.com/configuration-options/)
+- [Nix manager](https://docs.renovatebot.com/modules/manager/nix/)
+- [onboarding](https://docs.renovatebot.com/getting-started/installing-onboarding/)
+- [検証](https://docs.renovatebot.com/config-validation/)
+
+[renovate-app]: https://github.com/apps/renovate
