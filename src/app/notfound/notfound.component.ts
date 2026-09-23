@@ -1,4 +1,5 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { LoadingService } from "../services/loading.service";
 import { NavigateService } from "../services/navigate.service";
 
@@ -6,7 +7,9 @@ import { NavigateService } from "../services/navigate.service";
   standalone: true,
   selector: 'app-notfound',
   templateUrl: './notfound.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./notfound.component.scss'],
+  imports: [RouterLink],
 })
 export default class NotfoundComponent implements OnInit, OnDestroy {
   constructor(

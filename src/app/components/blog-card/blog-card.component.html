@@ -1,23 +1,23 @@
-<ng-template [ngIf]="data">
-  <a [routerLink]="'/blog/article/' + data.id"
+@if (data) {
+  <div
      [style.background-image]="'url(' + environment.cmsUrl + (data.eyecatch ? data.eyecatch.url :  '/uploads/small_noimage_f16114bd25.png') + ')'"
      class="article">
     <!-- グラデーション部分 -->
     <div aria-hidden="true" class="card-gradient"></div>
-
     <!-- 記事情報 -->
     <div class="article-info">
-      <div class="title">{{data.title}}</div>
-      <p class="date">{{ data.created_at | date: 'YYYY/MM/dd' }}</p>
-
+      <a class="title article-link" [routerLink]="['/blog/article', data.id]">{{ data.title }}</a>
+      <p class="date">{{ data.created_at | date: 'yyyy/MM/dd' }}</p>
       <!-- タグ一覧 -->
-      <ng-template [ngIf]="data.blogTags && data.blogTags.length !== 0">
+      @if (data.blogTags && data.blogTags.length !== 0) {
         <div class="tag">
-          <ng-template [ngForOf]="data.blogTags" let-tag ngFor>
-            <a [routerLink]="'/blog/tag/' + tag?.tag">{{tag?.tag}}</a>
-          </ng-template>
+          @for (tag of data.blogTags; track tag) {
+            @if (tag?.tag?.trim()) {
+              <a [routerLink]="['/blog/tag', tag?.tag]">{{ tag?.tag }}</a>
+            }
+          }
         </div>
-      </ng-template>
+      }
     </div>
-  </a>
-</ng-template>
+  </div>
+}

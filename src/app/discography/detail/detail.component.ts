@@ -1,29 +1,29 @@
 import { CommonModule } from "@angular/common";
 import { HttpClient } from "@angular/common/http";
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DomSanitizer, Title } from "@angular/platform-browser";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ClipboardService } from "ngx-clipboard";
 import { MarkdownPipe } from "ngx-markdown";
-import { Subject, takeUntil, tap } from 'rxjs';
+import { finalize, Subject, takeUntil, tap } from 'rxjs';
 import { ShareComponent } from "src/app/components/share/share.component";
-import { SanitizeHtmlPipe } from "src/app/pipes/sanitize-html.pipe";
+import {MediaEmbedComponent} from "../embed/media-embed.component";
 import { environment } from "../../../environments/environment";
 import { Discography } from "../../interfaces/discography";
 import { LoadingService } from "../../services/loading.service";
 import { NotificationService } from "../../services/notification.service";
 
 @Component({
-  standalone: true,
-  selector: 'app-detail',
-  templateUrl: './detail.component.html',
-  styleUrls: ['./detail.component.scss'],
-  imports: [
-    CommonModule,
-    SanitizeHtmlPipe,
-    ShareComponent,
-    MarkdownPipe,
-  ],
+    selector: 'app-detail',
+    templateUrl: './detail.component.html',
+    styleUrls: ['./detail.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    imports: [
+        CommonModule,
+        MediaEmbedComponent,
+        ShareComponent,
+        MarkdownPipe,
+    ]
 })
 export default class DetailComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
@@ -46,6 +46,7 @@ export default class DetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const finishLoading = this.loadingService.beginContentLoad();
     // 仮タイトル設定
     this.titleService.setTitle('Discography | しなちくシステム');
     // URLからIDを取得
@@ -60,6 +61,7 @@ export default class DetailComponent implements OnInit, OnDestroy {
           this.titleService.setTitle(`${data.title} | しなちくシステム`);
         }),
         takeUntil(this.#dispose$),
+        finalize(finishLoading),
       )
       .subscribe({
         error: (error) => {
@@ -71,8 +73,6 @@ export default class DetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.loadingService.loading = true;
-
     this.#dispose$.next(null);
   }
 }

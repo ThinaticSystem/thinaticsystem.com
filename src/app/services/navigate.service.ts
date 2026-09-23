@@ -13,15 +13,12 @@ export class NavigateService {
   ) {
   }
 
-  go(page: string): void {
+  go(page: string): Promise<boolean> {
     if (this.router.url === page) {
-      return;
+      return Promise.resolve(false);
     }
 
-    this.loadingService.loading = true;
-
-    setTimeout(() => {
-      this.router.navigate([page]);
-    }, 300);
+    // NOTE: Router events own pending navigation and error cleanup, not an animation timer.
+    return this.router.navigate([page]).catch(() => false);
   }
 }

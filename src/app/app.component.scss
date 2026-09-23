@@ -2,7 +2,7 @@
   @apply hidden md:block md:ml-10 md:pr-4 md:space-x-8;
 
   a {
-    @apply font-medium text-gray-500 hover:text-gray-900;
+    @apply font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white;
   }
 }
 

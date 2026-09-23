@@ -2,10 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
-@import '~animate.css/animate.css';
-@import '~github-markdown-css/github-markdown.css';
+@import 'github-markdown-css/github-markdown.css';
 
-$easing: cubic-bezier(1, 0, 0.25, 1);
+.animate__animated {
+  animation-duration: var(--animate-duration, 1s);
+  animation-fill-mode: both;
+}
+
+.animate__fadeIn {
+  animation-name: fadeIn;
+}
+
+.animate__slideInRight {
+  animation-name: slideInRight;
+}
+
+.animate__slideOutRight {
+  animation-name: slideOutRight;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translate3d(100%, 0, 0); visibility: visible; }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes slideOutRight {
+  from { opacity: 1; }
+  to { opacity: 0; transform: translate3d(100%, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate__animated {
+    animation-duration: 1ms;
+    animation-iteration-count: 1;
+  }
+}
+
 
 
 html {
@@ -122,56 +159,68 @@ body {
   @apply bg-white dark:bg-gray-800 text-black dark:text-white;
 }
 
-.loading {
+.loading-feedback {
+  // NOTE: Travel uses the full icon box, dynamic viewport, and all four safe-area insets.
+  --loading-size: min(3rem, 12vw, 12dvh);
+  --loading-left: max(1rem, env(safe-area-inset-left, 0px));
+  --loading-right: max(1rem, env(safe-area-inset-right, 0px));
+  --loading-top: max(1rem, env(safe-area-inset-top, 0px));
+  --loading-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  --loading-travel-x: max(0px, calc(100dvw - var(--loading-left) - var(--loading-right) - var(--loading-size)));
+  --loading-travel-y: max(0px, calc(100dvh - var(--loading-top) - var(--loading-bottom) - var(--loading-size)));
   position: fixed;
-  width: 100vw;
-  height: 100vh;
-  top: 0;
-  left: 0;
-  z-index: 99999;
+  left: var(--loading-left);
+  bottom: var(--loading-bottom);
+  z-index: 50;
+  inline-size: var(--loading-size);
+  block-size: var(--loading-size);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 180ms ease-out;
 
-  .layer1,
-  .layer2 {
-    width: 100%;
-    height: 100%;
-    transition-timing-function: $easing;
-    transition-delay: 1s;
+  &.loading-feedback-exiting { opacity: 0; }
+
+  .loading-artwork {
+    inline-size: 100%;
+    block-size: 100%;
+    --loading-heading: 0deg;
+    animation: loading-edge-orbit 64s linear infinite, loading-corner-heading 64s steps(1, end) infinite;
   }
 
-  .layer1 {
-    transition: height 0.5s;
+  // NOTE: The stable travel owner shares heading with replacement artwork; only its child rotates.
+  .loading-artwork > picture, .loading-artwork > svg {
+    rotate: var(--loading-heading);
+    transform-origin: center;
+    transform-box: border-box;
   }
 
-  .layer2 {
-    transition: height 1s;
-  }
+  picture { display: block; inline-size: 100%; block-size: 100%; }
+  img, svg { display: block; inline-size: 100%; block-size: 100%; object-fit: contain; }
+}
 
-  &.loaded {
-    pointer-events: none;
+// NOTE: Opacity belongs to the shell so exit/reversal never restarts or rotates the GIF trajectory.
+@starting-style {
+  .loading-feedback { opacity: 0; }
+}
 
-    .layer1,
-    .layer2 {
-      height: 0;
-    }
+@keyframes loading-corner-heading {
+  0% { --loading-heading: 0deg; }
+  25% { --loading-heading: -90deg; }
+  50% { --loading-heading: -180deg; }
+  75% { --loading-heading: -270deg; }
+  100% { --loading-heading: -360deg; }
+}
 
-    img {
-      opacity: 0;
-    }
-  }
+@keyframes loading-edge-orbit {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  25% { transform: translate3d(var(--loading-travel-x), 0, 0); }
+  50% { transform: translate3d(var(--loading-travel-x), calc(-1 * var(--loading-travel-y)), 0); }
+  75% { transform: translate3d(0, calc(-1 * var(--loading-travel-y)), 0); }
+}
 
-  img {
-    position: absolute;
-    width: 64px;
-    max-width: 50%;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: auto;
-    pointer-events: none;
-    transition: 0.25s;
-    transition-delay: 0.25s;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .loading-feedback { transition: none; }
+  .loading-feedback .loading-artwork { animation: none; transform: none; --loading-heading: 0deg; }
 }
 
 .markdown-body {
@@ -185,20 +234,19 @@ body {
 
 
 .tag {
-  @apply inline-block my-2;
+  @apply my-2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  min-width: 0;
+  max-width: 100%;
 
   a {
-    @apply inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-eclair-100 text-eclair-700 mx-1;
-
-    &:first-child {
-      @apply mr-1;
-      margin-left: 0 !important;
-    }
-
-    &:last-child {
-      @apply ml-1;
-      margin-right: 0 !important;
-    }
+    @apply inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-eclair-100 text-gray-900;
+    margin-inline: 0;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -216,4 +264,19 @@ body {
   a {
     @apply w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md md:py-4 md:text-lg md:px-10 transition-colors text-black bg-eclair-200 hover:bg-eclair-300 cursor-pointer;
   }
+}
+
+// NOTE: Angular inserts a fresh route host here; animate once, not on data updates.
+main > router-outlet + * {
+  display: block;
+  animation: page-scene-enter 180ms ease-out;
+}
+
+@keyframes page-scene-enter {
+  from { opacity: 0.94; transform: translateY(2px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main > router-outlet + * { animation: none; }
 }

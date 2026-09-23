@@ -1,13 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import GomamayoComponent from './gomamayo.component';
 
-describe('GomamayoComponent', () => {
+describe('Given the Gomamayo glossary page owner is created', () => {
   let component: GomamayoComponent;
   let fixture: ComponentFixture<GomamayoComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [GomamayoComponent]
+      imports: [GomamayoComponent]
     })
       .compileComponents();
   });
@@ -18,7 +18,7 @@ describe('GomamayoComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('When the owner is created Then the Gomamayo glossary component is available', () => {
     expect(component).toBeTruthy();
   });
 });

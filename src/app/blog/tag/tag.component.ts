@@ -1,89 +1,81 @@
-import { CommonModule } from "@angular/common";
-import { HttpClient } from "@angular/common/http";
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { Title } from "@angular/platform-browser";
-import { ActivatedRoute } from "@angular/router";
-import { NgxPaginationModule } from "ngx-pagination";
-import { NgPipesModule } from "ngx-pipes";
-import { Subject, map, takeUntil, tap } from 'rxjs';
-import { BlogCardComponent } from "src/app/components/blog-card/blog-card.component";
-import { environment } from "../../../environments/environment";
-import { Blog } from "../../interfaces/blog";
-import { LoadingService } from "../../services/loading.service";
-import { NavigateService } from "../../services/navigate.service";
-
-interface TagFilter {
-  blogTags?: (BlogTags | null)[] | null;
-}
-
-interface BlogTags {
-  tag: string;
-}
+import {HttpClient} from '@angular/common/http';
+import {Component, inject, signal, ChangeDetectionStrategy} from '@angular/core';
+import type {OnDestroy, OnInit} from '@angular/core';
+import {Title} from '@angular/platform-browser';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {NgxPaginationModule} from 'ngx-pagination';
+import {NgPipesModule} from 'ngx-pipes';
+import {combineLatest, finalize, Subscription} from 'rxjs';
+import {BlogCardComponent} from 'src/app/components/blog-card/blog-card.component';
+import {environment} from '../../../environments/environment';
+import type {Blog} from '../../interfaces/blog';
+import {LoadingService} from '../../services/loading.service';
+import {NavigateService} from '../../services/navigate.service';
+import {readBlogPage} from '../index/page';
 
 @Component({
-  standalone: true,
   selector: 'app-index',
   templateUrl: './tag.component.html',
   styleUrls: ['./tag.component.scss'],
-  imports: [
-    CommonModule,
-    NgPipesModule,
-    BlogCardComponent,
-    NgxPaginationModule,
-  ],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [NgPipesModule, BlogCardComponent, NgxPaginationModule, RouterLink]
 })
 export default class TagComponent implements OnInit, OnDestroy {
-  #dispose$ = new Subject<null>();
-
+  readonly #route = inject(ActivatedRoute);
+  readonly #router = inject(Router);
+  readonly #http = inject(HttpClient);
+  readonly #title = inject(Title);
+  readonly #navigate = inject(NavigateService);
+  readonly #loading = inject(LoadingService);
+  #routeSubscription: Subscription | null = null;
+  #request: Subscription | null = null;
+  #destroyed = false;
   blogs = signal<Blog[] | null>(null);
-  environment = environment;
-  tag = "";
-
-  // ページ設定部分
-  page = 1;
-
-  constructor(
-    private route: ActivatedRoute,
-    private httpClient: HttpClient,
-    private titleService: Title,
-    public navigate: NavigateService,
-    public loadingService: LoadingService,
-  ) {
-  }
+  error = signal(false);
+  tag = signal<string | null>(null);
+  page = signal(1);
 
   ngOnInit(): void {
-    this.titleService.setTitle('しなちくシステム');
+    this.#routeSubscription = combineLatest([this.#route.paramMap, this.#route.queryParamMap]).subscribe(([params, query]) => {
+      const state = readBlogPage(query.get('page'));
+      this.page.set(state.page);
+      if (state.invalid) this.changePage(1, true);
+      const tag = params.get('tag');
+      if (tag === this.tag()) return;
+      this.tag.set(tag);
+      this.loadTag();
+    });
+    if (this.tag() === null) this.#navigate.go('/blog');
+  }
 
-    // URLからブログのタグを取得
-    const tag = this.route.snapshot.paramMap.get('tag');
-
-    // なんらかの理由でタグが存在しない場合はブログトップへ
-    if (tag === null) {
-      this.navigate.go('/blog');
-      return;
-    }
-    this.tag = tag;
-
-    // ブログ情報の取得
-    this.httpClient.get<Blog[]>(`${environment.cmsUrl}/blogs`)
-      .pipe(
-        // タグが合致するものだけに絞る
-        map((list) =>
-          list.filter((article) =>
-            article.blogTags?.some(
-              tagEntry => tagEntry?.tag === this.tag
-            ) ?? false
-          )
-        ),
-        tap((list) => this.blogs.set(list)),
-        takeUntil(this.#dispose$),
-      )
-      .subscribe(() => {
-        this.loadingService.loading = false;
+  /** Query-only history reuses the loaded tag data; a new tag cancels the outgoing owner. */
+  loadTag(): void {
+    if (this.#destroyed) return;
+    this.#request?.unsubscribe();
+    this.blogs.set(null);
+    this.error.set(false);
+    const tag = this.tag();
+    if (tag === null) return;
+    this.#title.setTitle(`${tag} | ブログ | しなちくシステム`);
+    this.#loading.loading = true;
+    this.#request = this.#http.get<Blog[]>(`${environment.cmsUrl}/blogs`)
+      .pipe(finalize(() => {if (!this.#destroyed) this.#loading.loading = false;}))
+      .subscribe({
+        next: articles => this.blogs.set(articles.filter(article => article.blogTags?.some(entry => entry?.tag === tag) ?? false)),
+        error: () => this.error.set(true),
       });
   }
 
+  changePage(page: number, replaceUrl = false): void {
+    if (this.#destroyed || readBlogPage(String(page)).invalid) return;
+    // NOTE: the router owns history; rejection remains an actionable local failure.
+    void this.#router.navigate([], {relativeTo: this.#route, queryParams: {page: page === 1 ? null : page},
+      queryParamsHandling: 'merge', preserveFragment: true, replaceUrl}).catch(() => this.error.set(true));
+  }
+
   ngOnDestroy(): void {
-    this.#dispose$.next(null);
+    this.#destroyed = true;
+    this.#routeSubscription?.unsubscribe();
+    this.#request?.unsubscribe();
   }
 }

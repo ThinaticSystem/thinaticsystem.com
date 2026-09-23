@@ -1,0 +1,35 @@
+{
+  "schema": "thinaticsystem-modernization/performance-baseline/v1",
+  "baseSha": "33b4ef4e8d21276130127a61aede6f0a8e1c47cb",
+  "fixture": "synthetic CMS/API data; Chromium 140.0.7339.16; reducedMotion=reduce; browser-smoke v3 paired run",
+  "compression": {"gzip": {"level": 9, "mtime": 0}, "brotli": {"quality": 11}},
+  "initial": {"rawBytes": 531195, "gzipBytes": 155551, "brotliBytes": 136693},
+  "journeys": {
+    "desktop.home": {"medianInMs": 244.93, "requestCount": 13},
+    "desktop.theme-toggle": {"medianInMs": 789.67, "requestCount": 0},
+    "desktop.blog-list": {"medianInMs": 970.85, "requestCount": 6},
+    "desktop.blog-article": {"medianInMs": 100.34, "requestCount": 3},
+    "desktop.blog-back": {"medianInMs": 29.43, "requestCount": 2},
+    "desktop.discography": {"medianInMs": 970.09, "requestCount": 4},
+    "mobile.menu-blog": {"medianInMs": 2336.71, "requestCount": 19}
+  },
+  "policy": {
+    "initialSizeMustNotIncrease": true,
+    "requestCountMustNotIncrease": true,
+    "timing": {
+      "minimumRepeats": 3,
+      "maxRelativeRegression": 0.2,
+      "rule": "A median above the frozen base by more than 20% is inconclusive/fail and requires a paired retest; no tolerance is widened after observing results."
+    },
+    "routeResourceBytesMustNotIncrease": true
+  },
+  "routeResources": {
+    "desktop.home": {"requestCount": 8, "rawBytes": 683148, "gzipBytes": 0, "brotliBytes": 0},
+    "desktop.theme-toggle": {"requestCount": 0, "rawBytes": 0, "gzipBytes": 0, "brotliBytes": 0},
+    "desktop.blog-list": {"requestCount": 3, "rawBytes": 21571, "gzipBytes": 7383, "brotliBytes": 6546},
+    "desktop.blog-article": {"requestCount": 2, "rawBytes": 5899, "gzipBytes": 3010, "brotliBytes": 2691},
+    "desktop.blog-back": {"requestCount": 0, "rawBytes": 0, "gzipBytes": 0, "brotliBytes": 0},
+    "desktop.discography": {"requestCount": 2, "rawBytes": 4571, "gzipBytes": 2070, "brotliBytes": 1844},
+    "mobile.menu-blog": {"requestCount": 11, "rawBytes": 704719, "gzipBytes": 0, "brotliBytes": 0}
+  }
+}

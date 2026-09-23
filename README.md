@@ -1,44 +1,68 @@
 # ThinaticSystem.com
 
-しなちくシステムのサイト\
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 13.3.0.
+ブログや音楽作品を公開する、しなちくシステムのWebサイト  
+Angularで画面を構成し、記事や作品の情報をCMSから読み込む
 
-## Branches
+## 開発環境
 
-- **[master](https://github.com/ThinaticSystem/thinaticsystem.com/tree/master)**\
-  本番\
-  https://thinaticsystem.com でこのブランチが動きます\
-  下のdevelopブランチがいい感じ™に温まるとこちらにマージされます
-- **[develop](https://github.com/ThinaticSystem/thinaticsystem.com/tree/develop)**\
-  開発環境\
-  https://beta.thinaticsystem.com でこのブランチが動きます\
-  プルリクエストはこちらにお願いします！
-- アーカイブ
-  - **[v1](https://github.com/ThinaticSystem/thinaticsystem.com/tree/v1)**\
-    @CookieRamenがなんかもうめっちゃ変える前の最後のバージョン
-  - **[v0](https://github.com/ThinaticSystem/thinaticsystem.com/tree/v0)**\
-    [めうるみがTシャツにしてくれた](https://mewl.me/notes/817f2fe4138c62c0ed2358a1)バージョン
+Nodeとpnpmのバージョンは、リポジトリの設定に合わせる  
+`.node-version`でNodeのバージョンを確認し、Corepack経由でpnpmを実行する
 
-## Development server
+```sh
+corepack pnpm install --frozen-lockfile
+corepack pnpm start
+```
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+開発サーバーは`http://localhost:4200/`で起動する
 
-## Code scaffolding
+Nixを使う場合は、同じ開発環境を次のコマンドで利用できる
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+```sh
+nix develop -c corepack pnpm install --frozen-lockfile
+nix develop -c corepack pnpm start
+```
 
-## Build
+依存パッケージの更新条件は[依存関係の更新]を参照
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/app/` directory.
+## テストとビルド
 
-## Running unit tests
+変更後は、通常のチェックとビルドを実行する
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```sh
+corepack pnpm run check
+corepack pnpm run build
+```
 
-## Running end-to-end tests
+`check`は、開発中に必要な検査をまとめて実行する  
+ビルドしたサイトは`dist/app/browser/`へ出力される
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+ブラウザー上での操作や性能もCIで検証する  
+各テストの実行方法と確認できる範囲は[テストと検証]を参照
 
-## Further help
+## 配信
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+- `master`：本番配信用のブランチ
+- `develop`：開発用のブランチ、PRの反映先
+
+サイトはCloudflare Pagesで配信する  
+ローカルのビルドやテストとは別に、配信先の設定と実際の動作を確認する
+
+## 開発用ドキュメント
+
+- **[アプリの構成]**
+
+  画面・CMS・APIの役割と、それぞれのつながり
+
+- **[テストと検証]**
+
+  開発中に使うテストと、結果を判断するときの確認範囲
+
+- **[依存関係の更新]**
+
+  Renovateによる更新PRの運用と、バージョンの互換性
+
+コードから生成するAPIドキュメントは、`corepack pnpm run docs:check`で出力できる
+
+[アプリの構成]: docs/architecture.md
+[テストと検証]: docs/quality.md
+[依存関係の更新]: docs/dependency-updates.md

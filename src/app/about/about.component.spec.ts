@@ -1,13 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import AboutComponent from './about.component';
 
-describe('AboutComponent', () => {
+describe('Given the about page owner is created', () => {
   let component: AboutComponent;
   let fixture: ComponentFixture<AboutComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AboutComponent]
+      imports: [AboutComponent]
     })
       .compileComponents();
   });
@@ -18,7 +18,7 @@ describe('AboutComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('When the owner is created Then the about page component is available', () => {
     expect(component).toBeTruthy();
   });
 });

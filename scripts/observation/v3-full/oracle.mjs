@@ -1,0 +1,697 @@
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {existsSync, readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import ts from 'typescript';
+
+export const BASE_COMMIT = '7a8352242951516a2380e8fc69c5fb902b0c0e5d';
+export const REPO_ROOT = '/home/ts/site-development/thinaticsystem-renovate-20260921';
+export const BEFORE_MAP = '/home/ts/site-development/pr83-ci-test-delivery-evidence/before/observation-map-before.json';
+export const BEFORE_TAP = '/home/ts/site-development/pr83-ci-test-delivery-evidence/before/node-tests-before.tap';
+export const EXPECTED_PRECONDITION_INDICES = [700, 701, 702];
+const rel = file => file.startsWith(`${REPO_ROOT}/`) ? file.slice(REPO_ROOT.length + 1) : file;
+const sha = value => createHash('sha256').update(value).digest('hex').slice(0, 16);
+const scriptKind = file => file.endsWith('.ts') ? ts.ScriptKind.TS : ts.ScriptKind.JS;
+const literalText = node => ts.isStringLiteralLike(node) ? node.text : null;
+function registrationParts(node) {
+  if (!ts.isCallExpression(node)) return null;
+  if (ts.isIdentifier(node.expression) && (node.expression.text === 'it' || node.expression.text === 'test') && node.arguments.length >= 2) {
+    const callback = [...node.arguments].slice(1).reverse().find(argument => ts.isArrowFunction(argument) || ts.isFunctionExpression(argument));
+    if (callback) return {title: node.arguments[0], callback, table: null};
+  }
+  if (ts.isCallExpression(node.expression) && ts.isPropertyAccessExpression(node.expression.expression) && node.expression.expression.name.text === 'each' && ts.isIdentifier(node.expression.expression.expression) && (node.expression.expression.expression.text === 'it' || node.expression.expression.expression.text === 'test') && node.arguments.length >= 2 && (ts.isArrowFunction(node.arguments[1]) || ts.isFunctionExpression(node.arguments[1]))) return {title: node.arguments[0], callback: node.arguments[1], table: node.expression.arguments[0]};
+  return null;
+}
+const isRegistration = node => registrationParts(node) !== null;
+const isTestFile = file => file.endsWith('.spec.ts') || file.endsWith('.spec.test.mjs') || file.endsWith('.test.mjs');
+
+function sourceFile(text, file) { return ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, scriptKind(file)); }
+function normalizedText(sf, node) { return sf.text.slice(node.getStart(sf), node.end).replace(/\s+/g, ' ').trim(); }
+function escapeRegExp(value) { return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function titlePattern(sf, node) {
+  if (ts.isStringLiteralLike(node)) return `^${node.text.split(/%s|\$[A-Za-z_][A-Za-z0-9_]*/).map(escapeRegExp).join('[\\s\\S]*')}$`;
+  if (ts.isTemplateExpression(node)) {
+    let pattern = escapeRegExp(node.head.text);
+    for (const span of node.templateSpans) pattern += '[\\s\\S]*' + escapeRegExp(span.literal.text);
+    return `^${pattern}$`;
+  }
+  if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+    const left = titlePattern(sf, node.left).replace(/^\^|\$$/g, '');
+    const right = titlePattern(sf, node.right).replace(/^\^|\$$/g, '');
+    return `^${left}${right}$`;
+  }
+  return '^.*$';
+}
+function rangeOf(sf, node, file) {
+  const start = sf.getLineAndCharacterOfPosition(node.getStart(sf));
+  const end = sf.getLineAndCharacterOfPosition(node.end);
+  return {file, startLine: start.line + 1, startColumn: start.character + 1, endLine: end.line + 1, endColumn: end.character + 1, startOffset: node.getStart(sf), endOffset: node.end};
+}
+function signatureForCall(sf, node) {
+  if (!ts.isPropertyAccessExpression(node.expression)) return null;
+  const matcher = node.expression.name.text;
+  let receiver = node.expression.expression;
+  let negated = false;
+  if (ts.isPropertyAccessExpression(receiver) && receiver.name.text === 'not') { negated = true; receiver = receiver.expression; }
+  if (ts.isCallExpression(receiver) && ts.isIdentifier(receiver.expression) && receiver.expression.text === 'expect') {
+    return {operator: 'expect', callKind: 'matcher', negated, matcher, operands: receiver.arguments.map(argument => normalizedText(sf, argument)), arguments: node.arguments.map(argument => normalizedText(sf, argument)), source: rangeOf(sf, node, sf.fileName)};
+  }
+  if (ts.isIdentifier(receiver) && receiver.text === 'assert') {
+    return {operator: 'assert', callKind: matcher, negated: false, matcher, operands: node.arguments.map(argument => normalizedText(sf, argument)), arguments: node.arguments.map(argument => normalizedText(sf, argument)), source: rangeOf(sf, node, sf.fileName)};
+  }
+  return null;
+}
+function assertionSignatures(sf, callback) {
+  const result = [];
+  const visit = node => { if (ts.isCallExpression(node)) { const signature = signatureForCall(sf, node); if (signature) result.push(signature); } ts.forEachChild(node, visit); };
+  visit(callback);
+  return result.sort((left, right) => left.source.startOffset - right.source.startOffset);
+}
+function uniqueRanges(ranges) {
+  const seen = new Set();
+  return ranges.filter(range => { const key = `${range.file}:${range.startOffset}:${range.endOffset}`; if (seen.has(key)) return false; seen.add(key); return true; });
+}
+function sourceBindingRanges(sf, registration) {
+  const ranges = [registration.range];
+  const tableNames = new Set();
+  let parent = registration.node.parent;
+  while (parent && !ts.isSourceFile(parent)) {
+    if (ts.isForStatement(parent) || ts.isForOfStatement(parent) || ts.isForInStatement(parent)) {
+      ranges.push(rangeOf(sf, parent, sf.fileName));
+      const expression = ts.isForStatement(parent) ? parent.initializer ?? parent.condition ?? parent.incrementor : parent.expression;
+      if (expression) {
+        const collect = node => { if (ts.isIdentifier(node)) tableNames.add(node.text); ts.forEachChild(node, collect); };
+        collect(expression);
+      }
+    }
+    parent = parent.parent;
+  }
+  const visit = node => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && tableNames.has(node.name.text)) ranges.push(rangeOf(sf, node, sf.fileName));
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return uniqueRanges(ranges);
+}
+function tableBindings(sf, registration) {
+  const names = new Set();
+  let parent = registration.node.parent;
+  while (parent && !ts.isSourceFile(parent)) {
+    if (ts.isForStatement(parent) || ts.isForOfStatement(parent) || ts.isForInStatement(parent)) {
+      const expression = ts.isForStatement(parent) ? parent.initializer ?? parent.condition ?? parent.incrementor : parent.expression;
+      if (expression) {
+        const collect = node => { if (ts.isIdentifier(node)) names.add(node.text); ts.forEachChild(node, collect); };
+        collect(expression);
+      }
+    }
+    parent = parent.parent;
+  }
+  const result = [];
+  const visit = node => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && names.has(node.name.text) && node.initializer) result.push({name: node.name.text, range: rangeOf(sf, node, sf.fileName), values: normalizedText(sf, node.initializer)});
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return result;
+}
+function sourceContextText(item, file) {
+  if (file === item.file) return item.sourceText;
+  return item.sourceCommit ? textAtCommit(file, item.sourceCommit) : sourceText(file);
+}
+function importTarget(item, sf, name) {
+  let target = null;
+  const visit = node => {
+    if (target || !ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier)) return;
+    const clause = node.importClause;
+    if (!clause) return;
+    const bindings = clause.namedBindings;
+    const namedElement = bindings && ts.isNamedImports(bindings) ? bindings.elements.find(element => (element.propertyName?.text ?? element.name.text) === name) : null;
+    const importedName = clause.name?.text === name ? "default" : namedElement?.propertyName?.text ?? namedElement?.name.text;
+    if (!importedName) return;
+    const modulePath = node.moduleSpecifier.text;
+    const directory = item.file.slice(0, item.file.lastIndexOf('/'));
+    const moduleCandidates = /\.(?:ts|tsx|js|mjs|cjs)$/.test(modulePath) ? [modulePath] : [`${modulePath}.ts`, `${modulePath}.mjs`, `${modulePath}/index.ts`];
+    const candidates = moduleCandidates.map(candidate => candidate.startsWith('.') ? resolve('/', directory, candidate) : candidate).map(candidate => candidate.replace(/^\/+/, ''));
+    for (const candidate of candidates) {
+      try { target = {file: candidate, text: sourceContextText(item, candidate), importName: importedName}; break; } catch { /* unsupported import resolution */ }
+    }
+  };
+  visit(sf);
+  sf.forEachChild(node => { if (!target) visit(node); });
+  return target;
+}
+function unwrapExpression(node) { let current = node; while (ts.isParenthesizedExpression(current) || ts.isAsExpression(current) || ts.isTypeAssertionExpression(current)) current = current.expression; return current; }
+function variableInitializer(sf, name) {
+  let result = null;
+  const visit = node => {
+    if (result) return;
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === name && node.initializer) result = unwrapExpression(node.initializer);
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return result;
+}
+function finiteValue(item, sf, node, seen = new Set()) {
+  if (ts.isStringLiteralLike(node)) return node.text;
+  if (ts.isNumericLiteral(node)) return Number(node.text);
+  if (node.kind === ts.SyntaxKind.TrueKeyword) return true;
+  if (node.kind === ts.SyntaxKind.FalseKeyword) return false;
+  if (node.kind === ts.SyntaxKind.NullKeyword) return null;
+  if (ts.isPrefixUnaryExpression(node) && node.operator === ts.SyntaxKind.MinusToken) return -finiteValue(item, sf, node.operand, seen);
+  if (ts.isIdentifier(node)) {
+    if (node.text === 'undefined') return undefined;
+    if (seen.has(node.text)) throw new Error(`cyclic finite source value ${node.text}`);
+    const imported = importTarget(item, sf, node.text);
+    if (imported) {
+      const importedSf = sourceFile(imported.text, imported.file);
+      const initializer = variableInitializer(importedSf, node.text);
+      if (!initializer) return {type: "imported-value", file: imported.file, name: imported.importName};
+      return finiteValue({...item, file: imported.file, sourceText: imported.text, sourceCommit: item.sourceCommit}, importedSf, initializer, new Set([...seen, node.text]));
+    }
+    const initializer = variableInitializer(sf, node.text);
+    if (!initializer) throw new Error(`finite identifier is unresolved: ${node.text}`);
+    return finiteValue(item, sf, initializer, new Set([...seen, node.text]));
+  }
+  if (ts.isArrayLiteralExpression(node)) return node.elements.map(element => { if (ts.isSpreadElement(element)) throw new Error('spread finite row is unsupported'); return finiteValue(item, sf, element, seen); });
+  if (ts.isObjectLiteralExpression(node)) {
+    const result = {};
+    for (const property of node.properties) {
+      if (ts.isPropertyAssignment(property) && (ts.isIdentifier(property.name) || ts.isStringLiteralLike(property.name))) result[property.name.text] = finiteValue(item, sf, property.initializer, seen);
+      else if (ts.isShorthandPropertyAssignment(property)) result[property.name.text] = finiteValue(item, sf, property.name, seen);
+      else throw new Error('object finite row property is unsupported');
+    }
+    return result;
+  }
+  if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) return finiteValue(item, sf, node.left, seen) + finiteValue(item, sf, node.right, seen);
+  if (ts.isTemplateExpression(node)) {
+    let result = node.head.text;
+    for (const span of node.templateSpans) result += renderValue(finiteValue(item, sf, span.expression, seen)) + span.literal.text;
+    return result;
+  }
+  if (ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
+  if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'repeat' && node.arguments.length === 1) {
+    const value = finiteValue(item, sf, node.expression.expression, seen);
+    const count = finiteValue(item, sf, node.arguments[0], seen);
+    if (typeof value !== 'string' || !Number.isInteger(count) || count < 0 || count > 20_000) throw new Error('finite repeat is unsupported');
+    return value.repeat(count);
+  }
+  throw new Error(`unsupported finite source expression: ${normalizedText(sf, node)}`);
+}
+function renderValue(value) { return value === undefined ? 'undefined' : value === null ? 'null' : typeof value === 'object' ? JSON.stringify(value) : String(value); }
+function renderTitleBinding(value) { return typeof value === 'string' ? `'${value.replaceAll("'", "\\\\'")}'` : renderValue(value); }
+function finiteRows(item) {
+  const sf = sourceFile(item.sourceText, item.file);
+  const table = item.tableNode;
+  if (!table) throw new Error(`dynamic row has no table expression: ${item.file}:${item.range.startLine}`);
+  if (ts.isCallExpression(table) && ts.isPropertyAccessExpression(table.expression) && table.expression.name.text === 'filter' && table.arguments.length === 1 && (ts.isArrowFunction(table.arguments[0]) || ts.isFunctionExpression(table.arguments[0]))) {
+    const receiver = table.expression.expression;
+    if (!ts.isIdentifier(receiver)) throw new Error('filtered table receiver is unsupported');
+    const predicate = table.arguments[0];
+    if (predicate.parameters.length !== 1 || !ts.isIdentifier(predicate.parameters[0].name) || !ts.isBinaryExpression(predicate.body) || predicate.body.operatorToken.kind !== ts.SyntaxKind.ExclamationEqualsEqualsToken || !ts.isPropertyAccessExpression(predicate.body.left) || !ts.isIdentifier(predicate.body.left.expression) || predicate.body.left.expression.text !== predicate.parameters[0].name.text || predicate.body.left.name.text !== 'html' || predicate.body.right.kind !== ts.SyntaxKind.NullKeyword) throw new Error('filtered table predicate is unsupported');
+    const imported = importTarget(item, sf, receiver.text);
+    if (!imported) throw new Error(`filtered table import is unresolved: ${receiver.text}`);
+    const importedSf = sourceFile(imported.text, imported.file);
+    const initializer = variableInitializer(importedSf, receiver.text);
+    if (!initializer || !ts.isArrayLiteralExpression(initializer)) throw new Error('filtered table source is not a literal array');
+    return initializer.elements.filter(element => ts.isObjectLiteralExpression(element) && element.properties.some(property => ts.isPropertyAssignment(property) && (ts.isIdentifier(property.name) || ts.isStringLiteralLike(property.name)) && property.name.text === 'html' && finiteValue({...item, file: imported.file, sourceText: imported.text}, importedSf, property.initializer) !== null)).map(element => ({value: finiteValue({...item, file: imported.file, sourceText: imported.text}, importedSf, element), sourceNode: element, sourceFile: imported.file}));
+  }
+  if (!ts.isArrayLiteralExpression(table)) throw new Error(`dynamic table form is unsupported: ${item.tableExpression}`);
+  return table.elements.map(element => { if (ts.isSpreadElement(element)) throw new Error('spread dynamic table is unsupported'); return {value: finiteValue(item, sf, element), sourceNode: element, sourceFile: item.file}; });
+}
+function parameterBindings(callback, value) {
+  if (!callback?.parameters?.length) throw new Error('dynamic callback has no row parameter');
+  const parameter = callback.parameters[0].name;
+  const bindings = {};
+  if (ts.isIdentifier(parameter)) bindings[parameter.text] = value;
+  else if (ts.isObjectBindingPattern(parameter) && value && typeof value === 'object' && !Array.isArray(value)) for (const element of parameter.elements) if (ts.isBindingElement(element) && ts.isIdentifier(element.name) && ts.isIdentifier(element.propertyName ?? element.name)) bindings[element.name.text] = value[element.propertyName?.text ?? element.name.text];
+  else throw new Error('dynamic callback parameter form is unsupported');
+  return bindings;
+}
+function renderExpressionValue(value) { return value === undefined ? 'undefined' : JSON.stringify(value); }
+function substituteBindings(expression, bindings) { return expression.replace(/\b[A-Za-z_$][A-Za-z0-9_$]*\b/g, name => Object.hasOwn(bindings, name) ? renderExpressionValue(bindings[name]) : name); }
+function expectedAssertion(assertion, bindings) {
+  const operands = assertion.arguments.length ? assertion.arguments.map(source => ({source, substituted: substituteBindings(source, bindings)})) : ({toBeNull: [{source: 'null', substituted: 'null'}], toBeUndefined: [{source: 'undefined', substituted: 'undefined'}], toBeTruthy: [{source: 'true', substituted: 'true'}], toBeFalsy: [{source: 'false', substituted: 'false'}]}[assertion.matcher] ?? []);
+  const result = assertion.arguments.length ? operands : (assertion.matcher === 'toBeNull' ? [{source: 'null', value: null}] : assertion.matcher === 'toBeUndefined' ? [{source: 'undefined', value: {type: 'undefined'}}] : assertion.matcher === 'toBeTruthy' ? [{source: 'true', value: true}] : assertion.matcher === 'toBeFalsy' ? [{source: 'false', value: false}] : []);
+  return {operator: assertion.operator, matcher: assertion.matcher, negated: assertion.negated, sourceRange: assertion.source, actualOperands: assertion.operands.map(source => ({source, substituted: substituteBindings(source, bindings)})), expectedOperands: operands, expectedResult: result};
+}
+function dynamicRowBinding(item, actualTitle, fullId) {
+  if (!item.tableRange) return null;
+  const rows = finiteRows(item);
+  const matches = rows.map((row, rowIndex) => { const bindings = parameterBindings(item.callback, row.value); const titleBindings = row.value && typeof row.value === 'object' && !Array.isArray(row.value) ? {...row.value, ...bindings} : bindings; let placeholder = item.titleNode ? (ts.isStringLiteralLike(item.titleNode) ? item.titleNode.text : ts.isTemplateExpression(item.titleNode) ? item.titleNode.getText(item.sourceText) : item.titleExpression) : item.titleExpression; const values = ts.isIdentifier(item.callback.parameters[0].name) ? [row.value] : []; let index = 0; const rendered = placeholder.replace(/\$([A-Za-z_][A-Za-z0-9_]*)|%s/g, (_, name) => name ? renderTitleBinding(titleBindings[name]) : renderValue(values[index++])); return {...row, rowIndex, bindings, rendered}; }).filter(row => row.rendered === actualTitle);
+  if (matches.length !== 1) throw new Error(`dynamic row binding is ${matches.length === 0 ? 'missing' : 'ambiguous'} for ${item.file}:${item.range.startLine}:${actualTitle}`);
+  const row = matches[0];
+  const rowRange = rangeOf(sourceFile(row.sourceFile === item.file ? item.sourceText : sourceContextText(item, row.sourceFile), row.sourceFile), row.sourceNode, row.sourceFile);
+  const bindingValues = Object.fromEntries(Object.entries(row.bindings).map(([name, value]) => [name, finiteData(value)]));
+  const expectedResult = {assertions: item.assertions.map(assertion => expectedAssertion(assertion, row.bindings))};
+  const rowInput = {mechanism: row.sourceFile === item.file ? 'literal-table-row' : 'imported-fixture-row', tableExpression: item.tableExpression, tableRange: item.tableRange, rowRange, rowIndex: row.rowIndex, operands: [{source: normalizedText(sourceFile(row.sourceFile === item.file ? item.sourceText : sourceContextText(item, row.sourceFile), row.sourceFile), row.sourceNode), value: finiteData(row.value)}], bindings: bindingValues, title: actualTitle, fullId};
+  const callbackRange = rangeOf(sourceFile(item.sourceText, item.file), item.callback, item.file);
+  const assertionRanges = item.assertions.map(assertion => assertion.source);
+  const rowKey = sha(JSON.stringify({file: item.file, registrationRange: item.range, callbackRange, assertionRanges, tableRange: item.tableRange, rowInput, expectedResult}));
+  return {registrationRange: item.range, callbackRange, assertionRanges, tableRange: item.tableRange, callsiteRange: item.range, bindingRanges: item.bindingRanges, tableExpression: item.tableExpression, rowInput, expectedResult, rowKey};
+}
+function finiteData(value) { if (value === undefined) return {type: 'undefined'}; if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value; if (Array.isArray(value)) return value.map(finiteData); return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, finiteData(entry)])); }
+function rowBindingFor(item, actualTitle, fullId) {
+  const dynamic = dynamicRowBinding(item, actualTitle, fullId);
+  if (dynamic) return dynamic;
+  const registrationRange = item.range;
+  const tableRange = item.tableRange ?? null;
+  const bindingRanges = item.bindingRanges ?? [item.range];
+  const rowInput = {ancestorTitles: item.ancestors, title: actualTitle, fullId};
+  const expectedResult = {runtimeTitle: fullId};
+  const rowKey = sha(JSON.stringify({file: item.file, registrationRange, tableRange, bindingRanges, rowInput, expectedResult}));
+  return {registrationRange, tableRange, callsiteRange: item.range, bindingRanges, tableExpression: item.tableExpression ?? null, rowInput, expectedResult, rowKey};
+}
+function sameRowBinding(left, right) { return JSON.stringify(left ?? null) === JSON.stringify(right ?? null); }
+function helperDefinition(sf, helperName) {
+  let result = null;
+  const visit = node => {
+    if (result) return;
+    if (ts.isFunctionDeclaration(node) && node.name?.text === helperName && node.body) result = {callback: node.body, range: rangeOf(sf, node, sf.fileName)};
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === helperName && node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) result = {callback: node.initializer.body, range: rangeOf(sf, node, sf.fileName)};
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return result;
+}
+function helperOperations(sf, callback) {
+  const operations = [];
+  const visit = node => {
+    if (ts.isBinaryExpression(node) && [ts.SyntaxKind.EqualsToken, ts.SyntaxKind.PlusEqualsToken, ts.SyntaxKind.MinusEqualsToken, ts.SyntaxKind.AsteriskEqualsToken, ts.SyntaxKind.SlashEqualsToken].includes(node.operatorToken.kind)) operations.push({kind: 'assignment', target: normalizedText(sf, node.left), operator: node.operatorToken.getText(sf), value: normalizedText(sf, node.right), range: rangeOf(sf, node, sf.fileName)});
+    else if (ts.isCallExpression(node)) operations.push({kind: 'call', callee: normalizedText(sf, node.expression), operands: node.arguments.map(argument => normalizedText(sf, argument)), range: rangeOf(sf, node, sf.fileName)});
+    ts.forEachChild(node, visit);
+  };
+  visit(callback);
+  return operations;
+}
+function helperEvidence(sf, registration) {
+  const calls = [];
+  const visit = node => { if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'assertInvalid') calls.push(node); ts.forEachChild(node, visit); };
+  visit(registration.node.arguments[1]);
+  if (!calls.length) return null;
+  const definition = helperDefinition(sf, 'assertInvalid');
+  if (!definition) return {kind: 'assertInvalid', supported: false, calls: calls.map(call => ({range: rangeOf(sf, call, sf.fileName), operands: call.arguments.map(argument => normalizedText(sf, argument))})), bindingRanges: sourceBindingRanges(sf, registration)};
+  const contractAssertions = assertionSignatures(sf, definition.callback);
+  return {
+    kind: 'assertInvalid',
+    supported: contractAssertions.length > 0,
+    helperDefinitionRange: definition.range,
+    contractAssertions,
+    calls: calls.map(call => ({range: rangeOf(sf, call, sf.fileName), operands: call.arguments.map(argument => normalizedText(sf, argument))})),
+    operations: helperOperations(sf, registration.node.arguments[1]),
+    bindingRanges: sourceBindingRanges(sf, registration),
+    tableBindings: tableBindings(sf, registration),
+    expectedOutcome: contractAssertions.map(({operator, callKind, negated, matcher, operands, arguments: args}) => ({operator, callKind, negated, matcher, operands, arguments: args})),
+  };
+}
+function helperSemantic(evidence) {
+  if (!evidence) return null;
+  return {kind: evidence.kind, supported: evidence.supported, contractAssertions: semanticPart(evidence.contractAssertions ?? []), calls: (evidence.calls ?? []).map(({operands}) => ({operands})), operations: (evidence.operations ?? []).map(({kind, callee, operands, target, operator, value}) => ({kind, callee, operands, target, operator, value})), tableBindings: (evidence.tableBindings ?? []).map(({name, values}) => ({name, values})), expectedOutcome: evidence.expectedOutcome ?? []};
+}
+function sameHelperEvidence(left, right) { return JSON.stringify(helperSemantic(left)) === JSON.stringify(helperSemantic(right)); }
+function registrations(text, file, sourceCommit = null) {
+  const sf = sourceFile(text, file);
+  const result = [];
+  const visit = (node, ancestors = []) => {
+    if (isRegistration(node)) {
+      const parts = registrationParts(node);
+      const titleNode = parts.title;
+      result.push({file, title: literalText(titleNode), titleNode, titlePattern: titlePattern(sf, titleNode), titleExpression: normalizedText(sf, titleNode), tableExpression: parts.table ? normalizedText(sf, parts.table) : null, tableRange: parts.table ? rangeOf(sf, parts.table, file) : null, tableNode: parts.table, callback: parts.callback, sourceText: text, sourceCommit, bindingRanges: sourceBindingRanges(sf, {node, range: rangeOf(sf, node, file)}), ancestors, range: rangeOf(sf, node, file), assertions: assertionSignatures(sf, parts.callback), helperEvidence: helperEvidence(sf, {node, range: rangeOf(sf, node, file)}), node});
+      return;
+    }
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'describe' && node.arguments.length >= 2 && literalText(node.arguments[0]) !== null) {
+      const next = [...ancestors, literalText(node.arguments[0])];
+      ts.forEachChild(node, child => visit(child, next));
+      return;
+    }
+    ts.forEachChild(node, child => visit(child, ancestors));
+  };
+  visit(sf);
+  return result.map((item, index) => ({...item, ordinal: index}));
+}
+function filesAtCommit(commit = null) {
+  const args = commit ? ['ls-tree', '-r', '--name-only', commit] : ['ls-files'];
+  return execFileSync('git', args, {cwd: REPO_ROOT, encoding: 'utf8'}).split(String.fromCharCode(10)).filter(isTestFile);
+}
+function textAtCommit(file, commit = BASE_COMMIT) { return execFileSync('git', ['show', `${commit}:${file}`], {cwd: REPO_ROOT, encoding: 'utf8'}); }
+function sourceText(file, root = REPO_ROOT) { return readFileSync(resolve(root, file), 'utf8'); }
+function buildRegistry(commit = null) {
+  const result = [];
+  for (const file of filesAtCommit(commit)) {
+    let text;
+    try { text = commit ? textAtCommit(file, commit) : readFileSync(resolve(REPO_ROOT, file), 'utf8'); } catch { continue; }
+    for (const item of registrations(text, file, commit)) result.push(item);
+  }
+  return result;
+}
+function semanticPart(assertions) { return assertions.map(({source, ...rest}) => rest); }
+function semanticKey(assertions) { return JSON.stringify(semanticPart(assertions)); }
+function sameAssertions(left, right) { return semanticKey(left) === semanticKey(right); }
+function identity(event) { return `${event.runner}\u0000${event.file}\u0000${event.fullId}`; }
+function fullId(item, runner) { return runner === 'angular' ? [...item.ancestors, item.title].join(' ') : item.title; }
+function occurrence(entries, value) { return entries.filter(entry => entry === value).length; }
+function parseTapTitles(tap) {
+  const result = [];
+  for (const line of tap.split(String.fromCharCode(10))) {
+    const match = line.match(/^(ok|not ok) (\d+) - (.+)$/);
+    if (match) result.push({ordinal: Number(match[2]), title: match[3], status: match[1] === 'ok' ? 'PASS' : 'FAIL'});
+  }
+  return result;
+}
+function parseNodeReporter(output) {
+  const result = [];
+  for (const [lineIndex, line] of output.split(String.fromCharCode(10)).entries()) {
+    if (!line.trim()) continue;
+    let event;
+    try { event = JSON.parse(line); } catch { throw new Error(`Node reporter emitted non-JSON line ${lineIndex + 1}`); }
+    if (!['test:pass', 'test:fail'].includes(event.type)) continue;
+    const data = event.data;
+    if (!data || typeof data.file !== 'string' || typeof data.name !== 'string' || !Number.isInteger(data.line) || !Number.isInteger(data.column)) throw new Error(`Node reporter event lacks file/line/column/title at line ${lineIndex + 1}`);
+    const fileStart = data.file.indexOf('/scripts/');
+    const baseSourceStart = data.file.indexOf('/base-source/');
+    const file = fileStart >= 0 ? data.file.slice(fileStart + 1) : (baseSourceStart >= 0 ? data.file.slice(baseSourceStart + '/base-source/'.length) : rel(data.file));
+    result.push({eventId: `node-reporter:${data.testId ?? result.length + 1}:${file}:${data.line}:${data.column}:${data.name}`, runner: 'node-tap', file, fullId: data.name, title: data.name, status: event.type === 'test:pass' ? 'PASS' : 'FAIL', runnerOrdinal: Number.isInteger(data.testNumber) ? data.testNumber : result.length + 1, reporterLine: data.line, reporterColumn: data.column, reporterTestId: data.testId ?? null});
+  }
+  return result;
+}
+function nodeFinalFile(baseFile, currentRegistry = null) {
+  if (!baseFile) return null;
+  if (baseFile.endsWith('.spec.test.mjs')) return baseFile;
+  const candidate = baseFile.endsWith('.test.mjs') ? baseFile.replace(/\.test\.mjs$/, '.spec.test.mjs') : baseFile;
+  if (currentRegistry && !currentRegistry.some(item => item.file === candidate)) return baseFile;
+  return candidate;
+}
+function sameTitleOrPattern(item, title) { return item.title === title || (item.titlePattern && new RegExp(item.titlePattern).test(title)); }
+function nodeBaseSequence(baseRegistry, baseTap, baseOutput) {
+  const taps = parseTapTitles(baseTap);
+  const reports = parseNodeReporter(baseOutput);
+  const tapCounts = new Map(); for (const tap of taps) tapCounts.set(tap.title, (tapCounts.get(tap.title) ?? 0) + 1);
+  const usedTitles = new Map();
+  const relevantReports = reports.filter(report => { const used = usedTitles.get(report.title) ?? 0; const allowed = used < (tapCounts.get(report.title) ?? 0); if (allowed) usedTitles.set(report.title, used + 1); return allowed; });
+  if (relevantReports.length !== taps.length) throw new Error(`base reporter/TAP event count mismatch: ${relevantReports.length}/${taps.length} (raw reporter ${reports.length})`);
+  const assigned = new Array(taps.length).fill(null);
+  const byFile = new Map();
+  for (const report of relevantReports) { const list = byFile.get(report.file) ?? []; list.push(report); byFile.set(report.file, list); }
+  for (const [file, fileReports] of byFile) {
+    const titles = fileReports.map(report => report.title);
+    const matches = [];
+    for (let start = 0; start <= taps.length - titles.length; start++) if (titles.every((title, offset) => taps[start + offset].title === title)) matches.push(start);
+    if (matches.length !== 1) throw new Error(`base per-file reporter sequence is not uniquely reconciled for ${file}: ${matches.length} matches`);
+    const start = matches[0];
+    fileReports.forEach((report, offset) => { if (assigned[start + offset]) throw new Error(`base reporter sequences overlap at TAP ordinal ${taps[start + offset].ordinal}`); assigned[start + offset] = {...report, ...locateReporterCase(report, baseRegistry.filter(item => item.file.endsWith('.mjs'))), runnerOrdinal: taps[start + offset].ordinal, tapTitle: taps[start + offset].title, tapStatus: taps[start + offset].status}; });
+  }
+  if (assigned.some(item => !item)) throw new Error('base per-file reporter sequences do not cover the preserved aggregate TAP');
+  return assigned;
+}
+function locateReporterCase(event, registry) {
+  const candidates = registry.filter(item => item.file === event.file && item.range.startLine === event.reporterLine && item.range.startColumn === event.reporterColumn && sameTitleOrPattern(item, event.title));
+  if (candidates.length !== 1) throw new Error(`Node reporter source binding is ${candidates.length === 1 ? 'unexpectedly' : 'not'} unique: ${event.file}:${event.reporterLine}:${event.reporterColumn}:${event.title}`);
+  return candidates[0];
+}
+function pilotFinal(oldFullId) {
+  const values = {
+    'AppComponent should create the app': {file: 'src/app/app.component.spec.ts', fullId: 'AppComponent Given the application shell is rendered When the component is created Then it exposes an application instance'},
+    'AppComponent should expose semantic shell controls': {file: 'src/app/app.component.spec.ts', fullId: 'AppComponent Given the application shell is rendered When a user toggles theme and menu controls Then semantic state and navigation are exposed'},
+    'NotificationService should be created': {file: 'src/app/services/notification.service.spec.ts', fullId: 'NotificationService Given the service is injected When the service is created Then it is available'},
+    'NotificationService lifetime [notification-replacement-lifetime] gives each replacement its full three seconds': {file: 'src/app/services/notification.service.regression.spec.ts', fullId: 'NotificationService regression witnesses Given a timer-backed service When a replacement arrives near expiry Then each message gets a full three seconds'},
+    'NotificationService lifetime repeated replacements keep one timer and preserve the default message': {file: 'src/app/services/notification-lifetime.spec.ts', fullId: 'NotificationService Given a fresh service with fake timers When blank and omitted messages replace content Then one timer and the default message remain'},
+    'NotificationService lifetime releases its timer when the injector destroys the service': {file: 'src/app/services/notification-lifetime.spec.ts', fullId: 'NotificationService Given a fresh service with fake timers When the injector destroys the service Then its timer is released'},
+    'begin owns in-flight requests before a terminal callback exists': {file: 'scripts/performance/recorder.spec.test.mjs', fullId: 'Given a new ledger, when a request begins before its terminal callback, then the request remains owned with unknown bytes'},
+    'child begun during drain stays owned and has explicit tail scope': {file: 'scripts/performance/recorder.spec.test.mjs', fullId: 'Given a parent request and a child request, when the parent finishes during drain, then the child stays in the tail scope'},
+    'unknown bytes are null, failures remain failures, illegal terminals reject': {file: 'scripts/performance/recorder.spec.test.mjs', fullId: 'Given an image request with unknown bytes, when it fails, then failure and invalid terminal transitions remain explicit'},
+    'page clock reset cannot erase request IDs or preceding owner records': {file: 'scripts/performance/recorder.spec.test.mjs', fullId: 'Given requests recorded across owners, when the page clock resets, then IDs and preceding owner records remain addressable'},
+    'CMS fixtures reject unknown host, path, query and method': {file: 'scripts/performance/recorder.spec.test.mjs', fullId: 'Given the CMS fixture table, when an unknown host path query or method is requested, then no fixture is returned'},
+    'detail fixture matches actual CMS arrays and rich markdown exercises overrides': {file: 'scripts/performance/recorder.spec.test.mjs', fullId: 'Given the detail and article fixtures, when CMS arrays and rich markdown are consumed, then all overrides remain visible'},
+  };
+  return values[oldFullId] ?? null;
+}
+function matchesTitle(item, title) { return item.title === title || (item.titlePattern && new RegExp(item.titlePattern).test(title)); }
+function fileVariants(entry) {
+  return new Set([entry.baseFile, entry.proposedFile, entry.baseFile?.replace(/\.test\.mjs$/, '.spec.test.mjs'), entry.baseFile?.replace(/\.mjs$/, '.spec.test.mjs')].filter(Boolean));
+}
+function findBaseCase(entry, registry) {
+  const title = entry.runner === 'angular' ? entry.scenarioSignificantInput?.title : entry.scenarioSignificantInput?.title ?? entry.oldFullTestId;
+  if (entry.runner === 'angular' && typeof entry.ownerSource !== 'string') throw new Error(`owner source is missing for old index ${entry.oldEntryIndex ?? '?'}`);
+  const candidates = registry.filter(item => item.file === entry.ownerSource && JSON.stringify(item.ancestors) === JSON.stringify(entry.scenarioSignificantInput?.ancestorTitles ?? []) && matchesTitle(item, title));
+  if (candidates.length !== 1) throw new Error(`base registration is ${candidates.length === 0 ? 'missing' : 'ambiguous'} for old index ${entry.oldEntryIndex ?? '?'}: ${entry.oldFullTestId}`);
+  const found = candidates[0];
+  if (entry.runner === 'angular' && found.file !== entry.ownerSource) throw new Error(`base registration owner mismatch for old index ${entry.oldEntryIndex ?? '?'}`);
+  if (entry.runner === 'angular' && [...found.ancestors, title].join(' ') !== entry.oldFullTestId) throw new Error(`base full test ID does not match owner/ancestor/case for old index ${entry.oldEntryIndex ?? '?'}`);
+  return found;
+}
+function locateCurrentCase(event, registry, titleOccurrence) {
+  const candidates = registry.filter(item => matchesTitle(item, event.title));
+  const item = candidates[titleOccurrence] ?? candidates[0];
+  if (!item) throw new Error(`final registration not found: ${event.title}`);
+  return item;
+}
+export function buildBeforeEvidence(observationMap, baseRegistry, baseTap, baseNodeOutput, currentRegistry = null) {
+  const titleCounts = new Map();
+  const fileCounts = new Map();
+  let angularOrdinal = 0;
+  const entries = observationMap.entries ?? [];
+  const baseNodeSequence = nodeBaseSequence(baseRegistry, baseTap, baseNodeOutput);
+  return entries.map((entry, oldEntryIndex) => {
+    const title = entry.runner === 'angular' ? entry.scenarioSignificantInput?.title : entry.scenarioSignificantInput?.title ?? entry.oldFullTestId;
+    const prior = titleCounts.get(`${entry.runner}\u0000${title}`) ?? 0;
+    titleCounts.set(`${entry.runner}\u0000${title}`, prior + 1);
+    const runnerOrdinal = entry.runner === 'angular' ? angularOrdinal++ : Number(entry.importantAssertion?.statusLine?.match(/^(?:ok|not ok) (\d+)/)?.[1] ?? oldEntryIndex + 1);
+    const found = entry.runner === 'node-tap' ? baseNodeSequence[runnerOrdinal - 1] : findBaseCase({...entry, oldEntryIndex}, baseRegistry);
+    if (!found) throw new Error(`base source registration not found for old index ${oldEntryIndex}: ${entry.oldFullTestId}`);
+    if (entry.runner === 'node-tap' && found.tapTitle !== entry.oldFullTestId) throw new Error(`base TAP title mismatch at old index ${oldEntryIndex}: ${found.tapTitle} != ${entry.oldFullTestId}`);
+    const baseRowBinding = entry.runner === 'angular' ? rowBindingFor(found, title, entry.oldFullTestId) : null;
+    const fileOrdinal = fileCounts.get(found.file) ?? 0;
+    fileCounts.set(found.file, fileOrdinal + 1);
+    return {oldEntryIndex, runnerOrdinal, fileOrdinal, stableKey: `${entry.runner}:${oldEntryIndex}:${sha(entry.oldFullTestId)}`, runner: entry.runner, oldFullId: entry.oldFullTestId, plannedFinalId: entry.proposedFullTestId ?? null, baseCommit: BASE_COMMIT, baseFile: found.file, finalFileHint: entry.runner === 'node-tap' ? nodeFinalFile(found.file, currentRegistry) : null, proposedFile: entry.proposedFile ?? found.file, baseSourceRange: found.range, baseRegistrationOrdinal: baseRegistry.filter(item => item.file === found.file).indexOf(found), baseAncestors: found.ancestors, baseCaseTitle: found.title, baseRowBinding, meaningfulInput: entry.scenarioSignificantInput ?? null, expectedResult: entry.expectedResult, originalRunnerAssertion: entry.importantAssertion ?? null, baseAssertions: found.assertions, helperEvidence: found.helperEvidence, errorBoundary: entry.boundaryObservation ?? [], classification: 'normative-specification'};
+  });
+}
+export function buildEvents(angularReport, nodeOutput, currentRegistry, commands) {
+  const events = [];
+  let angularOrdinal = 0;
+  for (const fileResult of angularReport?.testResults ?? []) for (const assertion of fileResult.assertionResults ?? []) {
+    const title = assertion.title;
+    const file = rel(fileResult.name);
+    if (!Array.isArray(assertion.ancestorTitles)) throw new Error(`Angular report lacks ancestor identity: ${file}:${title}`);
+    const candidates = currentRegistry.filter(item => item.file === file && JSON.stringify(item.ancestors) === JSON.stringify(assertion.ancestorTitles) && matchesTitle(item, title));
+    if (candidates.length !== 1) throw new Error(`current Angular registration is ${candidates.length === 0 ? 'missing' : 'ambiguous'}: ${file}:${assertion.fullName}`);
+    const item = candidates[0];
+    const rowBinding = rowBindingFor(item, title, assertion.fullName);
+    events.push({eventId: `angular:${file}:${assertion.fullName}`, runner: 'angular', file, fullId: assertion.fullName, status: assertion.status === 'passed' ? 'PASS' : 'FAIL', title, ancestorTitles: assertion.ancestorTitles, runnerOrdinal: angularOrdinal++, sourceRange: item.range, caseOrdinal: currentRegistry.filter(candidate => candidate.file === file).indexOf(item), rowBinding, assertions: item.assertions, helperEvidence: item.helperEvidence, command: commands.angular.command, commandExit: commands.angular.exitCode});
+  }
+  const nodeEvents = parseNodeReporter(nodeOutput);
+  const nodeFileOrdinals = new Map();
+  for (const reportEvent of nodeEvents) {
+    const item = locateReporterCase(reportEvent, currentRegistry);
+    const fileOrdinal = nodeFileOrdinals.get(reportEvent.file) ?? 0;
+    nodeFileOrdinals.set(reportEvent.file, fileOrdinal + 1);
+    events.push({...reportEvent, fileOrdinal, sourceRange: item.range, caseOrdinal: currentRegistry.filter(candidate => candidate.file === item.file).indexOf(item), assertions: item.assertions, helperEvidence: item.helperEvidence, command: commands.node.command, commandExit: commands.node.exitCode});
+  }
+  return events;
+}
+export function buildMapping(before, events) {
+  const usedEventIds = new Set();
+  const usedIdentities = new Set();
+  const byOldTitle = new Map();
+  const after = [];
+  for (const entry of before) {
+    const pilot = pilotFinal(entry.oldFullId);
+    let candidates;
+    if (entry.runner === 'node-tap') {
+      candidates = events.filter(event => event.runner === 'node-tap' && event.file === entry.finalFileHint && event.fileOrdinal === entry.fileOrdinal);
+      if (!candidates.length && entry.plannedFinalId) candidates = events.filter(event => event.runner === 'node-tap' && event.file === entry.finalFileHint && event.fullId === entry.plannedFinalId);
+      if (!candidates.length) candidates = events.filter(event => event.runner === 'node-tap' && event.file === entry.finalFileHint && event.fullId === entry.oldFullId);
+    } else if (pilot) {
+      candidates = events.filter(event => event.runner === entry.runner && event.file === pilot.file && event.fullId === pilot.fullId);
+    } else {
+      const finalFile = entry.proposedFile ?? entry.baseFile;
+      const sourceCandidates = events.filter(event => event.runner === entry.runner && event.file === finalFile && event.caseOrdinal === entry.baseRegistrationOrdinal);
+      // NOTE: The two legacy clipboard rows came from a for-of registration. The R9
+      // source edit makes that finite input an explicit it.each table, so retain the
+      // smallest honest old-index/owner/row binding rather than using runner order.
+      const explicitAngularRows = {
+        3: {file: 'src/app/clipboard-toast.spec.ts', values: ['{Enter}']},
+        4: {file: 'src/app/clipboard-toast.spec.ts', values: [' ']},
+        18: {file: 'src/app/index/loading-completion.spec.ts', values: ['glossary index', 'synchronous content']},
+        19: {file: 'src/app/index/loading-completion.spec.ts', values: ['glossary Honi', 'synchronous content']},
+        20: {file: 'src/app/index/loading-completion.spec.ts', values: ['glossary Gomamayo', 'synchronous content']},
+        21: {file: 'src/app/index/loading-completion.spec.ts', values: ['home', 'settled response']},
+        22: {file: 'src/app/index/loading-completion.spec.ts', values: ['about', 'settled response']},
+        23: {file: 'src/app/index/loading-completion.spec.ts', values: ['home', 'release error']},
+        24: {file: 'src/app/index/loading-completion.spec.ts', values: ['home', 'release cancel']},
+        25: {file: 'src/app/index/loading-completion.spec.ts', values: ['home', 'release superseded']},
+        26: {file: 'src/app/index/loading-completion.spec.ts', values: ['about', 'release error']},
+        27: {file: 'src/app/index/loading-completion.spec.ts', values: ['about', 'release cancel']},
+        28: {file: 'src/app/index/loading-completion.spec.ts', values: ['about', 'release superseded']},
+        111: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [1, 13]},
+        112: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [1, 14]},
+        113: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [2, 15]},
+        114: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [2, 16]},
+        115: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [2, 17]},
+        116: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [3, 20]},
+        117: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [3, 21]},
+        118: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [4, 22]},
+        119: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [5, 23]},
+        120: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [6, 18]},
+        121: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [6, 19]},
+        122: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [7, 24]},
+        123: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [7, 25]},
+        124: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [9, 27]},
+        125: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [10, 28]},
+        126: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [10, 29]},
+        127: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [11, 31]},
+        128: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [12, 32]},
+        129: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [13, 33]},
+        130: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: [13, 34]},
+        132: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['HTTP YouTube URL']},
+        133: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['JavaScript URL']},
+        134: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['data URL']},
+        135: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['relative embed path']},
+        136: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['evil YouTube hostname']},
+        137: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['evil URL userinfo']},
+        138: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['YouTube userinfo']},
+        139: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['nonstandard YouTube port']},
+        140: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['duplicate evil userinfo URL']},
+        141: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['YouTube fragment']},
+        142: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['YouTube autoplay query']},
+        143: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['YouTube redirect query']},
+        144: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['YouTube watch route']},
+        145: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['short YouTube video ID']},
+        146: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['extra YouTube path']},
+        147: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['short Spotify track ID']},
+        148: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['Spotify album route']},
+        149: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['duplicate Spotify query']},
+        150: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['evil SoundCloud track URL']},
+        151: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['evil SoundCloud hostname']},
+        152: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['SoundCloud playlist route']},
+        153: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['duplicate SoundCloud URL parameter']},
+        154: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['SoundCloud autoplay option']},
+        155: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['SoundCloud color option']},
+        156: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['SoundCloud visual option']},
+        157: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['encoded newline']},
+        158: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['encoded color newline']},
+        159: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['unknown SoundCloud option']},
+        160: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['trailing newline']},
+        161: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['NUL character']},
+        162: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['4,097-character URL']},
+        165: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['script-wrapped iframe HTML']},
+        166: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['image plus iframe HTML']},
+        167: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['iframe with onload HTML']},
+        168: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['iframe with srcdoc HTML']},
+        169: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['SVG-wrapped iframe HTML']},
+        170: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['template-wrapped iframe HTML']},
+        171: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['arbitrary paragraph wrapper HTML']},
+        172: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['two iframe HTML']},
+        173: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['iframe without src HTML']},
+        174: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['unsupported player iframe HTML']},
+        175: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['javascript iframe HTML']},
+        176: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['iframe comment HTML']},
+        177: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['object HTML']},
+        178: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['16,385-character HTML']},
+        179: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['numeric HTML input']},
+        180: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['object HTML input']},
+        181: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['null record']},
+        182: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['undefined record']},
+        183: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['empty string record']},
+        184: {file: 'src/app/discography/embed/embed-policy.spec.ts', values: ['whitespace-only record']},
+        79: {file: 'src/app/blog/index/page.spec.ts', values: [null]},
+        80: {file: 'src/app/blog/index/page.spec.ts', values: ['1']},
+        81: {file: 'src/app/blog/index/page.spec.ts', values: ['2']},
+        82: {file: 'src/app/blog/index/page.spec.ts', values: ['100']},
+        83: {file: 'src/app/blog/index/page.spec.ts', values: ['']},
+        84: {file: 'src/app/blog/index/page.spec.ts', values: ['0']},
+        85: {file: 'src/app/blog/index/page.spec.ts', values: ['-1']},
+        86: {file: 'src/app/blog/index/page.spec.ts', values: ['2.5']},
+        87: {file: 'src/app/blog/index/page.spec.ts', values: ['NaN']},
+        88: {file: 'src/app/blog/index/page.spec.ts', values: ['Infinity']},
+        89: {file: 'src/app/blog/index/page.spec.ts', values: ['02']},
+        90: {file: 'src/app/blog/index/page.spec.ts', values: ['2e1']},
+        91: {file: 'src/app/blog/index/page.spec.ts', values: [' 2 ']},
+        92: {file: 'src/app/blog/index/page.spec.ts', values: ['9007199254740991']},
+      };
+      const explicitRow = entry.runner === 'angular' ? explicitAngularRows[entry.oldEntryIndex] : null;
+      if (explicitRow) {
+        candidates = events.filter(event => event.runner === 'angular' && event.file === explicitRow.file && explicitRow.values.every(value => event.rowBinding?.rowInput?.operands?.some(operand => operand.value === value || (operand.value && typeof operand.value === 'object' && !Array.isArray(operand.value) && Object.values(operand.value).some(entry => entry === value)))));
+        if (candidates.length !== 1) throw new Error(`final Angular explicit source/row binding is ${candidates.length === 0 ? 'missing' : 'ambiguous'} for old index ${entry.oldEntryIndex}: ${entry.oldFullId}`);
+      } else {
+        const sourceRowCandidates = sourceCandidates.filter(event => {
+          const values = (event.rowBinding?.rowInput?.operands ?? []).flatMap(operand => {
+            if (typeof operand.value === 'string' || typeof operand.value === 'number') return [String(operand.value)];
+            if (operand.value && typeof operand.value === 'object' && !Array.isArray(operand.value)) return Object.values(operand.value).filter(value => typeof value === 'string' || typeof value === 'number').map(String);
+            return [];
+          }).filter(value => value.length > 0);
+          return values.length > 0 && values.every(value => entry.meaningfulInput?.title?.includes(value));
+        });
+        const exactRowTitle = entry.meaningfulInput?.title ? sourceCandidates.filter(event => event.title === entry.meaningfulInput.title) : [];
+        candidates = exactRowTitle.length ? exactRowTitle : (sourceRowCandidates.length ? sourceRowCandidates : sourceCandidates);
+        if (candidates.length !== 1) throw new Error(`final Angular source/row binding is ${candidates.length === 0 ? 'missing' : 'ambiguous'} for old index ${entry.oldEntryIndex}: ${entry.oldFullId}`);
+      }
+    }
+    if (!candidates.length) {
+      if (entry.runner === 'node-tap') throw new Error(`final Node reporter case not found for old index ${entry.oldEntryIndex}: ${entry.oldFullId} at ${entry.finalFileHint} file ordinal ${entry.fileOrdinal}`);
+      throw new Error(`final runner case not found for old index ${entry.oldEntryIndex}: ${entry.oldFullId}`);
+    }
+    const unusedCandidates = candidates.filter(event => !usedEventIds.has(event.eventId) && !usedIdentities.has(identity(event)));
+    if (unusedCandidates.length !== 1) throw new Error(`final runner case is ${unusedCandidates.length === 0 ? 'used' : 'ambiguous'} for old index ${entry.oldEntryIndex}: ${entry.oldFullId}`);
+    const event = unusedCandidates[0];
+    usedEventIds.add(event.eventId);
+    usedIdentities.add(identity(event));
+    const helperSupported = entry.helperEvidence?.supported && event.helperEvidence?.supported && sameHelperEvidence(entry.helperEvidence, event.helperEvidence);
+    const judgment = entry.helperEvidence ? (helperSupported ? 'SUPPORTED_HELPER_CONTRACT_EQUAL' : 'UNKNOWN/manual independent review required') : (entry.baseAssertions.length === 0 || event.assertions.length === 0 ? 'UNKNOWN/manual independent review required' : (sameAssertions(entry.baseAssertions, event.assertions) ? 'SUPPORTED_EQUAL' : 'UNKNOWN/manual independent review required'));
+    const status = EXPECTED_PRECONDITION_INDICES.includes(entry.oldEntryIndex) && event.status === 'FAIL' ? 'PRECONDITION_PRESERVED' : event.status;
+    after.push({oldEntryIndex: entry.oldEntryIndex, oldStableKey: entry.stableKey, oldFullId: entry.oldFullId, classification: pilot?.file.includes('.regression.') ? 'concrete-regression' : entry.classification, mappingResolution: entry.runner === 'node-tap' ? 'source-file-line-column-reporter' : 'source-file-case-row-binding', finalFile: event.file, finalFullId: event.fullId, finalSourceRange: event.sourceRange, finalCaseOrdinal: event.caseOrdinal, finalCaseTitle: event.title, baseFile: entry.baseFile, baseSourceRange: entry.baseSourceRange, baseRegistrationOrdinal: entry.baseRegistrationOrdinal, baseAssertions: entry.baseAssertions, finalAssertions: event.assertions, baseHelperEvidence: entry.helperEvidence, finalHelperEvidence: event.helperEvidence, baseRowBinding: entry.baseRowBinding, finalRowBinding: event.rowBinding ?? null, assertionSemantics: judgment, manualReviewItem: judgment.startsWith('UNKNOWN') ? 'Compare exact source diff and preserved assertion/boundary semantics independently.' : null, errorBoundary: entry.errorBoundary, status, runnerEvidence: {eventId: event.eventId, runner: event.runner, command: event.command, commandExit: event.commandExit, fullId: event.fullId, file: event.file, title: event.title, status: event.status, sourceRange: event.sourceRange, rowBinding: event.rowBinding ?? null, assertions: event.assertions, helperEvidence: event.helperEvidence, fileOrdinal: event.fileOrdinal ?? null, reporterLine: event.reporterLine ?? null, reporterColumn: event.reporterColumn ?? null, reporterTestId: event.reporterTestId ?? null}});
+  }
+  return {after, mappedIdentities: usedIdentities};
+}
+function rangesEqual(left, right) { return left?.file === right?.file && left?.startLine === right?.startLine && left?.startColumn === right?.startColumn && left?.endLine === right?.endLine && left?.endColumn === right?.endColumn && left?.startOffset === right?.startOffset && left?.endOffset === right?.endOffset; }
+export function verifyEvidence({before, after, events, commands, sourceRoot = REPO_ROOT}) {
+  if (before.length !== 945 || after.length !== 945) throw new Error(`expected 945 old rows, got ${before.length}/${after.length}`);
+  if (before.filter(item => item.runner === 'angular').length !== 200 || before.filter(item => item.runner === 'node-tap').length !== 745) throw new Error('old Angular/Node counts are not exactly 200/745');
+  if (new Set(before.map(item => item.stableKey)).size !== before.length) throw new Error('duplicate stable key');
+  if (commands.angular.exitCode !== 0) throw new Error(`unexpected Angular command exit ${commands.angular.exitCode}`);
+  const identities = new Map(); for (const event of events) identities.set(identity(event), (identities.get(identity(event)) ?? 0) + 1);
+  const assignedEventIds = new Set();
+  for (const item of after) {
+    const eventId = item.runnerEvidence?.eventId;
+    if (typeof eventId !== 'string' || assignedEventIds.has(eventId)) throw new Error(`assigned actual event more than once: ${item.oldFullId}`);
+    assignedEventIds.add(eventId);
+  }
+  for (const item of after) if ((identities.get(`${item.runnerEvidence.runner}\u0000${item.finalFile}\u0000${item.finalFullId}`) ?? 0) !== 1) throw new Error(`missing or duplicate actual identity: ${item.oldFullId}`);
+  const rowBindingKeys = new Set();
+  for (const item of after) {
+    const event = events.find(candidate => candidate.eventId === item.runnerEvidence.eventId);
+    if (!event) throw new Error(`missing actual event: ${item.oldFullId}`);
+    if (event.runner !== item.runnerEvidence.runner || event.file !== item.finalFile || event.fullId !== item.finalFullId || item.runnerEvidence.file !== event.file || item.runnerEvidence.fullId !== event.fullId) throw new Error(`runner event identity does not match final case: ${item.oldFullId}`);
+    if (event.runner !== 'angular') {
+      if (item.runnerEvidence.reporterLine !== event.sourceRange.startLine || item.runnerEvidence.reporterColumn !== event.sourceRange.startColumn) throw new Error(`Node reporter location is not the registered source location: ${item.oldFullId}`);
+      if (!Number.isInteger(item.runnerEvidence.fileOrdinal)) throw new Error(`Node reporter file ordinal missing: ${item.oldFullId}`);
+    }
+    const parsed = registrations(sourceText(item.finalFile, sourceRoot), item.finalFile).find(candidate => candidate.range.startOffset === item.finalSourceRange.startOffset && candidate.range.endOffset === item.finalSourceRange.endOffset);
+    if (!parsed || !rangesEqual(item.finalSourceRange, parsed.range)) throw new Error(`foreign/truncated final source range: ${item.oldFullId}`);
+    if (!sameAssertions(item.finalAssertions ?? [], parsed.assertions)) throw new Error(`assertions are not bound to final case: ${item.oldFullId}`);
+    if (event.runner === 'angular') {
+      if (!item.baseRowBinding || !item.finalRowBinding || !event.rowBinding) throw new Error(`Angular source row binding is missing: ${item.oldFullId}`);
+      if (!sameRowBinding(item.finalRowBinding, event.rowBinding) || !sameRowBinding(item.runnerEvidence.rowBinding, event.rowBinding)) throw new Error(`Angular row binding was altered: ${item.oldFullId}`);
+      const expectedBinding = rowBindingFor(parsed, event.title, event.fullId);
+      if (!sameRowBinding(event.rowBinding, expectedBinding)) throw new Error(`Angular row binding is not source-derived: ${item.oldFullId}`);
+      const bindingKey = `${event.file}:${event.rowBinding.registrationRange.startOffset}:${event.rowBinding.registrationRange.endOffset}:${event.rowBinding.rowKey}`;
+      if (rowBindingKeys.has(bindingKey)) throw new Error(`Angular source row binding was reused: ${item.oldFullId}`);
+      rowBindingKeys.add(bindingKey);
+      const beforeEntry = before.find(candidate => candidate.oldEntryIndex === item.oldEntryIndex);
+      const pilot = pilotFinal(item.oldFullId);
+      if (!beforeEntry || ![beforeEntry.baseFile, beforeEntry.proposedFile, pilot?.file].includes(event.file)) throw new Error(`Angular event has foreign owner: ${item.oldFullId}`);
+    }
+    if (!sameHelperEvidence(item.finalHelperEvidence, parsed.helperEvidence)) throw new Error(`helper evidence is not bound to final case: ${item.oldFullId}`);
+    if ((item.baseAssertions.length === 0 || item.finalAssertions.length === 0) && !item.baseHelperEvidence && item.assertionSemantics === 'SUPPORTED_EQUAL') throw new Error(`empty assertion signatures were accepted without helper evidence: ${item.oldFullId}`);
+    if (item.assertionSemantics === 'SUPPORTED_HELPER_CONTRACT_EQUAL' && (!item.baseHelperEvidence?.supported || !item.finalHelperEvidence?.supported || !sameHelperEvidence(item.baseHelperEvidence, item.finalHelperEvidence))) throw new Error(`helper contract preservation is not source-bound: ${item.oldFullId}`);
+    if (item.status === 'PASS') { if (event.status !== 'PASS' || (event.runner === 'angular' ? event.commandExit !== 0 : ![0, 1].includes(event.commandExit))) throw new Error(`non-PASS old row marked PASS: ${item.oldFullId}`); }
+    else if (item.status === 'PRECONDITION_PRESERVED') { if (!EXPECTED_PRECONDITION_INDICES.includes(item.oldEntryIndex) || event.status !== 'FAIL') throw new Error(`invalid precondition witness: ${item.oldFullId}`); }
+    else throw new Error(`unexpected final failure: ${item.oldFullId}`);
+    if (!item.assertionSemantics || /passed-or-reconciled/i.test(JSON.stringify(item))) throw new Error(`missing bounded judgment: ${item.oldFullId}`);
+  }
+  const nodeExit = commands.node.exitCode;
+  if (nodeExit !== 0 && !(nodeExit === 1 && after.filter(item => item.status === 'PRECONDITION_PRESERVED').length === 3)) throw new Error(`unexpected Node command exit ${nodeExit}`);
+  return {status: nodeExit === 0 ? 'PASS' : 'PASS_WITH_PRESERVED_PRECONDITIONS', oldRows: 945, oldAngular: 200, oldNode: 745, oldPass: after.filter(item => item.status === 'PASS').length, preconditionPreserved: after.filter(item => item.status === 'PRECONDITION_PRESERVED').length, manualReview: after.filter(item => item.assertionSemantics.startsWith('UNKNOWN')).map(item => item.oldEntryIndex), identities: {planned: after.length, actualUnique: [...identities.values()].filter(count => count === 1).length}};
+}
+export function normalizedProjection(after) { return after.map(item => ({oldEntryIndex: item.oldEntryIndex, oldFullId: item.oldFullId, baseFile: item.baseFile, baseSourceRange: item.baseSourceRange, baseRegistrationOrdinal: item.baseRegistrationOrdinal, baseRowBinding: item.baseRowBinding ?? null, finalFile: item.finalFile, finalFullId: item.finalFullId, finalSourceRange: item.finalSourceRange, finalRowBinding: item.finalRowBinding ?? null, eventIdentity: {eventId: item.runnerEvidence.eventId, runner: item.runnerEvidence.runner, file: item.runnerEvidence.file, fullId: item.runnerEvidence.fullId}, assertions: {base: item.baseAssertions, final: item.finalAssertions}, helperSemantics: {base: helperSemantic(item.baseHelperEvidence), final: helperSemantic(item.finalHelperEvidence)}, assertionSemantics: item.assertionSemantics, status: item.status})); }
+export function loadObservationMap() { return JSON.parse(readFileSync(BEFORE_MAP, 'utf8')); }
+export function loadBeforeTap() { return readFileSync(BEFORE_TAP, 'utf8'); }
+export {buildRegistry, filesAtCommit, fullId, identity, registrations, semanticKey, textAtCommit, rowBindingFor, sameRowBinding, finiteRows};

@@ -1,13 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import IndexComponent from './index.component';
 
-describe('IndexComponent', () => {
+describe('Given the glossary index page owner is created', () => {
   let component: IndexComponent;
   let fixture: ComponentFixture<IndexComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [IndexComponent]
+      imports: [IndexComponent]
     })
       .compileComponents();
   });
@@ -18,7 +18,7 @@ describe('IndexComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('When the owner is created Then the glossary index component is available', () => {
     expect(component).toBeTruthy();
   });
 });

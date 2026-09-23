@@ -1,0 +1,11 @@
+import {spawnSync} from 'node:child_process';
+const collect = spawnSync(process.execPath, ['scripts/observation/v3-full/collect.mjs'], {cwd: process.cwd(), encoding: 'utf8'});
+process.stdout.write(collect.stdout ?? '');
+process.stderr.write(collect.stderr ?? '');
+if (collect.status !== 0) process.exit(collect.status ?? 1);
+const match = collect.stdout.match(/"runDir": "([^"]+)"/);
+if (!match) throw new Error('full collector did not report runDir');
+const verify = spawnSync(process.execPath, ['scripts/observation/v3-full/verify.mjs', match[1]], {cwd: process.cwd(), encoding: 'utf8'});
+process.stdout.write(verify.stdout ?? '');
+process.stderr.write(verify.stderr ?? '');
+process.exit(verify.status ?? 1);

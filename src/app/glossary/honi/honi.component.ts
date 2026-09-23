@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { LoadingService } from "../../services/loading.service";
 
@@ -6,6 +6,7 @@ import { LoadingService } from "../../services/loading.service";
   standalone: true,
   selector: 'app-honi',
   templateUrl: './honi.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./honi.component.scss']
 })
 export default class HoniComponent implements OnInit, OnDestroy {
@@ -17,9 +18,7 @@ export default class HoniComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.titleService.setTitle('ほに-用語集 | しなちくシステム');
-    setTimeout(() => {
-      this.loadingService.loading = false;
-    }, 500);
+    this.loadingService.loading = false;
   }
 
   ngOnDestroy(): void {

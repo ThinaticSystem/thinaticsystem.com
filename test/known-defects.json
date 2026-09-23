@@ -1,0 +1,15 @@
+{
+  "schema": "thinaticsystem-com/known-defects/v1",
+  "cases": [],
+  "resolvedCheck": {
+    "id": "unsafe-html-content",
+    "spec": "src/app/pipes/sanitize-html.pipe.spec.ts",
+    "suiteName": "Given the sanitizer receives HTML from content input",
+    "testNames": [
+      "When preserves ordinary non-executable HTML without marking it trusted",
+      "When [unsafe-html-content] removes executable scripts rather than trusting HTML",
+      "When does not retain event handlers or srcdoc HTML",
+      "When cannot bypass the dedicated player allowlist through generic HTML"
+    ]
+  }
+}

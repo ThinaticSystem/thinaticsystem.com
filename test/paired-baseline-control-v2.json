@@ -1,0 +1,307 @@
+{
+  "schema": "thinaticsystem/historical-performance-control/v2",
+  "name": "angular18-chromium153-axe413",
+  "scope": "historical-performance-control-only",
+  "parent": {
+    "path": "test/paired-baseline-debt.json",
+    "sha256": "23aa45dd621b4ae385dd127515e9115f3952ca79b0c1ae415978304fbf616be3"
+  },
+  "baseSha": "33b4ef4e8d21276130127a61aede6f0a8e1c47cb",
+  "provenance": "Explicit independently reviewed v2, never auto-enrolled from observed runs",
+  "disposition": "Historical comparison control only; critical/serious axe defects are NOT accessibility acceptance. Candidate must have zero defects. Any signature change requires review, never auto-enrollment.",
+  "optionalPageErrors": {
+    "message": "NG0953",
+    "url": "http://127.0.0.1:4174/",
+    "maximumPerRun": 2
+  },
+  "axe": [
+    {
+      "name": "desktop.home",
+      "violations": [
+        {
+          "id": "button-name",
+          "impact": "critical",
+          "targets": [
+            [
+              ".hover\\:text-yellow-400"
+            ]
+          ]
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "targets": [
+            [
+              ".text-white"
+            ]
+          ]
+        },
+        {
+          "id": "link-name",
+          "impact": "serious",
+          "targets": [
+            [
+              ".hover\\:text-sky-400"
+            ]
+          ]
+        },
+        {
+          "id": "listitem",
+          "impact": "serious",
+          "targets": [
+            [
+              ".col-span1"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "desktop.theme-toggle",
+      "violations": [
+        {
+          "id": "button-name",
+          "impact": "critical",
+          "targets": [
+            [
+              ".hover\\:text-yellow-400"
+            ]
+          ]
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "targets": [
+            [
+              ".big-hero > p"
+            ],
+            [
+              ".text-white"
+            ]
+          ]
+        },
+        {
+          "id": "link-name",
+          "impact": "serious",
+          "targets": [
+            [
+              ".hover\\:text-sky-400"
+            ]
+          ]
+        },
+        {
+          "id": "listitem",
+          "impact": "serious",
+          "targets": [
+            [
+              ".col-span1"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "desktop.blog-list",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "targets": [
+            [
+              "a[href$=\"fixture\"]"
+            ]
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "targets": [
+            [
+              "html"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > .sr-only"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "desktop.blog-article",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "targets": [
+            [
+              "a[href$=\"fixture\"]"
+            ],
+            [
+              ".text-gray-500"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "desktop.discography",
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "targets": [
+            [
+              "html"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mobile.menu-blog",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "targets": [
+            [
+              "a[href$=\"fixture\"]"
+            ]
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "targets": [
+            [
+              "html"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".loading"
+            ],
+            [
+              ".relative > .sr-only"
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "baseline": {
+    "node": "v22.23.2",
+    "corepack": "0.34.6",
+    "pnpm": "9.10.0",
+    "lockSha256": "7531f0550dc953f84b2f2ca66fd9487de776d2e5c45ed2ce815e93fd204ceffe",
+    "framework": "Angular18.2.4 historical unsupported framework; Node22 is within its published build compatibility range",
+    "compatibilitySource": "https://angular.dev/reference/versions"
+  },
+  "measurement": {
+    "node": "v24.19.0",
+    "playwright": "1.63.0",
+    "axe": "4.13.0",
+    "chromium": "153.0.8010.12",
+    "timingSubstrate": {
+      "fixture": "owned synthetic CMS/API data",
+      "reducedMotion": "reduce",
+      "readiness": "loading image fade then finite motion settled before timer stop",
+      "font": {
+        "family": "Noto Sans JP",
+        "emoji": {
+          "family": "Noto Color Emoji",
+          "revision": "f3ae03f5e9b3b8516fa151f7168159ca1a3e7515",
+          "sha256": "72a635cb3d2f3524c51620cdde406b217204e8a6a06c6a096ff8ed4b5fd6e27b"
+        },
+        "revision": "66a36c8c94b1a5d992ee4e7f392fccfe4945767c",
+        "file": "NotoSansJP[wght].ttf",
+        "sha256": "c2f3b4d463500a2ddcd3849cded1fceeb9fd6d1c32e6cbecd568453ba50fc68f"
+      },
+      "colorScheme": "light",
+      "initialTheme": "light",
+      "accessibility": "axe scan after timer stop",
+      "server": "loopback static artifact server"
+    }
+  },
+  "inputHashes": {
+    "flake.lock": "04d898ce5182a5b6fa86f59144e4f731e58b4b9291b3278abdbef916a92f1dfc",
+    "scripts/browser-smoke.mjs": "746f4e9e1620fdb8a81c8d7a95f8335ff9b228e4a2b2c03f606ed4a7d718f91a",
+    "scripts/browser-readiness.mjs": "c63fda3ad0996489422f6c69fff823aff7e7bdb8a29f52eceb86d596a3150dd3",
+    "scripts/browser-environment.mjs": "a1a7231808da6d97e403be51b0e7e81951f160ba1e6813943691978638fe0132",
+    "test/fixtures/patrons.json": "8af7fe54c029506dc5401c0f59c4f98a80ea62747b025957f641d8160452aee8"
+  },
+  "review": {
+    "disposition": "Design-only independent review approves precisely two historical identities, not product or performance acceptance",
+    "reportSha256": "05c3a1aafa5cc6c5696a3e03805f9b42df3ff36bd9078ac9d16c09e2966e8fbd",
+    "evidenceRoot": ".artifacts/paired-continuation-2026-09-11T10-58-06-122Z",
+    "causalResultSha256": "e706c73e34f86e7b59eca57055f74a69274ead79f5df9615e32e03ef5b4f8398",
+    "forwardReverse": {
+      "desktop.blog-list": "81a445f21f8c5c75af20450ed9782216025a59b78638915688e3048412b872f6",
+      "mobile.menu-blog": "1787c763df027ea30a9e813290cf67b193b2381cac3f6ed6327fb82384c72e9b"
+    },
+    "finding": "Identical DOM/current browser in both scan orders: axe4.10.2 bgOverlap/incomplete becomes axe4.13 measured3.32:1 below4.5:1. Earlier result was not PASS.",
+    "runtimeDisposition": "Parent selected actually verified cached locked-nixpkgs22.23.2 instead of older22.19 option",
+    "reviewTrigger": "Any input/runtime/browser/axe/identity change requires a separately reviewed version. Candidate violations and page/console/request errors must remain zero."
+  }
+}

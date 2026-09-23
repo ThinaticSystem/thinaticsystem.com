@@ -1,0 +1,95 @@
+[
+  {
+    "name": "missing runner event ID",
+    "mutation": "missing-id"
+  },
+  {
+    "name": "duplicate runner event ID",
+    "mutation": "duplicate-id"
+  },
+  {
+    "name": "foreign source range",
+    "mutation": "fake-source-range"
+  },
+  {
+    "name": "dropped matcher signature",
+    "mutation": "dropped-matcher"
+  },
+  {
+    "name": "failing event forged as PASS",
+    "mutation": "forged-pass"
+  },
+  {
+    "name": "truncated registered case range",
+    "mutation": "truncated-range"
+  },
+  {
+    "name": "duplicate runner file full ID with a distinct event ID",
+    "mutation": "duplicate-identity"
+  },
+  {
+    "name": "empty helper signature",
+    "mutation": "empty-helper-signature"
+  },
+  {
+    "name": "changed helper assertion",
+    "mutation": "changed-helper-assertion"
+  },
+  {
+    "name": "changed helper mutation operand",
+    "mutation": "changed-helper-operand"
+  },
+  {
+    "name": "changed helper table value",
+    "mutation": "changed-helper-table-value"
+  },
+  {
+    "name": "changed helper expected outcome",
+    "mutation": "changed-helper-expected-outcome"
+  },
+  {
+    "name": "cross-file broad template capture",
+    "mutation": "cross-file-broad-template-capture"
+  },
+  {
+    "name": "intra-file GWT template capture",
+    "mutation": "intra-file-gwt-template-capture"
+  },
+  {
+    "name": "same title captured from a foreign owner file",
+    "mutation": "same-title-foreign-owner"
+  },
+  {
+    "name": "same full ID captured from a different owner",
+    "mutation": "same-full-id-foreign-owner"
+  },
+  {
+    "name": "shared dynamic registration collapses distinct rows",
+    "mutation": "shared-dynamic-registration"
+  },
+  {
+    "name": "duplicate old rows assigned to one actual event",
+    "mutation": "duplicate-old-row-assignment"
+  },
+  {
+    "name": "changed Angular row operand or input",
+    "mutation": "changed-row-input"
+  },
+  {
+    "name": "changed Angular row expected outcome",
+    "mutation": "changed-row-expected-outcome"
+  },
+  {
+    "name": "source-mutated Angular old 142 row URL operand",
+    "mutation": "source-mutated-row-input"
+  },
+  {
+    "name": "source-mutated Angular old 142 expected null outcome",
+    "mutation": "source-mutated-row-expected-outcome"
+  },
+  {
+    "name": "reordered Angular report assertions preserve source mapping",
+    "mutation": "reordered-angular-assertions",
+    "expect": "stable"
+  }
+]

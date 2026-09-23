@@ -1,29 +1,37 @@
 <div class="min-h-screen">
-  <ng-template [ngIf]="blog()" let-article>
-    <ng-template [ngIf]="article.eyecatch" let-eyecatch>
+  <a routerLink="/blog" class="inline-block py-4 underline">記事一覧へ</a>
+  @if (!blog() && !error()) {
+    <p role="status" class="sr-only">記事を読み込み中…</p>
+  }
+  @if (error()) {
+    <div role="alert" class="py-12"><p>記事を読み込めませんでした</p><button type="button" class="underline" (click)="loadArticle()">再試行</button></div>
+  }
+  @if (blog(); as article) {
+    @if (article.eyecatch; as eyecatch) {
       <div [style.background-image]="'url(' + environment.cmsUrl + eyecatch.url + ')'" class="eyecatch"></div>
-    </ng-template>
+    }
     <div class="mx-auto py-12 max-w-7xl lg:py-24">
       <div class="space-y-12 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
         <div class="space-y-5 sm:space-y-4">
-          <h2 class="text-3xl font-extrabold tracking-tight sm:text-3xl">{{ article.title }}</h2>
-
+          <h1 class="text-3xl font-extrabold tracking-tight sm:text-3xl">{{ article.title }}</h1>
           <div class="tag">
-            <ng-template [ngForOf]="article.blogTags" let-tag ngFor>
-              <a [routerLink]="'/blog/tag/' + tag?.tag">{{tag?.tag}}</a>
-            </ng-template>
+            @for (tag of article.blogTags; track tag) {
+              @if (tag?.tag?.trim()) {
+                <a [routerLink]="['/blog/tag', tag?.tag]">{{ tag?.tag }}</a>
+              }
+            }
           </div>
-
           <!-- 共有ボタン -->
           <div class="my-4">
-            <app-share [share]="{text: '「' + article.title + '」', url: url, copyMsg: '記事のリンクをコピーしました!'}"></app-share>
+            <app-share
+              [share]="{text: '「' + article.title + '」', url: url, copyMsg: '記事のリンクをコピーしました!'}"></app-share>
           </div>
         </div>
         <div class="lg:col-span-2">
-          <p class="text-sm text-gray-500 mb-3">{{ article.created_at | date: 'YYYY年MM月dd日' }}</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">{{ article.created_at | date: 'yyyy年MM月dd日' }}</p>
           <div [innerHTML]="article.body | markdown | async" class="markdown-body"></div>
         </div>
       </div>
     </div>
-  </ng-template>
+  }
 </div>

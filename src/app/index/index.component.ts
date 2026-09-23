@@ -1,14 +1,14 @@
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 import { Title } from '@angular/platform-browser';
-import { ClipboardModule } from "ngx-clipboard";
-import { NgPipesModule } from 'ngx-pipes';
-import { Subject, map, takeUntil, tap } from 'rxjs';
-import { environment } from 'src/environments/environment';
-import { LoadingService } from "../services/loading.service";
-import { NavigateService } from "../services/navigate.service";
-import { NotificationService } from "../services/notification.service";
+import { RouterLink } from '@angular/router';
+import {ClipboardModule} from "ngx-clipboard";
+import {NgPipesModule} from 'ngx-pipes';
+import {finalize, map, Subject, takeUntil, tap} from 'rxjs';
+import {environment} from 'src/environments/environment';
+import {LoadingService} from "../services/loading.service";
+import {NavigateService} from "../services/navigate.service";
+import {NotificationService} from "../services/notification.service";
 
 export interface Notifications {
   title: string;
@@ -18,42 +18,31 @@ export interface Notifications {
 }
 
 export interface Patrons {
-  data: Data;
-  links: Links;
-}
-
-export interface Data {
-  attributes: Attributes;
-  id: string;
-  type: string;
+  data: {attributes: Attributes};
 }
 
 export interface Attributes {
-  currently_entitled_amount_cents: number;
   full_name: string;
   lifetime_support_cents: number;
-  patron_status?: string;
-}
-
-export interface Links {
-  self: string;
+  patron_status?: string | null;
 }
 
 @Component({
-  standalone: true,
   selector: 'app-index',
   templateUrl: './index.component.html',
   styleUrls: ['./index.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
-    CommonModule,
     ClipboardModule,
     NgPipesModule,
-  ],
+    RouterLink,
+  ]
 })
 export default class IndexComponent implements OnInit, OnDestroy {
   #dispose$ = new Subject<null>();
 
   notifications = signal<Notifications[] | null>(null);
+  notificationsError = signal(false);
   url = location.href;
   origin = location.origin;
 
@@ -75,6 +64,7 @@ export default class IndexComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const finishLoading = this.loadingService.beginContentLoad();
     this.titleService.setTitle('しなちくシステム');
     this.genDebobi();
 
@@ -90,14 +80,11 @@ export default class IndexComponent implements OnInit, OnDestroy {
           this.notifications.set(urlReplacedNotifications);
         }),
         takeUntil(this.#dispose$),
+        finalize(finishLoading),
       )
-      .subscribe(() => {
-        setTimeout(() => {
-          this.loadingService.loading = false;
-        }, 500);
-      });
+      .subscribe({error: () => this.notificationsError.set(true)});
 
-    this.httpClient.get<Patrons[]>(`${environment.publicUrl}/workers/patrons`)
+    this.httpClient.get<Patrons[]>(environment.patronsUrl)
       .pipe(
         map((data) =>
           data.filter(patron =>
@@ -113,8 +100,8 @@ export default class IndexComponent implements OnInit, OnDestroy {
   }
 
   genDebobi(): void {
-    const s = this.debobiSource.s[Math.floor(Math.random() * this.debobiSource.s.length)];
-    const m = this.debobiSource.m[Math.floor(Math.random() * this.debobiSource.m.length)];
+    const s = this.debobiSource.s[Math.floor(Math.random() * this.debobiSource.s.length)]!;
+    const m = this.debobiSource.m[Math.floor(Math.random() * this.debobiSource.m.length)]!;
 
     this.debobi = s + m;
   }
@@ -124,8 +111,6 @@ export default class IndexComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.loadingService.loading = true;
-
     this.#dispose$.next(null);
   }
 }

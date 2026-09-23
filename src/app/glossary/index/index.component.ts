@@ -1,4 +1,5 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { LoadingService } from "../../services/loading.service";
 import { NavigateService } from "../../services/navigate.service";
@@ -7,7 +8,9 @@ import { NavigateService } from "../../services/navigate.service";
   standalone: true,
   selector: 'app-index',
   templateUrl: './index.component.html',
-  styleUrls: ['./index.component.scss']
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./index.component.scss'],
+  imports: [RouterLink],
 })
 export default class IndexComponent implements OnInit, OnDestroy {
   constructor(
@@ -19,9 +22,7 @@ export default class IndexComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.titleService.setTitle('用語集 | しなちくシステム');
-    setTimeout(() => {
-      this.loadingService.loading = false;
-    }, 500);
+    this.loadingService.loading = false;
   }
 
   ngOnDestroy(): void {
