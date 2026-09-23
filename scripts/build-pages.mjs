@@ -109,16 +109,18 @@ export function createPagesRoot({browserRoot, outputRoot, commitSha}) {
 }
 
 export function validateCandidateBuildConfiguration(args) {
-  if (args.some((argument) => argument === '-c' || argument.startsWith('-c=') || argument.startsWith('--configuration'))) {
+  if (args.length === 1 && args[0] === '--configuration=production') return [];
+  if (args.some((argument) => argument.startsWith('-c') || argument.startsWith('--configuration'))) {
     throw new Error('Candidate Pages builds use the locked preview configuration');
   }
+  return args;
 }
 
 function buildAngular(args, candidatePreview) {
   const cli = resolve('node_modules/@angular/cli/bin/ng.js');
-  if (candidatePreview) validateCandidateBuildConfiguration(args);
+  const forwardedArgs = candidatePreview ? validateCandidateBuildConfiguration(args) : args;
   const configuration = candidatePreview ? ['--configuration=preview'] : [];
-  const result = spawnSync(process.execPath, [cli, 'build', ...configuration, ...args], {stdio: 'inherit'});
+  const result = spawnSync(process.execPath, [cli, 'build', ...configuration, ...forwardedArgs], {stdio: 'inherit'});
   if (result.error) throw result.error;
   if (result.signal) throw new Error(`Angular build terminated by ${result.signal}`);
   if (result.status !== 0) process.exitCode = result.status ?? 1;

@@ -55,10 +55,24 @@ function assertCompiledPatronsEndpoint(bundles, expectedUrl, label) {
   assert.equal(result.pass, true, label + ': expected one static patronsUrl assignment with the expected decoded value and one GET use');
 }
 
-test('Given a candidate build receives configuration overrides then it rejects both Angular configuration spellings', () => {
-  assert.doesNotThrow(() => validateCandidateBuildConfiguration(['--verbose']));
-  for (const args of [['-c', 'production'], ['-c=production'], ['--configuration', 'production'], ['--configuration=production']]) {
-    assert.throws(() => validateCandidateBuildConfiguration(args), /locked preview configuration/);
+test('Given the Pages host uses its exact production selector then candidate validation locks Angular to preview', () => {
+  assert.deepEqual(validateCandidateBuildConfiguration([]), []);
+  assert.deepEqual(validateCandidateBuildConfiguration(['--configuration=production']), []);
+  assert.deepEqual(validateCandidateBuildConfiguration(['--verbose']), ['--verbose']);
+});
+
+test('Given a candidate build receives any other configuration selector then it rejects ambiguous or competing inputs', () => {
+  const rejected = [
+    ['-c', 'production'], ['-c=production'], ['-cproduction'],
+    ['--configuration', 'production'], ['--configuration=preview'],
+    ['--configuration=development'], ['--configuration=custom'],
+    ['--configuration=production', '--configuration=production'],
+    ['--configuration=production,preview'], ['--configuration=production,'],
+    ['--configuration=production', '--verbose'], ['--configuration='],
+    ['--configurationPreview'], ['-c', 'production', '--verbose'],
+  ];
+  for (const args of rejected) {
+    assert.throws(() => validateCandidateBuildConfiguration(args), /locked preview configuration/, args.join(' '));
   }
 });
 
@@ -133,7 +147,7 @@ test('Given candidate Pages output then an ordinary build runs then deployment f
   const browserRoot = resolve(outputRoot, 'browser');
   const headSha = execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim();
   const candidateEnvironment = {...process.env, CF_PAGES: '1', CF_PAGES_BRANCH: 'chore/modernization-renovate', CF_PAGES_COMMIT_SHA: headSha};
-  const candidateBuild = spawnSync(process.execPath, ['scripts/build-pages.mjs'], {cwd: projectRoot, env: candidateEnvironment, encoding: 'utf8'});
+  const candidateBuild = spawnSync('corepack', ['pnpm', 'build', '--configuration=production'], {cwd: projectRoot, env: candidateEnvironment, encoding: 'utf8'});
   assert.equal(candidateBuild.status, 0, ['candidate build failed', candidateBuild.stdout, candidateBuild.stderr].join('\n'));
 
   assert.equal(readFileSync(resolve(outputRoot, 'pages-commit-sha.txt'), 'utf8'), headSha + '\n');
@@ -148,7 +162,7 @@ test('Given candidate Pages output then an ordinary build runs then deployment f
   delete ordinaryEnvironment.CF_PAGES;
   delete ordinaryEnvironment.CF_PAGES_BRANCH;
   delete ordinaryEnvironment.CF_PAGES_COMMIT_SHA;
-  const ordinaryBuild = spawnSync(process.execPath, ['scripts/build-pages.mjs'], {cwd: projectRoot, env: ordinaryEnvironment, encoding: 'utf8'});
+  const ordinaryBuild = spawnSync('corepack', ['pnpm', 'build', '--configuration=production'], {cwd: projectRoot, env: ordinaryEnvironment, encoding: 'utf8'});
   assert.equal(ordinaryBuild.status, 0, ['ordinary build failed', ordinaryBuild.stdout, ordinaryBuild.stderr].join('\n'));
 
   for (const filename of ['_worker.js', '_routes.json', 'pages-commit-sha.txt', 'index.html']) {
