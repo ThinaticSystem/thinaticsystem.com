@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {extractSameOriginAssets} from './preview-smoke-assets.mjs';
+import {hasAngularShell} from './preview-smoke-shell.mjs';
 
 const base = process.argv[2];
 if (!base) throw new Error('usage: node scripts/preview-smoke.mjs <deployment-url>');
@@ -37,8 +38,8 @@ for (const check of checks.slice(1)) {
   const url = check.url ?? new URL(check.path, origin).href;
   const response = await fetch(url, {headers: {accept: '*/*'}});
   assert.ok(response.status >= 200 && response.status < 400, `${check.name}: HTTP ${response.status} (${url})`);
-  if (check.type) assert.match(response.headers.get('content-type') ?? '', new RegExp(check.type.replace('/', '\/')), `${check.name}: content type`);
-  if (check.type === 'text/html') assert.match(await response.text(), /<app-root/i, `${check.name}: Angular shell`);
+  if (check.type) assert.equal((response.headers.get('content-type') ?? '').split(';', 1)[0].trim().toLowerCase(), check.type.toLowerCase(), `${check.name}: content type`);
+  if (check.type === 'text/html') assert.ok(hasAngularShell(await response.text()), `${check.name}: Angular shell`);
 }
 const browser = await chromium.launch({headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage']});
 const context = await browser.newContext();
@@ -48,7 +49,11 @@ context.on('pageerror', error => pageErrors.push(String(error)));
 context.on('requestfailed', request => requestFailures.push({url: request.url(), failure: request.failure()?.errorText ?? 'unknown'}));
 context.on('response', response => {
   const matching = assetExpectations.find(asset => asset.url.href === response.url());
-  if (matching) assetResponses.set(response.url(), {status: response.status(), contentType: response.headers()['content-type'] ?? ''});
+  if (matching) {
+    const observations = assetResponses.get(response.url()) ?? [];
+    observations.push({status: response.status(), contentType: response.headers()['content-type'] ?? ''});
+    assetResponses.set(response.url(), observations);
+  }
 });
 const page = await context.newPage();
 async function open(path, heading) {
@@ -68,9 +73,11 @@ await page.goBack({waitUntil: 'networkidle'}).catch(() => {});
 await context.close();
 await browser.close();
 for (const asset of assetExpectations) {
-  const witness = assetResponses.get(asset.url.href);
-  assert.ok(witness, `browser did not request exact ${asset.type} asset: ${asset.url}`);
-  assert.ok(witness.status >= 200 && witness.status < 300, `browser ${asset.type} asset HTTP ${witness.status}: ${asset.url}`);
+  const observations = assetResponses.get(asset.url.href) ?? [];
+  const successfulIndex = observations.findIndex(response => response.status >= 200 && response.status < 300);
+  assert.ok(successfulIndex >= 0, `browser did not successfully request exact ${asset.type} asset: ${asset.url}`);
+  assert.ok(observations.every((response, index) => response.status >= 200 && response.status < 300 || response.status === 304 && index > successfulIndex), `browser ${asset.type} asset had unexpected responses: ${observations.map(response => response.status).join("/")}: ${asset.url}`);
+  const witness = observations[successfulIndex];
   assert.match(witness.contentType, asset.type === 'javascript' ? /javascript|ecmascript/i : /text\/css/i, `browser ${asset.type} content type: ${asset.url}`);
 }
 assert.deepEqual(consoleErrors, [], `console errors: ${consoleErrors.join(' | ')}`);
