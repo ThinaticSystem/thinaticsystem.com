@@ -100,6 +100,41 @@ test('Given detached checkout refs for master and candidate share HEAD when Page
   } finally { await rm(root, {recursive: true, force: true}); }
 });
 
+test('Given attached master checkout and conflicting or missing Pages branch metadata when real Angular is invoked then the build rejects before Angular', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'pages-attached-metadata-'));
+  const runGit = (...args) => execFileSync('git', args, {cwd: root, encoding: 'utf8'}).trim();
+  try {
+    runGit('init', '--quiet', '--initial-branch=master');
+    runGit('config', 'user.name', 'Pages contract fixture');
+    runGit('config', 'user.email', 'pages-contract@example.invalid');
+    await writeFile(join(root, 'fixture.txt'), 'attached master fixture\n');
+    runGit('add', 'fixture.txt');
+    runGit('commit', '--quiet', '-m', 'fixture');
+    const headSha = runGit('rev-parse', 'HEAD');
+    const scriptsRoot = join(root, 'scripts');
+    await mkdir(scriptsRoot);
+    await writeFile(join(scriptsRoot, 'build-pages.mjs'), await readFile(new URL('./build-pages.mjs', import.meta.url)));
+    await symlink(realpathSync('node_modules'), join(root, 'node_modules'), 'dir');
+    for (const branch of ['develop', undefined]) {
+      const result = spawnSync(process.execPath, [join(scriptsRoot, 'build-pages.mjs'), '--help'], {
+        cwd: root, encoding: 'utf8',
+        env: {...process.env, CF_PAGES: '1', CF_PAGES_BRANCH: branch, CF_PAGES_COMMIT_SHA: headSha},
+      });
+      assert.equal(result.error, undefined);
+      assert.notEqual(result.status, 0, 'attached branch contradiction rejects');
+      assert.match(result.stderr, /Pages branch metadata does not match the checked-out branch/);
+      assert.doesNotMatch(result.stdout, /ng build \[project\]/, 'Angular CLI was not invoked');
+    }
+    const matching = spawnSync(process.execPath, [join(scriptsRoot, 'build-pages.mjs'), '--help'], {
+      cwd: root, encoding: 'utf8',
+      env: {...process.env, CF_PAGES: '1', CF_PAGES_BRANCH: 'master', CF_PAGES_COMMIT_SHA: headSha},
+    });
+    assert.equal(matching.error, undefined);
+    assert.equal(matching.status, 0, matching.stderr);
+    assert.match(matching.stdout, /ng build \[project\]/, 'matching attached branch reaches real Angular');
+  } finally { await rm(root, {recursive: true, force: true}); }
+});
+
 test('Given detached checkout and candidate Pages metadata when exact HEAD SHA is supplied then candidate identity is selected', () => {
   assert.equal(validatePagesBuildIdentity({isPages: true, branch: CANDIDATE_BRANCH, localBranch: '', commitSha: candidateSha, headSha: candidateSha}), candidateSha);
 });

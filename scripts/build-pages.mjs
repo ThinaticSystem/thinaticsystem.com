@@ -17,6 +17,7 @@ const BROWSER_ROOT = resolve(APPLICATION_ROOT, 'browser');
 export function validatePagesBuildIdentity(identity) {
   if (!identity.isPages) return null;
   const localBranch = typeof identity.localBranch === 'string' && identity.localBranch !== '' ? identity.localBranch : null;
+  if (localBranch !== null && identity.branch !== localBranch) throw new Error('Pages branch metadata does not match the checked-out branch');
   if (localBranch !== null && localBranch !== CANDIDATE_BRANCH) {
     if (identity.branch === CANDIDATE_BRANCH) throw new Error('Candidate Pages metadata does not match the checked-out branch');
     return null;
