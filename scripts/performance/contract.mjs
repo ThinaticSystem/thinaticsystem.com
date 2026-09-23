@@ -4,7 +4,8 @@
  * substrate; authenticity, source snapshots and actual readiness remain parent
  * and collector responsibilities. This module proves DTO consistency, not origin.
  *
- * Policy schemas v2 and v3 are checked-in immutable controls. The runner selects v3; v2 remains supported for historical fixtures.
+ * Policy schemas v2 and v3 are checked-in immutable controls. v4 is additive;
+ * v2/v3 evaluation semantics remain unchanged for historical fixtures.
  * warmScope may be REVIEW_REQUIRED (diagnostic only) or REVIEWED_COMPATIBLE with
  * exact fixtureSha256, harnessSha256 and nonempty reviewReference. A new fixture
  * must not silently inherit the historical warm resource scope.
@@ -39,6 +40,9 @@ const categories = ['code', 'document', 'api', 'image', 'font', 'other'];
 const scopes = ['action', 'tail'];
 const aggregateKeys = ['aggregate', 'aggregates', 'summary'];
 const hashPattern = /^[a-f0-9]{64}$/;
+const noiseDecisionKeys = ['sampleRange', 'calibrationBias', 'comparisonBlocks', 'inconsistentSignal', 'materialRegression', 'tailClaim'];
+const noiseDecision = {sampleRange: 'DIAGNOSTIC_ONLY', calibrationBias: 'INCONCLUSIVE', comparisonBlocks: 'TWO_FIXED_PAIRS', inconsistentSignal: 'INCONCLUSIVE', materialRegression: 'PAIRED_AND_SIDE_MEDIANS', tailClaim: 'NOT_ESTABLISHED'};
+const noiseDecisionSha256 = '54d9725da4cd7f300714eb42a82457ca3032941d63527d0bb3b2d02e389c1373';
 const number = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER;
 const integer = value => number(value) && Number.isSafeInteger(value);
 const text = value => typeof value === 'string' && value.trim().length > 0;
@@ -203,13 +207,15 @@ export function validateBaselineRuntimeIdentity({sourceSha, node, packageManager
   return {valid: errors.length === 0, errors};
 }
 function inspectPolicy(policy, errors) {
-  if (!shape(policy, ['schema', 'version', 'anchor', 'caps', 'warmScope', 'materiality', 'schedule', 'calibrationSchedule', 'runtimeMajor', 'absoluteUxAcceptance'], [], 'policy', errors)) return;
+  const v4 = policy?.schema === 'thinaticsystem/performance-policy/v4' && policy?.version === 'comparative-engineering-v4.0';
+  const required = ['schema', 'version', 'anchor', 'caps', 'warmScope', 'materiality', 'schedule', 'calibrationSchedule', 'runtimeMajor', 'absoluteUxAcceptance', ...(v4 ? ['noiseDecision'] : [])];
+  if (!shape(policy, required, [], 'policy', errors)) return;
   const v2 = policy.schema === 'thinaticsystem/performance-policy/v2' && policy.version === 'comparative-engineering-v2.0';
   const v3 = policy.schema === 'thinaticsystem/performance-policy/v3' && policy.version === 'comparative-engineering-v3.0';
-  requireValue(v2 || v3, 'policy: unsupported version', errors);
+  requireValue(v2 || v3 || v4, 'policy: unsupported version', errors);
   requireValue(policy.runtimeMajor === 24 && policy.absoluteUxAcceptance === 'NOT_ESTABLISHED', 'policy: unsupported runtime/UX claim', errors);
   if (shape(policy.anchor, ['id', 'proposalSha256', 'reference', 'referenceCodeBytes'], [], 'policy.anchor', errors)) {
-    const expected = v3 ? {id: 'source-7a835224-v1', proposalSha256: '16a13627d3ef432606d9ddfc982b44e38edae569bcf8d9d526a1cbf101ceca1c', reference: 'candidate-source-7a8352242951516a2380e8fc69c5fb902b0c0e5d', bytes: fixedReferenceV3} : {id: 'required-features-v1', proposalSha256: 'acc9d1071435fba0166d4338aca99021d4e9ba4431a71837e1d659f542edc64f', reference: 'historical-ci-35531884637-baseline', bytes: fixedReferenceV2};
+    const expected = v4 ? {id: 'source-7a835224-v2', proposalSha256: noiseDecisionSha256, reference: 'candidate-source-7a8352242951516a2380e8fc69c5fb902b0c0e5d', bytes: fixedReferenceV3} : v3 ? {id: 'source-7a835224-v1', proposalSha256: '16a13627d3ef432606d9ddfc982b44e38edae569bcf8d9d526a1cbf101ceca1c', reference: 'candidate-source-7a8352242951516a2380e8fc69c5fb902b0c0e5d', bytes: fixedReferenceV3} : {id: 'required-features-v1', proposalSha256: 'acc9d1071435fba0166d4338aca99021d4e9ba4431a71837e1d659f542edc64f', reference: 'historical-ci-35531884637-baseline', bytes: fixedReferenceV2};
     requireValue(policy.anchor.id === expected.id && policy.anchor.proposalSha256 === expected.proposalSha256 && policy.anchor.reference === expected.reference, 'policy.anchor: immutable reference changed', errors);
     sameRecord(policy.anchor.referenceCodeBytes, expected.bytes, 'policy.anchor.referenceCodeBytes', errors);
   }
@@ -225,6 +231,10 @@ function inspectPolicy(policy, errors) {
     requireValue(scope.scope === 'decoded-code-action-and-tail' && text(scope.reason), 'policy.warmScope: missing scope/rationale', errors);
     if (scope.status === 'REVIEW_REQUIRED') requireValue(scope.fixtureSha256 === null && scope.harnessSha256 === null && scope.reviewReference === null, 'policy.warmScope: unreviewed binding contradiction', errors);
     else requireValue(scope.status === 'REVIEWED_COMPATIBLE' && hashPattern.test(scope.fixtureSha256) && hashPattern.test(scope.harnessSha256) && text(scope.reviewReference), 'policy.warmScope: missing compatibility approval', errors);
+  }
+  if (v4) {
+    requireValue(Object.keys(policy.noiseDecision).length === noiseDecisionKeys.length && Object.keys(policy.noiseDecision).every((key, index) => key === noiseDecisionKeys[index]), 'policy.noiseDecision: key order changed', errors);
+    for (const key of noiseDecisionKeys) requireValue(policy.noiseDecision[key] === noiseDecision[key], `policy.noiseDecision.${key}: proposal changed`, errors);
   }
 }
 function inspectAssets(assets, errors) {
@@ -282,6 +292,27 @@ function pairedComparison(series, extract, floor) {
   const contradictory = blockDeltas.some(delta => delta > threshold) && blockDeltas.some(delta => delta <= threshold);
   return {baseline: left, candidate: right, pairedDeltas, blockDeltas, threshold, medianDelta: right.median - left.median, unstable: noisy || contradictory, materialRegression: pairedDeltas.median > threshold && right.median - left.median > threshold};
 }
+function pairedComparisonV4(series, extract, floor) {
+  const baseline = series.filter(item => item.side === 'baseline').map(extract);
+  const candidate = series.filter(item => item.side === 'candidate').map(extract);
+  const left = statistics(baseline);
+  const right = statistics(candidate);
+  const paired = [];
+  for (let index = 0; index < series.length; index += 2) {
+    const pair = series.slice(index, index + 2);
+    paired.push(extract(pair.find(item => item.side === 'candidate')) - extract(pair.find(item => item.side === 'baseline')));
+  }
+  const pairedDeltas = statistics(paired);
+  const threshold = Math.max(floor, left.median * 0.2);
+  const blockDeltas = [];
+  for (let index = 0; index < paired.length; index += 2) blockDeltas.push(median(paired.slice(index, index + 2)));
+  const blockSignals = blockDeltas.map(delta => delta > threshold);
+  const blockInconsistent = blockSignals.length === 2 && blockSignals[0] !== blockSignals[1];
+  const materialRegression = pairedDeltas.median > threshold && right.median - left.median > threshold;
+  const aggregateSignalMismatch = (pairedDeltas.median > threshold) !== (right.median - left.median > threshold);
+  const bothBlocksExceedWithoutAggregate = blockSignals.length === 2 && blockSignals.every(Boolean) && !materialRegression;
+  return {baseline: left, candidate: right, pairedDeltas, blockDeltas, blockSignals, threshold, medianDelta: right.median - left.median, aggregateSignalMismatch, unstable: blockInconsistent || aggregateSignalMismatch || bothBlocksExceedWithoutAggregate, materialRegression};
+}
 function journey(observation, id) { return observation.journeys.find(item => item.id === id); }
 function elapsedInMs(observation, id) {
   const item = journey(observation, id);
@@ -322,7 +353,7 @@ function evaluateCapturedPerformance(input) {
   catch (error) { errors.push(`input: ${error.message}`); return result; }
   if (!shape(captured, ['observations', 'calibration', 'assets', 'policy', 'receipts'], [], 'input', errors)) return result;
   const {observations, calibration, assets, policy, receipts} = captured;
-  result.schema = policy.schema === 'thinaticsystem/performance-policy/v2' ? 'thinaticsystem/performance-evaluation/v2' : 'thinaticsystem/performance-evaluation/v3';
+  result.schema = policy.schema === 'thinaticsystem/performance-policy/v2' ? 'thinaticsystem/performance-evaluation/v2' : policy.schema === 'thinaticsystem/performance-policy/v4' ? 'thinaticsystem/performance-evaluation/v4' : 'thinaticsystem/performance-evaluation/v3';
   inspectPolicy(policy, errors);
   inspectAssets(assets, errors);
   shape(receipts, ['observations', 'calibration'], [], 'receipts', errors);
@@ -357,6 +388,8 @@ function evaluateCapturedPerformance(input) {
   if (!compatible) result.notes.push(policy.warmScope.reason);
   let capFailure = false;
   let unstable = false;
+  let inconclusive = false;
+  let materialRegression = false;
   let review = false;
   function capCheck(id, value, cap) {
     const exceeded = value > cap;
@@ -374,30 +407,47 @@ function evaluateCapturedPerformance(input) {
     result.sizeChecks.push({kind:'static-comparison', id:initial ? `initial.${key}` : key, baseline, candidate, delta, threshold, status:material ? 'MATERIAL_REGRESSION' : delta > 0 ? 'SMALL_INCREASE_NOTE' : 'WITHIN_FILTER'});
     review ||= material;
   }
+  const isV4 = policy.schema === 'thinaticsystem/performance-policy/v4';
   for (const id of requiredJourneyIds) {
-    const aa = pairedComparison(calibration, item => elapsedInMs(item, id), 50);
-    const comparison = pairedComparison(observations, item => elapsedInMs(item, id), 50);
-    const calibrationStable = !aa.unstable && Math.abs(aa.pairedDeltas.median) <= aa.threshold && Math.abs(aa.medianDelta) <= aa.threshold;
-    unstable ||= !calibrationStable || comparison.unstable;
+    const aa = isV4 ? pairedComparisonV4(calibration, item => elapsedInMs(item, id), 50) : pairedComparison(calibration, item => elapsedInMs(item, id), 50);
+    const comparison = isV4 ? pairedComparisonV4(observations, item => elapsedInMs(item, id), 50) : pairedComparison(observations, item => elapsedInMs(item, id), 50);
+    const calibrationStable = isV4
+      ? Math.abs(aa.pairedDeltas.median) <= aa.threshold && Math.abs(aa.medianDelta) <= aa.threshold
+      : !aa.unstable && Math.abs(aa.pairedDeltas.median) <= aa.threshold && Math.abs(aa.medianDelta) <= aa.threshold;
+    if (isV4) {
+      inconclusive ||= !calibrationStable || comparison.unstable;
+      materialRegression ||= comparison.materialRegression;
+    } else {
+      unstable ||= !calibrationStable || comparison.unstable;
+    }
     review ||= comparison.materialRegression;
-    result.timingChecks.push({id, unit: 'ms', calibration: {...aa, stable: calibrationStable}, comparison, status: !calibrationStable || comparison.unstable ? 'INCONCLUSIVE' : comparison.materialRegression ? 'MATERIAL_REGRESSION' : 'WITHIN_FILTER'});
+    const status = comparison.materialRegression ? 'MATERIAL_REGRESSION' : !calibrationStable || comparison.unstable ? 'INCONCLUSIVE' : 'WITHIN_FILTER';
+    result.timingChecks.push({id, unit: 'ms', calibration: {...aa, stable: calibrationStable}, comparison, status});
     for (const category of categories) for (const scope of [null, ...scopes]) {
       const extract = item => resourceBytes(item, id, category, scope);
       if (all.some(item => extract(item) === null)) {
         result.sizeChecks.push({kind: 'resource-comparison', id, category, scope, status: 'UNKNOWN'});
         continue;
       }
-      const resourceAa = pairedComparison(calibration, extract, 1024);
-      const resourceComparison = pairedComparison(observations, extract, 1024);
-      const stable = !resourceAa.unstable && Math.abs(resourceAa.pairedDeltas.median) <= resourceAa.threshold && Math.abs(resourceAa.medianDelta) <= resourceAa.threshold;
-      unstable ||= !stable || resourceComparison.unstable;
+      const resourceAa = isV4 ? pairedComparisonV4(calibration, extract, 1024) : pairedComparison(calibration, extract, 1024);
+      const resourceComparison = isV4 ? pairedComparisonV4(observations, extract, 1024) : pairedComparison(observations, extract, 1024);
+      const stable = isV4
+        ? Math.abs(resourceAa.pairedDeltas.median) <= resourceAa.threshold && Math.abs(resourceAa.medianDelta) <= resourceAa.threshold
+        : !resourceAa.unstable && Math.abs(resourceAa.pairedDeltas.median) <= resourceAa.threshold && Math.abs(resourceAa.medianDelta) <= resourceAa.threshold;
+      if (isV4) {
+        inconclusive ||= !stable || resourceComparison.unstable;
+        materialRegression ||= resourceComparison.materialRegression;
+      } else {
+        unstable ||= !stable || resourceComparison.unstable;
+      }
       review ||= resourceComparison.materialRegression;
-      result.sizeChecks.push({kind: 'resource-comparison', id, category, scope, unit: 'decoded-bytes', calibration: {...resourceAa, stable}, comparison: resourceComparison, status: !stable || resourceComparison.unstable ? 'INCONCLUSIVE' : resourceComparison.materialRegression ? 'MATERIAL_REGRESSION' : 'WITHIN_FILTER'});
+      const resourceStatus = resourceComparison.materialRegression ? 'MATERIAL_REGRESSION' : !stable || resourceComparison.unstable ? 'INCONCLUSIVE' : 'WITHIN_FILTER';
+      result.sizeChecks.push({kind: 'resource-comparison', id, category, scope, unit: 'decoded-bytes', calibration: {...resourceAa, stable}, comparison: resourceComparison, status: resourceStatus});
     }
     if (Object.hasOwn(warmCaps, id)) {
       const candidateBytes = observations.filter(item => item.side === 'candidate').map(item => resourceBytes(item, id, 'code'));
       const maximum = Math.max(...candidateBytes);
-      const reference = (policy.schema === 'thinaticsystem/performance-policy/v3' ? fixedReferenceV3 : fixedReferenceV2)[id];
+      const reference = (policy.schema === 'thinaticsystem/performance-policy/v2' ? fixedReferenceV2 : fixedReferenceV3)[id];
       const delta = median(candidateBytes) - reference;
       const threshold = Math.max(1024, reference * 0.2);
       result.sizeChecks.push({kind: 'fixed-warm-anchor', id, candidateBytes, reference, cap: warmCaps[id], delta, threshold, status: compatible ? maximum > warmCaps[id] ? 'EXCEEDED' : delta > threshold ? 'MATERIAL_REGRESSION' : 'WITHIN_CAP' : 'SCOPE_REVIEW_REQUIRED'});
@@ -405,6 +455,8 @@ function evaluateCapturedPerformance(input) {
     }
     result.sizeChecks.push({kind: 'request-count-diagnostic', id, baseline: observations.filter(item => item.side === 'baseline').map(item => journey(item, id).requestCount), candidate: observations.filter(item => item.side === 'candidate').map(item => journey(item, id).requestCount), status: 'DIAGNOSTIC_ONLY'});
   }
-  result.verdict = capFailure ? 'FAIL' : unstable ? 'INCONCLUSIVE' : review ? 'REVIEW_REQUIRED' : 'PASS_WITH_NOTES';
+  result.verdict = isV4
+    ? capFailure ? 'FAIL' : materialRegression ? 'REVIEW_REQUIRED' : inconclusive ? 'INCONCLUSIVE' : review ? 'REVIEW_REQUIRED' : 'PASS_WITH_NOTES'
+    : capFailure ? 'FAIL' : unstable ? 'INCONCLUSIVE' : review ? 'REVIEW_REQUIRED' : 'PASS_WITH_NOTES';
   return result;
 }

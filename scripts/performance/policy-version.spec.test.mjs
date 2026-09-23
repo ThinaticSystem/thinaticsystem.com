@@ -1,11 +1,14 @@
 import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {evaluatePerformance, validateBaselineRuntimeIdentity} from './contract.mjs';
 import {evidence} from './v3-test-fixtures.mjs';
+import {evidence as v4Evidence} from './v4-test-fixtures.mjs';
 
 const v2 = JSON.parse(readFileSync(new URL('./fixtures/performance-policy-v2.json', import.meta.url), 'utf8'));
 const v3 = JSON.parse(readFileSync(new URL('./fixtures/performance-policy-v3.json', import.meta.url), 'utf8'));
+const v4 = JSON.parse(readFileSync(new URL('./fixtures/performance-policy-v4.json', import.meta.url), 'utf8'));
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/performance-baseline-v3.json', import.meta.url), 'utf8'));
 const anchor = '7a8352242951516a2380e8fc69c5fb902b0c0e5d';
 const packageManager = 'pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457';
@@ -20,6 +23,21 @@ test('Given the v3 policy is compared with its reviewed baseline when the policy
   assert.equal(baseline.runtime.node, 'v24.19.0');
   assert.equal(baseline.runtime.packageManager, packageManager);
   assert.deepEqual(validateBaselineRuntimeIdentity({sourceSha:anchor,node:'24.19.0',packageManager,fixture:baseline}), {valid:true, errors:[]});
+});
+
+test('v4 freezes the additive noise decision values, insertion order and proposal hash while preserving the v3 anchor', () => {
+  const expectedKeys = ['sampleRange', 'calibrationBias', 'comparisonBlocks', 'inconsistentSignal', 'materialRegression', 'tailClaim'];
+  assert.equal(v4.schema, 'thinaticsystem/performance-policy/v4');
+  assert.equal(v4.version, 'comparative-engineering-v4.0');
+  assert.equal(v4.anchor.id, 'source-7a835224-v2');
+  assert.deepEqual(Object.keys(v4.noiseDecision), expectedKeys);
+  assert.equal(createHash('sha256').update(JSON.stringify(v4.noiseDecision), 'utf8').digest('hex'), '54d9725da4cd7f300714eb42a82457ca3032941d63527d0bb3b2d02e389c1373');
+  assert.equal(v4.anchor.proposalSha256, '54d9725da4cd7f300714eb42a82457ca3032941d63527d0bb3b2d02e389c1373');
+  const input = v4Evidence();
+  assert.equal(evaluatePerformance(input).verdict, 'PASS_WITH_NOTES');
+  const reordered = Object.fromEntries([...Object.entries(input.policy.noiseDecision)].reverse());
+  input.policy.noiseDecision = reordered;
+  assert.equal(evaluatePerformance(input).verdict, 'INVALID_EVIDENCE');
 });
 
 test('v3 runner identity fails closed when the baseline package-manager differs from the reviewed fixture', () => {
