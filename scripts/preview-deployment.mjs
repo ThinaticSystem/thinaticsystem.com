@@ -1,3 +1,4 @@
+import {CANDIDATE_BRANCH} from './build-pages.mjs';
 const sha = /^[a-f0-9]{40}$/;
 const text = value => typeof value === 'string' && value.trim() !== '';
 // Official schema: https://developers.cloudflare.com/api/resources/pages/subresources/projects/subresources/deployments/methods/list/
@@ -10,7 +11,7 @@ function aliasesOf(deployment) { return [deployment?.url, ...(Array.isArray(depl
 export function selectPreviewDeployment(payload, expected) {
   const deployments = payload?.result;
   if (!Array.isArray(deployments)) throw new Error('Pages deployments response has no result array');
-  if (!sha.test(expected.commitSha) || expected.branch !== 'chore-modernization-renovate' || expected.environment !== 'preview' || !text(expected.actionUrl)) throw new Error('invalid expected deployment identity');
+  if (!sha.test(expected.commitSha) || expected.branch !== CANDIDATE_BRANCH || expected.environment !== 'preview' || !text(expected.actionUrl)) throw new Error('invalid expected deployment identity');
   const matches = deployments.filter(item => commitOf(item) === expected.commitSha && item.branch === expected.branch && item.environment === expected.environment && stageSucceeded(item) && aliasesOf(item).includes(expected.actionUrl));
   if (matches.length !== 1) throw new Error(`expected exactly one successful preview deployment, observed ${matches.length}`);
   const [deployment] = matches;

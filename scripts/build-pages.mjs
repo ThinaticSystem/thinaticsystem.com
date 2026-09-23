@@ -16,10 +16,16 @@ const BROWSER_ROOT = resolve(APPLICATION_ROOT, 'browser');
  */
 export function validatePagesBuildIdentity(identity) {
   if (!identity.isPages) return null;
-  if (identity.branch !== CANDIDATE_BRANCH) throw new Error(`Pages branch must be ${CANDIDATE_BRANCH}`);
-  if (typeof identity.commitSha !== 'string' || !SHA_PATTERN.test(identity.commitSha)) {
-    throw new Error('Pages commit SHA must be a 40-character hexadecimal Git SHA');
+  const localBranch = typeof identity.localBranch === 'string' && identity.localBranch !== '' ? identity.localBranch : null;
+  if (localBranch !== null && localBranch !== CANDIDATE_BRANCH) {
+    if (identity.branch === CANDIDATE_BRANCH) throw new Error('Candidate Pages metadata does not match the checked-out branch');
+    return null;
   }
+  if (identity.branch !== CANDIDATE_BRANCH) {
+    if (localBranch === CANDIDATE_BRANCH) throw new Error('Pages branch must be ' + CANDIDATE_BRANCH);
+    return null;
+  }
+  if (typeof identity.commitSha !== 'string' || !SHA_PATTERN.test(identity.commitSha)) throw new Error('Pages commit SHA must be a 40-character hexadecimal Git SHA');
   if (identity.commitSha !== identity.headSha) throw new Error('Pages commit SHA does not match checked-out HEAD');
   return identity.commitSha;
 }
@@ -80,11 +86,26 @@ function buildAngular(args) {
 
 function runBuild() {
   const isPages = process.env.CF_PAGES === '1';
+  const headSha = execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim();
+  let localBranch = execFileSync('git', ['branch', '--show-current'], {encoding: 'utf8'}).trim();
+  if (!localBranch) {
+    // Detached Pages checkouts may still expose a branch ref; only an exact ref-to-HEAD match is evidence.
+    // If no ref can attest the branch, candidate mode necessarily trusts CF_PAGES_BRANCH plus the exact SHA.
+    for (const ref of [`refs/heads/${CANDIDATE_BRANCH}`, `refs/remotes/origin/${CANDIDATE_BRANCH}`]) {
+      try {
+        if (execFileSync('git', ['rev-parse', '--verify', `${ref}^{commit}`], {encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore']}).trim() === headSha) {
+          localBranch = CANDIDATE_BRANCH;
+          break;
+        }
+      } catch {}
+    }
+  }
   const commitSha = validatePagesBuildIdentity({
     isPages,
     branch: process.env.CF_PAGES_BRANCH,
+    localBranch,
     commitSha: process.env.CF_PAGES_COMMIT_SHA,
-    headSha: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
+    headSha,
   });
   if (commitSha !== null) rmSync(resolve(APPLICATION_ROOT, PAGES_SHA_MARKER), {force: true});
   buildAngular(process.argv.slice(2));
