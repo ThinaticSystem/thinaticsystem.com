@@ -4,7 +4,56 @@ import {existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, w
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import test from 'node:test';
+import ts from 'typescript';
 import {createPagesRoot, normalizeModulePreloadHrefs, validateCandidateBuildConfiguration} from './build-pages.mjs';
+
+
+function inspectCompiledPatronsEndpoint(bundles, expectedUrl) {
+  const definitions = [];
+  const reads = [];
+  const requestReads = [];
+  for (const [filename, text] of bundles) {
+    const tree = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+    if (tree.parseDiagnostics.length > 0) {
+      return {pass: false, reason: `parse diagnostics in ${filename}: ${tree.parseDiagnostics.length}`, definitions, reads, requestReads};
+    }
+    const visit = (node) => {
+      if (ts.isPropertyAssignment(node)) {
+        const name = node.name;
+        const isPatronsUrl = ((ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNoSubstitutionTemplateLiteral(name)) && name.text === 'patronsUrl')
+          || (ts.isComputedPropertyName(name) && (ts.isStringLiteral(name.expression) || ts.isNoSubstitutionTemplateLiteral(name.expression)) && name.expression.text === 'patronsUrl');
+        if (isPatronsUrl) {
+          const initializer = node.initializer;
+          const isStaticString = ts.isStringLiteral(initializer) || ts.isNoSubstitutionTemplateLiteral(initializer);
+          definitions.push({filename, isStaticString, value: isStaticString ? initializer.text : null});
+        }
+      }
+      if (ts.isPropertyAccessExpression(node) && node.name.text === 'patronsUrl') {
+        reads.push(node);
+        const call = node.parent;
+        const isGetFirstArgument = ts.isCallExpression(call)
+          && call.arguments[0] === node
+          && ts.isPropertyAccessExpression(call.expression)
+          && call.expression.name.text === 'get';
+        if (isGetFirstArgument) requestReads.push(node);
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(tree);
+  }
+  const pass = definitions.length === 1
+    && definitions[0].isStaticString
+    && definitions[0].value === expectedUrl
+    && reads.length === 1
+    && requestReads.length === 1;
+  return {pass, reason: null, definitions, reads: reads.length, requestReads: requestReads.length};
+}
+
+function assertCompiledPatronsEndpoint(bundles, expectedUrl, label) {
+  const result = inspectCompiledPatronsEndpoint(bundles, expectedUrl);
+  assert.equal(result.reason, null, label + ': emitted JavaScript must parse without diagnostics');
+  assert.equal(result.pass, true, label + ': expected one static patronsUrl assignment with the expected decoded value and one GET use');
+}
 
 test('Given a candidate build receives configuration overrides then it rejects both Angular configuration spellings', () => {
   assert.doesNotThrow(() => validateCandidateBuildConfiguration(['--verbose']));
@@ -46,6 +95,38 @@ test('Given candidate browser output is flattened to the Pages root when buildin
   }
 });
 
+test('compiled Patrons oracle accepts only the unique static endpoint used by GET', () => {
+  const candidate = '/workers/patrons';
+  const ordinary = 'https://thinaticsystem.com/workers/patrons';
+  const tick = String.fromCharCode(96);
+  const fixtures = [
+    ['candidate backtick', 'const t={patronsUrl:' + tick + '/workers/patrons' + tick + '};client.get(t.patronsUrl)', candidate, true],
+    ['ordinary backtick', 'const t={patronsUrl:' + tick + ordinary + tick + '};client.get(t.patronsUrl)', ordinary, true],
+    ['candidate single quote', "const t={patronsUrl:'/workers/patrons'};client.get(t.patronsUrl)", candidate, true],
+    ['ordinary double quote', 'const t={patronsUrl:"https://thinaticsystem.com/workers/patrons"};client.get(t.patronsUrl)', ordinary, true],
+    ['escaped double quote', String.raw`const t={patronsUrl:"https:\u002f\u002fthinaticsystem.com/workers/patrons"};client.get(t.patronsUrl)`, ordinary, true],
+    ['quoted property key', "const t={'patronsUrl':'https://thinaticsystem.com/workers/patrons'};client.get(t.patronsUrl)", ordinary, true],
+    ['interpolated template', 'const t={patronsUrl:' + tick + '/workers/${suffix}' + tick + '};client.get(t.patronsUrl)', candidate, false],
+    ['R26 regression: candidate selected plus unrelated production URL', 'const t={patronsUrl:' + tick + candidate + tick + '};client.get(t.patronsUrl);const unrelated=' + tick + ordinary + tick, ordinary, false],
+    ['ordinary selected plus unrelated candidate URL', "const t={patronsUrl:'https://thinaticsystem.com/workers/patrons'};client.get(t.patronsUrl);const unrelated='/workers/patrons'", candidate, false],
+    ['missing property with unrelated correct URL', "const t={other:'/workers/patrons'};client.get(t.patronsUrl)", candidate, false],
+    ['duplicate property assignments', "const t={patronsUrl:'/workers/patrons'};const other={patronsUrl:'/workers/patrons'};client.get(t.patronsUrl)", candidate, false],
+    ['dynamic value', 'const t={patronsUrl:resolveUrl()};client.get(t.patronsUrl)', candidate, false],
+    ['unrelated correct URL only', "const t={other:'https://thinaticsystem.com/workers/patrons'};client.get(t.patronsUrl)", ordinary, false],
+    ['property read not used for GET', "const t={patronsUrl:'/workers/patrons'};client.get('/workers/patrons')", candidate, false],
+  ];
+  for (const [label, text, expectedUrl, expectedPass] of fixtures) {
+    const result = inspectCompiledPatronsEndpoint([['fixture.js', text]], expectedUrl);
+    assert.doesNotThrow(() => result, label + ': fixture analyzer itself must not throw');
+    assert.equal(result.pass, expectedPass, label + ': fixture oracle result');
+    if (label.startsWith('R26 regression')) assert.equal(result.definitions[0]?.value, candidate, 'R26 counterexample retains the wrong selected endpoint');
+  }
+  assert.equal(fixtures.length, 14, 'keep the fixed 14-case oracle matrix');
+  const malformed = inspectCompiledPatronsEndpoint([['malformed.js', 'const =']], candidate);
+  assert.equal(malformed.pass, false, 'syntax errors fail closed');
+  assert.match(malformed.reason, /parse diagnostics/, 'parse diagnostics are explicit');
+});
+
 test('Given candidate Pages output then an ordinary build runs then deployment files and compiled Patrons endpoint return to production', () => {
   const projectRoot = resolve('.');
   const outputRoot = resolve(projectRoot, 'dist/app');
@@ -60,9 +141,8 @@ test('Given candidate Pages output then an ordinary build runs then deployment f
   assert.ok(readFileSync(resolve(outputRoot, '_worker.js'), 'utf8').includes('handlePagesRequest'));
   assert.ok(existsSync(resolve(outputRoot, 'index.html')), 'candidate index must be at the configured Pages deployment root');
   assert.ok(!existsSync(browserRoot), 'candidate flattening must consume the browser subtree');
-  const candidateBundles = readdirSync(outputRoot).filter((file) => file.endsWith('.js') && file !== '_worker.js').map((file) => readFileSync(resolve(outputRoot, file), 'utf8'));
-  assert.ok(candidateBundles.some((bundle) => bundle.includes('/workers/patrons')), 'candidate compiled client must select the same-origin Patrons endpoint');
-  assert.ok(!candidateBundles.some((bundle) => bundle.includes('https://thinaticsystem.com/workers/patrons')), 'candidate compiled client must not retain the ordinary production endpoint');
+  const candidateBundles = readdirSync(outputRoot).filter((file) => file.endsWith('.js')).map((file) => [file, readFileSync(resolve(outputRoot, file), 'utf8')]);
+  assertCompiledPatronsEndpoint(candidateBundles, '/workers/patrons', 'candidate build');
 
   const ordinaryEnvironment = {...process.env};
   delete ordinaryEnvironment.CF_PAGES;
@@ -75,7 +155,6 @@ test('Given candidate Pages output then an ordinary build runs then deployment f
     assert.equal(existsSync(resolve(outputRoot, filename)), false, 'ordinary deployment root must not retain candidate ' + filename);
   }
   assert.ok(existsSync(resolve(browserRoot, 'index.html')), 'ordinary Angular build output must remain at dist/app/browser');
-  const ordinaryBundles = readdirSync(browserRoot).filter((file) => file.endsWith('.js')).map((file) => readFileSync(resolve(browserRoot, file), 'utf8'));
-  assert.ok(ordinaryBundles.some((bundle) => bundle.includes('https://thinaticsystem.com/workers/patrons')), 'ordinary compiled client must select the existing production Patrons endpoint');
-  assert.ok(!ordinaryBundles.some((bundle) => bundle.includes('"/workers/patrons"') || bundle.includes("'/workers/patrons'")), 'ordinary compiled client must not select the candidate same-origin endpoint');
+  const ordinaryBundles = readdirSync(browserRoot).filter((file) => file.endsWith('.js')).map((file) => [file, readFileSync(resolve(browserRoot, file), 'utf8')]);
+  assertCompiledPatronsEndpoint(ordinaryBundles, 'https://thinaticsystem.com/workers/patrons', 'ordinary build');
 });
