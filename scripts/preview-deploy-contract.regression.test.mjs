@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import {mkdtemp, rm, writeFile, readFile, mkdir, stat} from 'node:fs/promises';
+import {mkdtemp, rm, writeFile, readFile, mkdir, stat, symlink} from 'node:fs/promises';
+import {execFileSync, spawnSync} from 'node:child_process';
+import {existsSync, realpathSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import test from 'node:test';
@@ -62,8 +64,50 @@ test('Given candidate checkout metadata for another branch then it fails closed'
   assert.throws(() => validatePagesBuildIdentity({isPages: true, branch: 'master', localBranch: CANDIDATE_BRANCH, commitSha: candidateSha, headSha: candidateSha}));
 });
 
-test('Given detached Pages checkout with candidate metadata then exact SHA is checked while branch trust remains delegated to Pages metadata', () => {
+test('Given attached noncandidate checkout with candidate Pages metadata then it fails closed', () => {
+  assert.throws(() => validatePagesBuildIdentity({isPages: true, branch: CANDIDATE_BRANCH, localBranch: 'master', commitSha: candidateSha, headSha: candidateSha}));
+});
+
+test('Given detached checkout refs for master and candidate share HEAD when Pages selects master then real Angular receives transparent --help', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'pages-detached-shared-refs-'));
+  const runGit = (...args) => execFileSync('git', args, {cwd: root, encoding: 'utf8'}).trim();
+  try {
+    runGit('init', '--quiet', '--initial-branch=master');
+    runGit('config', 'user.name', 'Pages contract fixture');
+    runGit('config', 'user.email', 'pages-contract@example.invalid');
+    await writeFile(join(root, 'fixture.txt'), 'same commit for both refs\n');
+    runGit('add', 'fixture.txt');
+    runGit('commit', '--quiet', '-m', 'fixture');
+    const headSha = runGit('rev-parse', 'HEAD');
+    runGit('branch', CANDIDATE_BRANCH);
+    runGit('checkout', '--quiet', '--detach', 'master');
+    assert.equal(runGit('branch', '--show-current'), '');
+    assert.equal(runGit('rev-parse', `refs/heads/${CANDIDATE_BRANCH}`), headSha);
+    assert.equal(runGit('rev-parse', 'refs/heads/master'), headSha);
+    const scriptsRoot = join(root, 'scripts');
+    await mkdir(scriptsRoot);
+    await writeFile(join(scriptsRoot, 'build-pages.mjs'), await readFile(new URL('./build-pages.mjs', import.meta.url)));
+    await symlink(realpathSync('node_modules'), join(root, 'node_modules'), 'dir');
+    const result = spawnSync(process.execPath, [join(scriptsRoot, 'build-pages.mjs'), '--help'], {
+      cwd: root, encoding: 'utf8',
+      env: {...process.env, CF_PAGES: '1', CF_PAGES_BRANCH: 'master', CF_PAGES_COMMIT_SHA: headSha},
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Options|Arguments/, 'the real Angular CLI help path ran');
+    assert.equal(existsSync(join(root, 'dist', 'app', PAGES_SHA_MARKER)), false, 'noncandidate mode adds no marker');
+    assert.equal(existsSync(join(root, 'dist', 'app', 'browser')), false, '--help creates no browser output');
+  } finally { await rm(root, {recursive: true, force: true}); }
+});
+
+test('Given detached checkout and candidate Pages metadata when exact HEAD SHA is supplied then candidate identity is selected', () => {
   assert.equal(validatePagesBuildIdentity({isPages: true, branch: CANDIDATE_BRANCH, localBranch: '', commitSha: candidateSha, headSha: candidateSha}), candidateSha);
+});
+
+test('Given detached checkout and candidate Pages metadata when SHA is missing or stale then candidate build fails before Angular', () => {
+  for (const commitSha of [undefined, 'b'.repeat(40), 'not-a-sha']) {
+    assert.throws(() => validatePagesBuildIdentity({isPages: true, branch: CANDIDATE_BRANCH, localBranch: '', commitSha, headSha: candidateSha}));
+  }
 });
 
 async function withLayoutFixture(run) {

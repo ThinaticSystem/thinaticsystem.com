@@ -11,7 +11,7 @@ const BROWSER_ROOT = resolve(APPLICATION_ROOT, 'browser');
 
 /**
  * Validate the build identity that Pages supplies before candidate-only layout changes.
- * @param {{isPages: boolean, branch: string | undefined, commitSha: string | undefined, headSha: string}} identity
+ * @param {{isPages: boolean, branch: string | undefined, localBranch: string | undefined, commitSha: string | undefined, headSha: string}} identity
  * @returns {string | null}
  */
 export function validatePagesBuildIdentity(identity) {
@@ -87,19 +87,9 @@ function buildAngular(args) {
 function runBuild() {
   const isPages = process.env.CF_PAGES === '1';
   const headSha = execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim();
-  let localBranch = execFileSync('git', ['branch', '--show-current'], {encoding: 'utf8'}).trim();
-  if (!localBranch) {
-    // Detached Pages checkouts may still expose a branch ref; only an exact ref-to-HEAD match is evidence.
-    // If no ref can attest the branch, candidate mode necessarily trusts CF_PAGES_BRANCH plus the exact SHA.
-    for (const ref of [`refs/heads/${CANDIDATE_BRANCH}`, `refs/remotes/origin/${CANDIDATE_BRANCH}`]) {
-      try {
-        if (execFileSync('git', ['rev-parse', '--verify', `${ref}^{commit}`], {encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore']}).trim() === headSha) {
-          localBranch = CANDIDATE_BRANCH;
-          break;
-        }
-      } catch {}
-    }
-  }
+  // A detached checkout has no symbolic branch identity; refs that happen to point at HEAD cannot establish one.
+  // In detached mode CF_PAGES_BRANCH selects behavior, while candidate mode still requires an exact HEAD SHA.
+  const localBranch = execFileSync('git', ['branch', '--show-current'], {encoding: 'utf8'}).trim();
   const commitSha = validatePagesBuildIdentity({
     isPages,
     branch: process.env.CF_PAGES_BRANCH,
