@@ -25,11 +25,12 @@
     "perf:current": "node scripts/performance/run.mjs",
     "test:performance-contract": "node --test --test-reporter=tap scripts/performance/contract.spec.test.mjs scripts/performance/recorder.spec.test.mjs",
     "test:performance-recorder": "node scripts/performance/verify-recorder.mjs",
-    "test:preview-contract": "node --test scripts/preview-deploy-contract.spec.test.mjs scripts/preview-deploy-contract.regression.test.mjs scripts/preview-deployment.spec.test.mjs scripts/preview-deployment.regression.test.mjs scripts/preview-smoke-shell.regression.test.mjs",
+    "test:preview-contract": "node --test scripts/preview-deploy-contract.spec.test.mjs scripts/preview-deploy-contract.regression.test.mjs scripts/preview-deployment.spec.test.mjs scripts/preview-deployment.regression.test.mjs scripts/preview-smoke-shell.regression.test.mjs scripts/build-pages.regression.test.mjs && node --test scripts/pages-patrons-proxy.spec.test.mjs",
     "test:observation-pilot": "node scripts/observation/pilot-v3/run.mjs",
-    "test:preview-smoke-contract": "node --test scripts/build-pages.regression.test.mjs scripts/preview-smoke-assets.spec.test.mjs scripts/preview-smoke-article.regression.test.mjs scripts/preview-smoke-shell.regression.test.mjs",
+    "test:preview-smoke-contract": "node --test scripts/build-pages.regression.test.mjs scripts/preview-smoke-assets.spec.test.mjs scripts/preview-smoke-article.regression.test.mjs scripts/preview-smoke-shell.regression.test.mjs && node --test scripts/pages-patrons-proxy.spec.test.mjs",
     "test:performance-policy": "node --test scripts/performance/policy-version.spec.test.mjs scripts/performance/policy-v3.regression.test.mjs scripts/performance/policy-v4.regression.test.mjs",
-    "test:observation-full": "node scripts/observation/v3-full/run.mjs"
+    "test:observation-full": "node scripts/observation/v3-full/run.mjs",
+    "test:patrons-proxy-contract": "node --test scripts/pages-patrons-proxy.spec.test.mjs"
   },
   "private": true,
   "dependencies": {

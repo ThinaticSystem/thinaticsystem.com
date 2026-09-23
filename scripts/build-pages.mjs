@@ -7,6 +7,9 @@ export const CANDIDATE_BRANCH = 'chore/modernization-renovate';
 export const PAGES_SHA_MARKER = 'pages-commit-sha.txt';
 const SHA_PATTERN = /^[0-9a-f]{40}$/i;
 const APPLICATION_ROOT = resolve('dist/app');
+const PATRONS_PROXY_SOURCE = resolve('scripts/pages-patrons-proxy.mjs');
+export const PATRONS_WORKER_FILENAME = '_worker.js';
+export const PAGES_ROUTES_FILENAME = '_routes.json';
 const BROWSER_ROOT = resolve(APPLICATION_ROOT, 'browser');
 
 /**
@@ -80,6 +83,17 @@ export function validatePagesRoot(root, expectedSha) {
   validateBrowserOutput(root);
 }
 
+/** Emit the candidate-only Pages worker and its exact invocation route. */
+export function createPagesRuntimeFiles(outputRoot) {
+  const proxySource = readFileSync(PATRONS_PROXY_SOURCE, 'utf8');
+  if (!proxySource.includes('export async function handlePagesRequest') || /\bexport\s+default\b/.test(proxySource)) {
+    throw new Error('Pages proxy policy must expose only its named handler');
+  }
+  const worker = `${proxySource}\nexport default {\n  fetch(request, env) {\n    return handlePagesRequest(request, env);\n  },\n};\n`;
+  writeFileSync(resolve(outputRoot, PATRONS_WORKER_FILENAME), worker, {encoding: 'utf8', flag: 'wx'});
+  writeFileSync(resolve(outputRoot, PAGES_ROUTES_FILENAME), JSON.stringify({version: 1, include: ['/workers/patrons'], exclude: []}, null, 2) + '\n', {encoding: 'utf8', flag: 'wx'});
+}
+
 /** Copy Angular's browser subtree to Pages' configured root and add an exact-SHA marker. */
 export function createPagesRoot({browserRoot, outputRoot, commitSha}) {
   if (!SHA_PATTERN.test(commitSha)) throw new Error('Pages commit SHA is invalid');
@@ -91,11 +105,20 @@ export function createPagesRoot({browserRoot, outputRoot, commitSha}) {
   rmSync(browserRoot, {recursive: true, force: true});
   writeFileSync(resolve(outputRoot, PAGES_SHA_MARKER), `${commitSha}\n`, {encoding: 'utf8', flag: 'wx'});
   validatePagesRoot(outputRoot, commitSha);
+  createPagesRuntimeFiles(outputRoot);
 }
 
-function buildAngular(args) {
+export function validateCandidateBuildConfiguration(args) {
+  if (args.some((argument) => argument === '-c' || argument.startsWith('-c=') || argument.startsWith('--configuration'))) {
+    throw new Error('Candidate Pages builds use the locked preview configuration');
+  }
+}
+
+function buildAngular(args, candidatePreview) {
   const cli = resolve('node_modules/@angular/cli/bin/ng.js');
-  const result = spawnSync(process.execPath, [cli, 'build', ...args], {stdio: 'inherit'});
+  if (candidatePreview) validateCandidateBuildConfiguration(args);
+  const configuration = candidatePreview ? ['--configuration=preview'] : [];
+  const result = spawnSync(process.execPath, [cli, 'build', ...configuration, ...args], {stdio: 'inherit'});
   if (result.error) throw result.error;
   if (result.signal) throw new Error(`Angular build terminated by ${result.signal}`);
   if (result.status !== 0) process.exitCode = result.status ?? 1;
@@ -115,7 +138,7 @@ function runBuild() {
     headSha,
   });
   if (commitSha !== null) rmSync(resolve(APPLICATION_ROOT, PAGES_SHA_MARKER), {force: true});
-  buildAngular(process.argv.slice(2));
+  buildAngular(process.argv.slice(2), commitSha !== null);
   if (process.exitCode && process.exitCode !== 0) return;
   if (commitSha !== null) createPagesRoot({browserRoot: BROWSER_ROOT, outputRoot: APPLICATION_ROOT, commitSha});
 }

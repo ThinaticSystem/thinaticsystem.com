@@ -18,25 +18,13 @@ export interface Notifications {
 }
 
 export interface Patrons {
-  data: Data;
-  links: Links;
-}
-
-export interface Data {
-  attributes: Attributes;
-  id: string;
-  type: string;
+  data: {attributes: Attributes};
 }
 
 export interface Attributes {
-  currently_entitled_amount_cents: number;
   full_name: string;
   lifetime_support_cents: number;
-  patron_status?: string;
-}
-
-export interface Links {
-  self: string;
+  patron_status?: string | null;
 }
 
 @Component({
@@ -96,7 +84,7 @@ export default class IndexComponent implements OnInit, OnDestroy {
       )
       .subscribe({error: () => this.notificationsError.set(true)});
 
-    this.httpClient.get<Patrons[]>(`${environment.publicUrl}/workers/patrons`)
+    this.httpClient.get<Patrons[]>(environment.patronsUrl)
       .pipe(
         map((data) =>
           data.filter(patron =>
