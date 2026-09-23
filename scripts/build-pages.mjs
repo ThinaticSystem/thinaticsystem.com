@@ -43,6 +43,20 @@ function localAssetPaths(indexHtml) {
   return paths;
 }
 
+/** Convert only relative modulepreload links to root-relative URLs for Pages-generated Link headers. */
+export function normalizeModulePreloadHrefs(indexHtml) {
+  return indexHtml.replace(/<link\b[^>]*>/gi, tag => {
+    const relation = tag.match(/\brel=["']([^"']+)["']/i)?.[1].toLowerCase().split(/\s+/) ?? [];
+    if (!relation.includes('modulepreload')) return tag;
+    return tag.replace(/\bhref=(["'])([^"']+)\1/i, (attribute, quote, reference) => {
+      if (/^(?:[a-z][a-z\d+.-]*:|\/\/|\/|#)/i.test(reference)) return attribute;
+      const url = new URL(reference, 'https://pages.invalid/');
+      if (url.origin !== 'https://pages.invalid') return attribute;
+      return 'href=' + quote + url.pathname + url.search + url.hash + quote;
+    });
+  });
+}
+
 /** Validate Angular's browser output before publishing it as the Pages root. */
 export function validateBrowserOutput(browserRoot) {
   const indexPath = resolve(browserRoot, 'index.html');
@@ -69,7 +83,9 @@ export function validatePagesRoot(root, expectedSha) {
 /** Copy Angular's browser subtree to Pages' configured root and add an exact-SHA marker. */
 export function createPagesRoot({browserRoot, outputRoot, commitSha}) {
   if (!SHA_PATTERN.test(commitSha)) throw new Error('Pages commit SHA is invalid');
-  validateBrowserOutput(browserRoot);
+  const indexHtml = validateBrowserOutput(browserRoot);
+  const normalizedIndexHtml = normalizeModulePreloadHrefs(indexHtml);
+  if (normalizedIndexHtml !== indexHtml) writeFileSync(resolve(browserRoot, 'index.html'), normalizedIndexHtml, 'utf8');
   mkdirSync(outputRoot, {recursive: true});
   cpSync(browserRoot, outputRoot, {recursive: true, force: true});
   rmSync(browserRoot, {recursive: true, force: true});

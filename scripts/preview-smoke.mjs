@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {extractSameOriginAssets} from './preview-smoke-assets.mjs';
+import {assertArticleDetailMatches, parseArticleList} from './preview-smoke-article.mjs';
 import {hasAngularShell} from './preview-smoke-shell.mjs';
 
 const base = process.argv[2];
@@ -11,10 +12,8 @@ const checks = [
   {name: 'about deep link', path: '/about', type: 'text/html'},
   {name: 'blog deep link', path: '/blog', type: 'text/html'},
   {name: 'discography deep link', path: '/discography', type: 'text/html'},
-  {name: 'article deep link', path: '/blog/article/1', type: 'text/html'},
   {name: 'discography detail deep link', path: '/discography/1', type: 'text/html'},
   {name: 'site asset', path: '/assets/site_logo.svg', type: 'image/svg+xml'},
-  {name: 'CMS API', url: 'https://cms.thinaticsystem.com/blogs?_limit=1', type: null},
 ];
 const rootResponse = await fetch(new URL('/', origin), {headers: {accept: 'text/html'}});
 assert.ok(rootResponse.status >= 200 && rootResponse.status < 300, `root: HTTP ${rootResponse.status}`);
@@ -41,13 +40,29 @@ for (const check of checks.slice(1)) {
   if (check.type) assert.equal((response.headers.get('content-type') ?? '').split(';', 1)[0].trim().toLowerCase(), check.type.toLowerCase(), `${check.name}: content type`);
   if (check.type === 'text/html') assert.ok(hasAngularShell(await response.text()), `${check.name}: Angular shell`);
 }
+const articleListResponse = await fetch('https://cms.thinaticsystem.com/blogs?_limit=20', {headers: {accept: 'application/json'}});
+assert.ok(articleListResponse.status >= 200 && articleListResponse.status < 300, `CMS article list: HTTP ${articleListResponse.status}`);
+let articleList;
+try { articleList = await articleListResponse.json(); } catch (error) { throw new Error('CMS article list is not valid JSON', {cause: error}); }
+const [article] = parseArticleList(articleList);
+const articleDetailResponse = await fetch(`https://cms.thinaticsystem.com/blogs/${article.id}`, {headers: {accept: 'application/json'}});
+assert.ok(articleDetailResponse.status >= 200 && articleDetailResponse.status < 300, `CMS article ${article.id}: HTTP ${articleDetailResponse.status}`);
+let articleDetail;
+try { articleDetail = await articleDetailResponse.json(); } catch (error) { throw new Error(`CMS article ${article.id} detail is not valid JSON`, {cause: error}); }
+assertArticleDetailMatches(article, articleDetail);
+
 const browser = await chromium.launch({headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage']});
 const context = await browser.newContext();
-const consoleErrors = []; const pageErrors = []; const requestFailures = []; const assetResponses = new Map();
+const consoleErrors = []; const pageErrors = []; const requestFailures = []; const assetResponses = new Map(); const scriptResponses = new Map();
 context.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
 context.on('pageerror', error => pageErrors.push(String(error)));
 context.on('requestfailed', request => requestFailures.push({url: request.url(), failure: request.failure()?.errorText ?? 'unknown'}));
 context.on('response', response => {
+  if (new URL(response.url()).origin === origin.origin && response.request().resourceType() === 'script') {
+    const observations = scriptResponses.get(response.url()) ?? [];
+    observations.push({status: response.status(), contentType: response.headers()['content-type'] ?? ''});
+    scriptResponses.set(response.url(), observations);
+  }
   const matching = assetExpectations.find(asset => asset.url.href === response.url());
   if (matching) {
     const observations = assetResponses.get(response.url()) ?? [];
@@ -62,16 +77,35 @@ async function open(path, heading) {
   if (heading) await assert.doesNotReject(() => page.getByRole('heading', {name: heading}).waitFor({state: 'visible'}));
   else await assert.doesNotReject(() => page.getByRole('heading').first().waitFor({state: 'visible'}));
 }
-await open('/', 'ThinaticSystem');
-await page.getByRole('link', {name: /楽曲一覧/}).click();
-await page.getByRole('heading', {name: /Discography|ディスコグラフィ/}).waitFor({state: 'visible'});
-await page.getByRole('link', {name: /Synthetic release|詳細|detail/i}).first().click().catch(() => page.goto(new URL('/discography/1', origin).href, {waitUntil: 'networkidle'}));
-await page.getByRole('heading').first().waitFor({state: 'visible'});
-await open('/blog/article/1', '');
-assert.ok((await page.locator('body').innerText()).trim().length > 0, 'article content is empty');
-await page.goBack({waitUntil: 'networkidle'}).catch(() => {});
-await context.close();
-await browser.close();
+try {
+  await open('/', 'ThinaticSystem');
+  await page.getByRole('link', {name: /楽曲一覧/}).click();
+  await page.getByRole('heading', {name: /Discography|ディスコグラフィ/}).waitFor({state: 'visible'});
+  const releaseLink = page.getByRole('link').filter({has: page.getByRole('heading', {level: 2}).first()}).first();
+  const releasePath = await releaseLink.getAttribute('href');
+  assert.match(releasePath ?? '', /^\/discography\/\d+$/, 'discography listing has no real release link');
+  await releaseLink.click();
+  await page.getByRole('heading').first().waitFor({state: 'visible'});
+  await open(releasePath, '');
+  const articlePath = `/blog/article/${article.id}`;
+  await open(articlePath, article.title);
+  assert.equal(new URL(page.url()).pathname, articlePath, 'article navigation changed the selected article URL');
+  const visibleArticle = (await page.locator('body').innerText()).replace(/\s+/g, '');
+  const expectedBodyExcerpt = article.body.replace(/\s+/g, '').slice(0, 24);
+  assert.ok(expectedBodyExcerpt.length >= 8 && visibleArticle.includes(expectedBodyExcerpt), 'selected CMS article body is not visible');
+} finally {
+  try {
+    await context.close();
+  } finally {
+    await browser.close();
+  }
+}
+for (const [url, observations] of scriptResponses) {
+  const successfulIndex = observations.findIndex(response => response.status >= 200 && response.status < 300);
+  assert.ok(successfulIndex >= 0, `browser script asset had no successful response: ${url} (${observations.map(response => response.status).join('/')})`);
+  assert.ok(observations.every((response, index) => response.status >= 200 && response.status < 300 || response.status === 304 && index > successfulIndex), `browser script asset had unexpected responses: ${observations.map(response => response.status).join('/')}: ${url}`);
+  for (const response of observations.filter(response => response.status >= 200 && response.status < 300)) assert.match(response.contentType, /javascript|ecmascript/i, `browser script asset content type: ${url}`);
+}
 for (const asset of assetExpectations) {
   const observations = assetResponses.get(asset.url.href) ?? [];
   const successfulIndex = observations.findIndex(response => response.status >= 200 && response.status < 300);
