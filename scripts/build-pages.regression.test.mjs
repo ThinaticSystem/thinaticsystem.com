@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import {mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {execFileSync, spawnSync} from 'node:child_process';
+import {existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import test from 'node:test';
@@ -43,4 +44,38 @@ test('Given candidate browser output is flattened to the Pages root when buildin
   } finally {
     rmSync(temp, {recursive: true, force: true});
   }
+});
+
+test('Given candidate Pages output then an ordinary build runs then deployment files and compiled Patrons endpoint return to production', () => {
+  const projectRoot = resolve('.');
+  const outputRoot = resolve(projectRoot, 'dist/app');
+  const browserRoot = resolve(outputRoot, 'browser');
+  const headSha = execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim();
+  const candidateEnvironment = {...process.env, CF_PAGES: '1', CF_PAGES_BRANCH: 'chore/modernization-renovate', CF_PAGES_COMMIT_SHA: headSha};
+  const candidateBuild = spawnSync(process.execPath, ['scripts/build-pages.mjs'], {cwd: projectRoot, env: candidateEnvironment, encoding: 'utf8'});
+  assert.equal(candidateBuild.status, 0, ['candidate build failed', candidateBuild.stdout, candidateBuild.stderr].join('\n'));
+
+  assert.equal(readFileSync(resolve(outputRoot, 'pages-commit-sha.txt'), 'utf8'), headSha + '\n');
+  assert.equal(JSON.stringify(JSON.parse(readFileSync(resolve(outputRoot, '_routes.json'), 'utf8'))), JSON.stringify({version: 1, include: ['/workers/patrons'], exclude: []}));
+  assert.ok(readFileSync(resolve(outputRoot, '_worker.js'), 'utf8').includes('handlePagesRequest'));
+  assert.ok(existsSync(resolve(outputRoot, 'index.html')), 'candidate index must be at the configured Pages deployment root');
+  assert.ok(!existsSync(browserRoot), 'candidate flattening must consume the browser subtree');
+  const candidateBundles = readdirSync(outputRoot).filter((file) => file.endsWith('.js') && file !== '_worker.js').map((file) => readFileSync(resolve(outputRoot, file), 'utf8'));
+  assert.ok(candidateBundles.some((bundle) => bundle.includes('/workers/patrons')), 'candidate compiled client must select the same-origin Patrons endpoint');
+  assert.ok(!candidateBundles.some((bundle) => bundle.includes('https://thinaticsystem.com/workers/patrons')), 'candidate compiled client must not retain the ordinary production endpoint');
+
+  const ordinaryEnvironment = {...process.env};
+  delete ordinaryEnvironment.CF_PAGES;
+  delete ordinaryEnvironment.CF_PAGES_BRANCH;
+  delete ordinaryEnvironment.CF_PAGES_COMMIT_SHA;
+  const ordinaryBuild = spawnSync(process.execPath, ['scripts/build-pages.mjs'], {cwd: projectRoot, env: ordinaryEnvironment, encoding: 'utf8'});
+  assert.equal(ordinaryBuild.status, 0, ['ordinary build failed', ordinaryBuild.stdout, ordinaryBuild.stderr].join('\n'));
+
+  for (const filename of ['_worker.js', '_routes.json', 'pages-commit-sha.txt', 'index.html']) {
+    assert.equal(existsSync(resolve(outputRoot, filename)), false, 'ordinary deployment root must not retain candidate ' + filename);
+  }
+  assert.ok(existsSync(resolve(browserRoot, 'index.html')), 'ordinary Angular build output must remain at dist/app/browser');
+  const ordinaryBundles = readdirSync(browserRoot).filter((file) => file.endsWith('.js')).map((file) => readFileSync(resolve(browserRoot, file), 'utf8'));
+  assert.ok(ordinaryBundles.some((bundle) => bundle.includes('https://thinaticsystem.com/workers/patrons')), 'ordinary compiled client must select the existing production Patrons endpoint');
+  assert.ok(!ordinaryBundles.some((bundle) => bundle.includes('"/workers/patrons"') || bundle.includes("'/workers/patrons'")), 'ordinary compiled client must not select the candidate same-origin endpoint');
 });
