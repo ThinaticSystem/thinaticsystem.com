@@ -1,33 +1,38 @@
-import {readFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import test from 'node:test';
 
-const source = () => readFile('.github/workflows/ci.yml', 'utf8');
-const requireLine = (text, pattern, description) => assert.match(text, pattern, description);
+const workflowPath = '.github/workflows/ci.yml';
+const requiredVerifyGates = [
+  'Typecheck',
+  'Performance policy version contract',
+  'Preview delivery contract',
+  'Lint',
+  'Unit tests',
+  'Known-defect contract fixtures',
+  'Known-defect raw gate',
+  'Functional performance budget contract fixtures',
+  'Paired performance contract fixtures',
+  'Production build',
+  'Current performance contract fixtures',
+  'Actual-browser recorder canaries',
+  'Native menu motion regression',
+  'Candidate browser functionality and accessibility',
+  'Calibrated same-runner current performance',
+  'TypeDoc',
+  'Fixture-only local HTTP contract smoke',
+];
 
-test('Given a preview deployment is gated by an exact candidate artifact when the artifact and readback are checked Then preview deploy is gated by exact candidate artifact and readback smoke', async () => {
-  const text = await source();
-  const preview = text.slice(text.indexOf('  preview:'));
-  requireLine(text, /preview:\n    name: deploy verified artifact to Pages preview\n    needs: verify/m, 'preview needs verification');
-  requireLine(text, /github\.event_name == 'push'/, 'push-only deployment');
-  requireLine(text, /github\.ref == 'refs\/heads\/chore\/modernization-renovate'/, 'candidate branch only');
-  requireLine(text, /github\.repository == 'ThinaticSystem\/thinaticsystem\.com'/, 'repository boundary');
-  requireLine(text, /name: thinaticsystem-verification-\$\{\{ github\.sha \}\}/, 'exact SHA artifact');
-  requireLine(text, /p\.sha !== process\.env\.EXPECTED_SHA/, 'provenance SHA check');
-  requireLine(text, /p\.repository !== process\.env\.EXPECTED_REPOSITORY/, 'provenance repository check');
-  requireLine(text, /statSync\('dist\/app\/browser\/index\.html'\)/, 'built output witness');
-  requireLine(text, /command: pages deploy dist\/app\/browser --project-name=thinaticsystem-com --branch=chore-modernization-renovate --commit-hash=\$\{\{ github\.sha \}\} --commit-message=/, 'explicit non-production Pages target and commit metadata');
-  requireLine(text, /id: deploy[\s\S]*deployment-url/, 'deployment URL readback');
-  requireLine(text, /run: node scripts\/pages-readback\.mjs/, 'Pages API readback');
-  requireLine(text, /run: node scripts\/preview-smoke\.mjs/, 'post-deploy browser smoke');
-  requireLine(text, /wranglerVersion: 4\.136\.1/, 'verified Wrangler version');
-  requireLine(text, /actions\/checkout@d23441a48e516b6c34aea4fa41551a30e30af803/, 'immutable checkout action');
-  requireLine(text, /actions\/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38/, 'immutable setup-node action');
-  requireLine(text, /actions\/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02/, 'immutable upload action');
-  requireLine(text, /actions\/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0/, 'immutable download action');
-  requireLine(text, /cloudflare\/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0/, 'immutable Wrangler action');
-  assert.doesNotMatch(preview, /wrangler deploy(?!.*pages)/, 'Pages deploy only');
-  assert.doesNotMatch(preview, /master|production|workers\.dev/i, 'no production target');
-  const smoke = await readFile('scripts/preview-smoke.mjs', 'utf8');
-  for (const path of ['/', '/about', '/blog', '/discography', '/assets/site_logo.svg', 'cms.thinaticsystem.com/blogs?_limit=1']) assert.match(smoke, new RegExp(path.replace(/[.?/]/g, '\\$&')), `smoke includes ${path}`);
+test('Given Pages Git integration owns candidate delivery when CI runs then workflow retains verification gates without a deploy or secret-bearing job', async () => {
+  const workflow = await readFile(workflowPath, 'utf8');
+  assert.match(workflow, /jobs:\n  verify:/, 'verification job remains');
+  assert.doesNotMatch(workflow, /^  (?:preview|deploy):/m, 'legacy upload job is removed');
+  assert.doesNotMatch(workflow, /wrangler-action|wrangler pages deploy|pages deploy|CLOUDFLARE_API_TOKEN|CLOUDFLARE_ACCOUNT_ID|secrets\./i, 'workflow has no deployment action or Cloudflare secret privilege');
+  assert.match(workflow, /permissions:\n  contents: read\n/, 'workflow retains read-only repository permissions');
+  const verifyJob = workflow.slice(workflow.indexOf('  verify:'), workflow.indexOf('\n  preview:') > -1 ? workflow.indexOf('\n  preview:') : undefined);
+  for (const gate of requiredVerifyGates) assert.ok(verifyJob.includes(`name: ${gate}`), `verification gate remains: ${gate}`);
+  assert.match(verifyJob, /run: corepack pnpm run test:performance-policy/);
+  assert.match(verifyJob, /run: corepack pnpm run test:preview-contract/);
+  assert.match(verifyJob, /run: corepack pnpm run perf:current/);
+  assert.match(verifyJob, /dist\/app\/browser\//, 'normal CI artifact layout is unchanged');
 });

@@ -5,7 +5,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "node scripts/build-pages.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "typecheck": "corepack pnpm exec tsc -p tsconfig.spec.json --noEmit",
